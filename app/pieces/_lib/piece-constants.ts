@@ -3,7 +3,7 @@ export const PIECE_COUNT = 10;
 export const PIECE_TITLES = [
   "Token Ceiling",
   "Latent Bloom",
-  "Edge Grammar",
+  "Evals",
   "Ghost Buffer",
   "Soft Prompt",
   "State Mirror",

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import PiecePlaceholder from "../_components/piece-placeholder";
 import { getPieceTitle, wrapPiece } from "../_lib/piece-constants";
 import { SERVER_TOKEN_POOL } from "../_lib/token-pool";
+import EvalsScene from "../_scenes/evals-scene";
 import LatentBloomScene from "../_scenes/latent-bloom-scene";
 import TokenCeilingScene from "../_scenes/token-ceiling-scene";
 
@@ -16,6 +17,7 @@ type PiecePageProps = {
 const SCENE_BY_ID: Partial<Record<number, () => ReactElement>> = {
   1: () => <TokenCeilingScene tokenPool={SERVER_TOKEN_POOL} />,
   2: () => <LatentBloomScene />,
+  3: () => <EvalsScene />,
 };
 
 export default async function PiecePage({ params }: PiecePageProps) {

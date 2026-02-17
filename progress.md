@@ -92,3 +92,53 @@ Original prompt: i want enter exhibition button to be a next transition effect t
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
 - Restored loading boundary to dynamic segment path: `app/pieces/[id]/loading.tsx`.
+- Piece 3 added and retitled:
+  - Updated title #3 from `Edge Grammar` to `Evals` in `app/pieces/_lib/piece-constants.ts`.
+  - Added new scene `app/pieces/_scenes/evals-scene.tsx` and wired it in dynamic route mapping.
+- `Evals` scene behavior:
+  - Black-hole static field aesthetic with dense procedural grain and vortex ring particles.
+  - Continuous stream of evaluation cards pulled toward a central singularity.
+  - Card distribution heavily favors `THIS IS WRONG`, with occasional `THIS IS RIGHT` cards.
+- Dynamic route map update:
+  - `app/pieces/[id]/page.tsx` now maps piece IDs 1, 2, and 3 to dedicated scene modules.
+- Placeholder update:
+  - Placeholder copy now states pieces 1, 2, and 3 are available.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 (`Evals`) card design overhaul:
+  - Rebuilt eval cards with richer styling and interaction in `app/pieces/_scenes/evals-scene.tsx`.
+  - Added randomized per-card content (headlines/details/tags), varied dimensions, and varied color palettes.
+  - Added high-contrast iconography per verdict: bright red `X` for wrong, green check for right.
+  - Added hover interactivity: card focus + pop scale + animated shimmer sweep.
+  - Added pointer-reactive physics (hover influence + click impulse) to make the scene feel more tactile.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Fixed Piece 3 runtime Canvas color parsing error:
+  - Replaced space-syntax `hsla(...)` gradient/shadow strings with a strict comma-syntax helper (`hslaColor`) in `app/pieces/_scenes/evals-scene.tsx`.
+  - Ensures `CanvasGradient.addColorStop` receives parseable color strings across browsers.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 visual polish pass (`Evals`):
+  - Shifted cards to brighter bubblegum-style opaque gradients (less muddy/dirty, cleaner high-key palette).
+  - Softened/delightened borders and tag chips to match the poppier card treatment.
+  - Added continuous fade behavior into the singularity/edges using combined life + void distance + edge visibility factors.
+  - Cards now dissolve out smoothly instead of abrupt blink disappearance.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 gum-material refinement:
+  - Removed residual scanline/grime look from card surfaces.
+  - Added glossy gum-stick texture stack: stronger rounded corners, top/bottom specular glaze, moving candy-band highlights, edge bevel highlights, and sparkle flecks.
+  - Kept overall bright bubblegum palette and hover shimmer behavior.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 stacking behavior fix:
+  - Removed special-case draw-last path for hovered cards in `app/pieces/_scenes/evals-scene.tsx`.
+  - Hover/click states now preserve natural relative card stacking order (no pop-to-top z jump).
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
