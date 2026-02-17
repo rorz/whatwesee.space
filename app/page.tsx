@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 const WORDS = ["WHAT", "WE", "SEE"];
 const WORD_GAP = 4;
@@ -18,47 +18,155 @@ type GridSize = {
   rows: number;
 };
 
-type PointerCell = {
-  col: number;
+type BackgroundTile = {
+  index: number;
   row: number;
-} | null;
+  col: number;
+  tone: string;
+  opacityBase: number;
+  opacityPeak: number;
+  shimmerDuration: number;
+  shimmerDelay: number;
+  animate: boolean;
+};
+
+type LetterCell = {
+  char: string;
+  strength: number;
+  core: boolean;
+};
+
+type TransitionCell = {
+  id: string;
+  color: string;
+  delay: number;
+  duration: number;
+  offsetX: number;
+  offsetY: number;
+  rotate: number;
+};
+
+type BackgroundLayerProps = {
+  tiles: BackgroundTile[];
+  registerEyeRef: (index: number, node: HTMLSpanElement | null) => void;
+};
+
+function seededNoise(seed: number): number {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
 
 function getGridSize(width: number, height: number): GridSize {
   const targetTileSize = width < 640 ? 24 : width < 1024 ? 28 : 34;
-  const minCols = 18;
-  const cols = Math.max(minCols, Math.ceil(width / targetTileSize));
+  const cols = Math.max(18, Math.ceil(width / targetTileSize));
   const rows = Math.max(12, Math.ceil(height / targetTileSize));
-
   return { cols, rows };
 }
 
+const BackgroundLayer = memo(function BackgroundLayer({
+  tiles,
+  registerEyeRef,
+}: BackgroundLayerProps) {
+  return (
+    <>
+      {tiles.map((tile) => {
+        const style: CSSProperties & Record<string, string | number> = {
+          backgroundColor: tile.tone,
+          opacity: tile.opacityBase,
+        };
+
+        if (tile.animate) {
+          style.animationDuration = `${tile.shimmerDuration.toFixed(2)}s`;
+          style.animationDelay = `${tile.shimmerDelay.toFixed(2)}s`;
+          style["--wws-opacity-min"] = tile.opacityBase.toFixed(3);
+          style["--wws-opacity-max"] = tile.opacityPeak.toFixed(3);
+        }
+
+        return (
+          <div
+            key={`bg-${tile.index}`}
+            className={`wws-bg-tile border border-black/75 ${tile.animate ? "wws-bg-tile--animated" : ""}`}
+            style={style}
+            aria-hidden
+          >
+            <span
+              ref={(node) => registerEyeRef(tile.index, node)}
+              className="wws-eye"
+            />
+          </div>
+        );
+      })}
+    </>
+  );
+});
+
+BackgroundLayer.displayName = "BackgroundLayer";
+
 export default function Home() {
-  const prefersReducedMotion = useReducedMotion();
+  const router = useRouter();
   const [gridSize, setGridSize] = useState<GridSize>(() => getGridSize(1440, 900));
-  const [pointerCell, setPointerCell] = useState<PointerCell>(null);
   const [tick, setTick] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionSeed, setTransitionSeed] = useState(0);
+  const [targetPiece, setTargetPiece] = useState(1);
+
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const eyeRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
+  const activeEyesRef = useRef<number[]>([]);
+  const rafRef = useRef<number | null>(null);
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const syncGrid = () => setGridSize(getGridSize(window.innerWidth, window.innerHeight));
-
     syncGrid();
     window.addEventListener("resize", syncGrid);
     return () => window.removeEventListener("resize", syncGrid);
   }, []);
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      return;
-    }
-
     const timer = window.setInterval(() => {
       setTick((prev) => prev + 1);
     }, 190);
-
     return () => window.clearInterval(timer);
-  }, [prefersReducedMotion]);
+  }, []);
 
   const { cols, rows } = gridSize;
+  const totalTiles = cols * rows;
+
+  const gridTemplateStyle = useMemo<CSSProperties>(
+    () => ({
+      gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+      gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+    }),
+    [cols, rows],
+  );
+
+  const backgroundTiles = useMemo<BackgroundTile[]>(
+    () =>
+      Array.from({ length: totalTiles }, (_, index) => {
+        const row = Math.floor(index / cols);
+        const col = index % cols;
+        const noiseA = seededNoise(index * 17 + 7);
+        const noiseB = seededNoise(index * 31 + 13);
+        const noiseC = seededNoise(index * 47 + 19);
+        const opacityBase = 0.12 + noiseA * 0.12;
+        const opacityPeak = opacityBase + 0.08 + noiseB * 0.06;
+
+        return {
+          index,
+          row,
+          col,
+          tone: GRAY_TONES[Math.floor(noiseA * GRAY_TONES.length)],
+          opacityBase,
+          opacityPeak,
+          shimmerDuration: 8 + noiseB * 8,
+          shimmerDelay: -(noiseC * 8),
+          animate: noiseC > 0.74,
+        };
+      }),
+    [cols, totalTiles],
+  );
 
   const { letterMap, swarmMap } = useMemo(() => {
     const totalSpan =
@@ -78,7 +186,7 @@ export default function Home() {
       [1, -1],
     ] as const;
 
-    const nextLetterMap = new Map<number, { char: string; strength: number; core: boolean }>();
+    const nextLetterMap = new Map<number, LetterCell>();
     const nextSwarmMap = new Map<number, number>();
 
     const setLetterTile = (
@@ -102,6 +210,7 @@ export default function Home() {
     const letters: Array<{ char: string; col: number; sequence: number }> = [];
     let cursor = startCol;
     let sequence = 0;
+
     WORDS.forEach((word, wordIndex) => {
       [...word].forEach((char, charIndex) => {
         letters.push({ char, col: cursor + charIndex, sequence });
@@ -152,124 +261,276 @@ export default function Home() {
     return { letterMap: nextLetterMap, swarmMap: nextSwarmMap };
   }, [cols, rows, tick]);
 
-  const totalTiles = cols * rows;
+  const letterTiles = useMemo(
+    () =>
+      Array.from(letterMap.entries()).map(([index, cell]) => {
+        const row = Math.floor(index / cols);
+        const col = index % cols;
+        const noiseA = seededNoise(index * 11 + 3);
+        const noiseB = seededNoise(index * 23 + 9);
+
+        return {
+          id: `letter-${index}`,
+          row,
+          col,
+          char: cell.char,
+          core: cell.core,
+          duration: cell.core ? 1.45 + noiseA * 0.45 : 1.2 + noiseA * 0.35,
+          delay: -(noiseB * 2.5),
+          driftX: (noiseA * 2 - 1) * (cell.core ? 1.1 : 1.9),
+          driftY: (noiseB * 2 - 1) * (cell.core ? 1.05 : 2.1),
+        };
+      }),
+    [cols, letterMap],
+  );
+
+  const swarmTiles = useMemo(
+    () =>
+      Array.from(swarmMap.entries()).map(([index, strength]) => ({
+        id: `aura-${index}`,
+        row: Math.floor(index / cols),
+        col: index % cols,
+        strength,
+      })),
+    [cols, swarmMap],
+  );
+
   const coreLetterSize = `clamp(0.9rem, ${Math.max(1.1, 23 / cols) * 2.15}vw, 1.7rem)`;
   const swarmLetterSize = `clamp(0.65rem, ${Math.max(0.9, 23 / cols) * 1.5}vw, 1.15rem)`;
+  const transitionCells = useMemo<TransitionCell[]>(
+    () =>
+      Array.from({ length: 220 }, (_, index) => {
+        const noiseA = seededNoise(transitionSeed + index * 13 + 11);
+        const noiseB = seededNoise(transitionSeed + index * 29 + 37);
+        const noiseC = seededNoise(transitionSeed + index * 47 + 53);
+        const hue = 18 + noiseA * 24;
+        const saturation = 88 + noiseB * 10;
+        const lightness = 46 + noiseC * 20;
+
+        return {
+          id: `transition-${index}-${transitionSeed}`,
+          color: `hsl(${hue.toFixed(1)} ${saturation.toFixed(1)}% ${lightness.toFixed(1)}%)`,
+          delay: noiseA * 0.35,
+          duration: 0.62 + noiseB * 0.58,
+          offsetX: (noiseA * 2 - 1) * 85,
+          offsetY: (noiseB * 2 - 1) * 85,
+          rotate: (noiseC * 2 - 1) * 140,
+        };
+      }),
+    [transitionSeed],
+  );
+
+  const registerEyeRef = useCallback((index: number, node: HTMLSpanElement | null) => {
+    if (node) {
+      eyeRefs.current.set(index, node);
+    } else {
+      eyeRefs.current.delete(index);
+    }
+  }, []);
+
+  const clearActiveEyes = useCallback(() => {
+    activeEyesRef.current.forEach((index) => {
+      eyeRefs.current.get(index)?.classList.remove("is-open");
+    });
+    activeEyesRef.current = [];
+  }, []);
+
+  const openEyesNear = useCallback(
+    (col: number, row: number) => {
+      const next: number[] = [];
+      for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+        for (let colOffset = -1; colOffset <= 1; colOffset += 1) {
+          const eyeCol = col + colOffset;
+          const eyeRow = row + rowOffset;
+          if (eyeCol < 0 || eyeCol >= cols || eyeRow < 0 || eyeRow >= rows) {
+            continue;
+          }
+          next.push(eyeRow * cols + eyeCol);
+        }
+      }
+
+      const previous = activeEyesRef.current;
+      const previousSet = new Set(previous);
+      const nextSet = new Set(next);
+
+      previous.forEach((index) => {
+        if (!nextSet.has(index)) {
+          eyeRefs.current.get(index)?.classList.remove("is-open");
+        }
+      });
+
+      next.forEach((index) => {
+        if (!previousSet.has(index)) {
+          eyeRefs.current.get(index)?.classList.add("is-open");
+        }
+      });
+
+      activeEyesRef.current = next;
+    },
+    [cols, rows],
+  );
+
+  useEffect(() => {
+    clearActiveEyes();
+  }, [clearActiveEyes, cols, rows]);
+
+  useEffect(
+    () => () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+      clearActiveEyes();
+    },
+    [clearActiveEyes],
+  );
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      pointerRef.current = { x: event.clientX, y: event.clientY };
+
+      if (rafRef.current !== null) {
+        return;
+      }
+
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        const pointer = pointerRef.current;
+        const host = gridRef.current;
+        if (!pointer || !host) {
+          return;
+        }
+
+        const bounds = host.getBoundingClientRect();
+        const col = Math.min(
+          cols - 1,
+          Math.max(0, Math.floor(((pointer.x - bounds.left) / bounds.width) * cols)),
+        );
+        const row = Math.min(
+          rows - 1,
+          Math.max(0, Math.floor(((pointer.y - bounds.top) / bounds.height) * rows)),
+        );
+
+        openEyesNear(col, row);
+      });
+    },
+    [cols, rows, openEyesNear],
+  );
+
+  const handleEnterExhibition = useCallback(() => {
+    if (isTransitioning) {
+      return;
+    }
+
+    const piece = Math.floor(Math.random() * 10) + 1;
+    const seed = Math.floor(Math.random() * 1_000_000);
+
+    setTargetPiece(piece);
+    setTransitionSeed(seed);
+    setIsTransitioning(true);
+
+    if (transitionTimerRef.current !== null) {
+      window.clearTimeout(transitionTimerRef.current);
+    }
+
+    transitionTimerRef.current = window.setTimeout(() => {
+      router.push(`/pieces/${piece}`);
+    }, 920);
+  }, [isTransitioning, router]);
+
+  useEffect(
+    () => () => {
+      if (transitionTimerRef.current !== null) {
+        window.clearTimeout(transitionTimerRef.current);
+      }
+    },
+    [],
+  );
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
       <main
-        className="grid h-full w-full gap-0 bg-black p-0 font-pixel-square"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
-        }}
-        onPointerMove={(event) => {
-          const bounds = event.currentTarget.getBoundingClientRect();
-          const col = Math.min(
-            cols - 1,
-            Math.max(0, Math.floor(((event.clientX - bounds.left) / bounds.width) * cols)),
-          );
-          const row = Math.min(
-            rows - 1,
-            Math.max(0, Math.floor(((event.clientY - bounds.top) / bounds.height) * rows)),
-          );
-
-          setPointerCell({ col, row });
-        }}
-        onPointerLeave={() => setPointerCell(null)}
+        ref={gridRef}
+        className="relative grid h-full w-full gap-0 bg-black p-0 font-pixel-square"
+        style={gridTemplateStyle}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={clearActiveEyes}
       >
-        {Array.from({ length: totalTiles }, (_, index) => {
-          const row = Math.floor(index / cols);
-          const col = index % cols;
-          const letterTile = letterMap.get(index);
-          const swarmStrength = swarmMap.get(index) ?? 0;
-          const baseClass =
-            "relative flex select-none items-center justify-center border border-black/70";
+        <BackgroundLayer tiles={backgroundTiles} registerEyeRef={registerEyeRef} />
 
-          if (letterTile) {
-            const isCore = letterTile.core;
-            return (
-              <motion.div
-                key={`tile-${index}`}
-                className={`${baseClass} font-black leading-none text-black ${isCore ? "bg-[#d7ff4a]" : "bg-[#b6f72a]"}`}
-                style={{ fontSize: isCore ? coreLetterSize : swarmLetterSize }}
-                animate={
-                  prefersReducedMotion
-                    ? undefined
-                    : { scale: isCore ? [0.95, 1.06, 0.97] : [0.9, 1, 0.92] }
-                }
-                transition={
-                  prefersReducedMotion
-                    ? undefined
-                    : {
-                        duration: isCore ? 1.4 : 1.15,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                        delay: (index % cols) * 0.02,
-                      }
-                }
-              >
-                {letterTile.char}
-              </motion.div>
-            );
-          }
+        <div className="pointer-events-none absolute inset-0 grid" style={gridTemplateStyle}>
+          {swarmTiles.map((tile) => (
+            <span
+              key={tile.id}
+              className="wws-swarm-aura"
+              style={
+                {
+                  gridColumnStart: tile.col + 1,
+                  gridRowStart: tile.row + 1,
+                  opacity: tile.strength === 2 ? 0.52 : 0.3,
+                } as CSSProperties
+              }
+            />
+          ))}
 
-          const primaryNoise =
-            Math.sin((index + 1) * 12.9898 + tick * 0.36 + row * 0.21 + col * 0.17) *
-            43758.5453;
-          const secondaryNoise =
-            Math.sin((index + 5) * 78.233 + tick * 0.22 + row * 0.11 + col * 0.27) *
-            12515.8731;
-          const randomA = primaryNoise - Math.floor(primaryNoise);
-          const randomB = secondaryNoise - Math.floor(secondaryNoise);
-          const shimmer = 0.22 + randomA * 0.2;
-          const isEyeOpen =
-            pointerCell !== null &&
-            Math.abs(pointerCell.row - row) <= 1 &&
-            Math.abs(pointerCell.col - col) <= 1;
-
-          const backgroundColor =
-            swarmStrength === 2
-              ? "#84cc16"
-              : swarmStrength === 1
-                ? "#65a30d"
-                : GRAY_TONES[Math.floor(randomB * GRAY_TONES.length)];
-
-          return (
-            <div
-              key={`tile-${index}`}
-              className={baseClass}
-              style={{
-                backgroundColor,
-                opacity: swarmStrength > 0 ? 1 : shimmer,
-              }}
-              aria-hidden
+          {letterTiles.map((tile) => (
+            <span
+              key={tile.id}
+              className={`wws-letter-tile ${tile.core ? "wws-letter-tile--core" : "wws-letter-tile--swarm"}`}
+              style={
+                {
+                  gridColumnStart: tile.col + 1,
+                  gridRowStart: tile.row + 1,
+                  fontSize: tile.core ? coreLetterSize : swarmLetterSize,
+                  animationDuration: `${tile.duration.toFixed(2)}s`,
+                  animationDelay: `${tile.delay.toFixed(2)}s`,
+                  "--wws-drift-x": `${tile.driftX.toFixed(2)}px`,
+                  "--wws-drift-y": `${tile.driftY.toFixed(2)}px`,
+                } as CSSProperties
+              }
             >
-              <span
-                className={`pointer-events-none absolute flex w-2/3 items-center justify-center gap-[22%] transition-all duration-150 ${isEyeOpen ? "scale-y-100 opacity-100" : "scale-y-[0.15] opacity-0"}`}
-              >
-                <span className="h-[18%] w-[18%] rounded-full bg-black/80" />
-                <span className="h-[18%] w-[18%] rounded-full bg-black/80" />
-              </span>
-            </div>
-          );
-        })}
+              {tile.char}
+            </span>
+          ))}
+        </div>
       </main>
 
       <div className="absolute left-1/2 top-[72%] flex -translate-x-1/2 flex-col items-center gap-3">
         <p className="pointer-events-none bg-black px-5 py-3 font-sans text-base tracking-[0.08em] text-white sm:text-lg md:text-xl">
           An insight into the agentic mind
         </p>
-        <motion.button
+        <button
           type="button"
-          className="pointer-events-auto border-2 border-black bg-orange-500 px-6 py-3 font-sans text-sm font-semibold uppercase tracking-[0.1em] text-black shadow-[0_6px_0_#7c2d12] sm:text-base"
-          whileHover={prefersReducedMotion ? undefined : { scale: 1.04, y: -1 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.98, y: 2 }}
+          onClick={handleEnterExhibition}
+          disabled={isTransitioning}
+          className={`pointer-events-auto border-2 border-black bg-orange-500 px-6 py-3 font-sans text-sm font-semibold uppercase tracking-[0.1em] text-black shadow-[0_6px_0_#7c2d12] transition-transform duration-150 sm:text-base ${isTransitioning ? "cursor-wait opacity-80" : "hover:-translate-y-px active:translate-y-[2px]"}`}
         >
-          enter exhibition
-        </motion.button>
+          {isTransitioning ? `loading piece ${targetPiece}` : "enter exhibition"}
+        </button>
       </div>
+
+      {isTransitioning ? (
+        <div className="wws-transition-overlay" aria-hidden>
+          <div className="wws-transition-grid">
+            {transitionCells.map((cell) => (
+              <span
+                key={cell.id}
+                className="wws-transition-cell"
+                style={
+                  {
+                    backgroundColor: cell.color,
+                    "--wws-cell-delay": `${cell.delay.toFixed(3)}s`,
+                    "--wws-cell-duration": `${cell.duration.toFixed(3)}s`,
+                    "--wws-cell-x": `${cell.offsetX.toFixed(2)}vw`,
+                    "--wws-cell-y": `${cell.offsetY.toFixed(2)}vh`,
+                    "--wws-cell-r": `${cell.rotate.toFixed(2)}deg`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
+          <p className="wws-transition-banner">entering piece {targetPiece}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
