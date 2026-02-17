@@ -493,32 +493,35 @@ export default function EvalsScene() {
 
       context.restore();
 
-      const iconX = left + card.height * 0.5;
+      const glyphLane = clamp(card.width * 0.24, 58, 104);
+      const iconX = left + glyphLane * 0.5;
       const icon = card.isRight ? "✓" : "✕";
       context.fillStyle = card.isRight ? "rgba(16, 214, 115, 0.98)" : "rgba(236, 28, 74, 0.98)";
       context.shadowBlur = 10 + card.hover * 10;
       context.shadowColor = card.isRight
         ? "rgba(34, 255, 150, 0.48)"
         : "rgba(255, 48, 86, 0.52)";
-      context.font = `900 ${Math.max(22, card.height * 0.68)}px var(--font-geist-sans), sans-serif`;
+      context.font = `900 ${Math.max(52, card.height * (card.isRight ? 1.24 : 1.42))}px var(--font-geist-sans), "Arial Black", sans-serif`;
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.fillText(icon, iconX, 0);
       context.shadowBlur = 0;
 
-      const textLeft = left + card.height * 0.88;
+      const textLeft = left + glyphLane + 10;
 
       context.fillStyle = "rgba(255,255,255,0.97)";
-      context.font = `800 ${Math.max(10, card.height * 0.26)}px var(--font-geist-sans), sans-serif`;
+      context.font = `900 ${Math.max(16, card.height * 0.38)}px var(--font-geist-sans), "Arial Black", sans-serif`;
       context.textAlign = "left";
       context.textBaseline = "middle";
       context.fillText(card.headline, textLeft, -card.height * 0.16);
+      context.fillText(card.headline, textLeft + 0.7, -card.height * 0.16);
 
       context.fillStyle = card.isRight ? "rgba(231, 255, 238, 0.92)" : "rgba(255, 230, 234, 0.92)";
-      context.font = `600 ${Math.max(8, card.height * 0.18)}px var(--font-geist-mono), monospace`;
-      context.fillText(card.detail, textLeft, card.height * 0.18);
+      context.font = `900 ${Math.max(12, card.height * 0.26)}px var(--font-geist-sans), "Arial Black", sans-serif`;
+      context.fillText(card.detail.toUpperCase(), textLeft, card.height * 0.18);
+      context.fillText(card.detail.toUpperCase(), textLeft + 0.6, card.height * 0.18);
 
-      context.font = `700 ${Math.max(7, card.height * 0.15)}px var(--font-geist-sans), sans-serif`;
+      context.font = `900 ${Math.max(7.5, card.height * 0.16)}px var(--font-geist-sans), sans-serif`;
       const tagText = card.tag.toUpperCase();
       const tagWidth = context.measureText(tagText).width + 10;
       const tagHeight = Math.max(12, card.height * 0.24);

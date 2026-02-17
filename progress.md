@@ -142,3 +142,26 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 3 character push:
+  - Added oversized embedded verdict glyphs as part of card fabric (huge `✕` on wrong cards, large `✓` on right cards) inside the clipped gum surface.
+  - Increased typography intensity across card text (heavier and larger headline/detail/tag styles).
+  - Kept glossy gum-stick sheen layers while boosting visual character.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 typography/glyph structure correction:
+  - Removed the prior embedded watermark glyph treatment inside the clipped texture pass.
+  - Replaced left icon area with a fixed-position glyph lane (`glyphLane`) so glyphs are absolutely anchored and not reduced by text padding.
+  - Up-scaled left glyphs significantly (especially wrong-card `✕`) and added stroke for stronger silhouette.
+  - Increased typographic weight/size and added stroke rendering for headline/detail to ensure genuinely bold in-card text.
+  - Left glyph now fully replaces the prior small left icon behavior.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 text/glyph weight fix:
+  - Removed stroke-based glyph/text rendering that caused the hollow outlined look.
+  - Increased glyph sizes substantially and kept pure heavy-fill rendering.
+  - Increased headline/detail font sizes and weights; added subtle same-color double-fill pass for thicker visual weight without outline artifacts.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
