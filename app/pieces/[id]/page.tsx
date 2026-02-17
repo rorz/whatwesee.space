@@ -4,6 +4,7 @@ import { getPieceTitle, wrapPiece } from "../_lib/piece-constants";
 import { SERVER_TOKEN_POOL } from "../_lib/token-pool";
 import EvalsScene from "../_scenes/evals-scene";
 import LatentBloomScene from "../_scenes/latent-bloom-scene";
+import QuantaScene from "../_scenes/quanta-scene";
 import TokenCeilingScene from "../_scenes/token-ceiling-scene";
 
 type PieceRouteParams = {
@@ -18,6 +19,7 @@ const SCENE_BY_ID: Partial<Record<number, () => ReactElement>> = {
   1: () => <TokenCeilingScene tokenPool={SERVER_TOKEN_POOL} />,
   2: () => <LatentBloomScene />,
   3: () => <EvalsScene />,
+  4: () => <QuantaScene />,
 };
 
 export default async function PiecePage({ params }: PiecePageProps) {

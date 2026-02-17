@@ -165,3 +165,39 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) activation + contrast pass:
+  - Wired `app/pieces/_scenes/quanta-scene.tsx` into dynamic route mapping in `app/pieces/[id]/page.tsx` so `/pieces/4` now renders the WebGL point-cloud scene.
+  - Updated piece title #4 to `Quanta` in `app/pieces/_lib/piece-constants.ts`.
+  - Updated placeholder copy to show pieces 1-4 as available.
+  - Increased Quanta point contrast (less pastel): switched to stronger color palette, broadened tint range, reduced white overlay wash, slightly darkened white background, and increased point size for readability.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Homepage polish:
+  - Added `Admission Free` notice directly under the `Enter exhibition` button in `app/page.tsx`.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) behavior redesign:
+  - Removed the predefined shape/atrophy loop model.
+  - Rebuilt the scene as a continuous procedural quantum cloud driven by generated force-field functions (nodes, ribbons, folds, symmetry/pareidolia bias) that are regenerated on the fly.
+  - Added perpetual blended state morphing so forms emerge and dissolve continuously without hard phase transitions.
+  - Kept WebGL point-cloud rendering and navigation UI intact.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) density/style update:
+  - Increased point count from `5,200` to `26,000` (5x).
+  - Switched point coloring to grayscale only (equal RGB channels).
+  - Added per-point alpha attribute in shader/buffer pipeline, randomized in the `0.5–1.0` range.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) color/chaos update:
+  - Shifted points from grayscale to a red-forward maroon/brown palette.
+  - Kept per-point opacity randomized in the `0.5–1.0` range.
+  - Removed static seed behavior by introducing per-load random seed generation (`crypto.getRandomValues` fallback to `Math.random`).
+  - Seed now influences base point lattice, phase offsets, alpha distribution, and procedural cloud-state generation so each load yields a different equation family.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.

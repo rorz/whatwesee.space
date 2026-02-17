@@ -4,7 +4,7 @@ export const PIECE_TITLES = [
   "Token Ceiling",
   "Latent Bloom",
   "Evals",
-  "Ghost Buffer",
+  "Quanta",
   "Soft Prompt",
   "State Mirror",
   "Silent Branch",

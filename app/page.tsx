@@ -527,7 +527,7 @@ export default function Home() {
         </div>
       </main>
 
-      <div className="absolute left-1/2 top-[64%] z-20 -translate-x-1/2">
+      <div className="absolute left-1/2 top-[64%] z-20 flex -translate-x-1/2 flex-col items-center">
         <button
           type="button"
           onClick={handleEnterExhibition}
@@ -536,6 +536,9 @@ export default function Home() {
         >
           {isTransitioning ? `loading piece ${targetPiece}` : "enter exhibition"}
         </button>
+        <p className="mt-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-white/82 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs">
+          Admission Free
+        </p>
       </div>
 
       <div className="pointer-events-none absolute bottom-4 left-4 z-20 max-w-xl text-white sm:bottom-6 sm:left-6">
