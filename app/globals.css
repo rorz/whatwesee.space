@@ -26,6 +26,12 @@ body {
   font-family: var(--font-geist-sans), sans-serif;
 }
 
+button,
+[role="button"],
+a[href] {
+  cursor: pointer;
+}
+
 .wws-bg-tile {
   position: relative;
   display: flex;
@@ -79,6 +85,12 @@ body {
   animation-name: wws-letter-drift;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
+  transition:
+    filter 180ms ease,
+    border-radius 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+  pointer-events: auto;
 }
 
 .wws-letter-tile--core {
@@ -93,6 +105,45 @@ body {
 .wws-swarm-aura {
   border: 1px solid rgb(101 163 13 / 16%);
   background: rgb(101 163 13 / 20%);
+}
+
+.wws-scene-wireframe {
+  background: #000;
+}
+
+.wws-scene-wireframe .wws-bg-tile {
+  background: transparent !important;
+  opacity: 1 !important;
+  border-color: rgb(255 255 255 / 24%) !important;
+  animation: none !important;
+}
+
+.wws-scene-wireframe .wws-eye {
+  opacity: 0 !important;
+}
+
+.wws-scene-wireframe .wws-swarm-aura {
+  background: transparent !important;
+  border-color: rgb(255 255 255 / 30%) !important;
+  opacity: 0.32 !important;
+}
+
+.wws-scene-wireframe .wws-letter-tile {
+  animation: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.wws-scene-wireframe .wws-letter-tile--core {
+  background: #fff !important;
+  color: #000 !important;
+  border-color: #000 !important;
+}
+
+.wws-scene-wireframe .wws-letter-tile--swarm {
+  background: #a5a5a5 !important;
+  color: #000 !important;
+  border-color: #000 !important;
 }
 
 @keyframes wws-bg-shimmer {

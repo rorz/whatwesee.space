@@ -16,7 +16,30 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Implemented Piece 2 (`Latent Bloom`) with interactive node activation, branching bloom structures, and collapsing geometric memory traces.
 - Added clear piece navigation controls next to `back to lobby` (prev/next + direct 1..10 links) across piece views.
 - Simplified lobby sequence behavior: removed session-persisted next-piece memory so page reload always restarts sequencing from Piece 1.
+- Homepage iteration:
+  - Repositioned subtitle and expanded authorship/copyright description to a bottom-left panel.
+  - Kept `enter exhibition` centered and prominent.
+  - Brightened background gray tile palette/opacity for daylight legibility.
+  - Added tile hover color/warp interaction on `WHAT WE SEE`.
+  - Renamed `back to lobby` label to `back to start`.
+  - Added global pointer cursor behavior for buttons/links.
+- Homepage refinement:
+  - Lowered `enter exhibition` to avoid overlap with title tiles while keeping center-stage emphasis.
+  - Removed boxed panel treatment from bottom-left copy (text now superimposed plainly).
+  - Replaced per-tile hover styling with full-scene wireframe black/white minimalist mode triggered by hovering `WHAT WE SEE` tiles.
 
 ### TODO
 - Add unique full experiences for pieces 2-10.
 - Add audio-reactive layer to Token Ceiling (optional).
+- Piece 1 (`Token Ceiling`) refinements:
+  - Replaced circular top impact pulses with square pixel debris bursts that eject from the `y-min` barrier.
+  - Token glyph rendering now uses the pixel font in-canvas (`var(--font-geist-pixel-square)`) for better visual coherence.
+- Refactored `/pieces/[id]` route split:
+  - `app/pieces/[id]/page.tsx` is now a server component wrapper.
+  - `app/pieces/[id]/piece-view-client.tsx` holds the client-side interactive rendering.
+- Added server-side token corpus generation at load time:
+  - Built a small English corpus and tokenized it into randomized, believable 2–5 character chunks.
+  - Token pool is generated on the server and passed to Piece 1 as props for random token labels.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
