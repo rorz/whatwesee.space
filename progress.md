@@ -9,6 +9,13 @@ Original prompt: i want enter exhibition button to be a next transition effect t
   - Technicolor rotating token blocks with glyph labels.
 - Added placeholder scenes for pieces 2-10 and navigation back to lobby.
 - Verified code quality checks: `pnpm lint` and `pnpm exec tsc --noEmit` both pass.
+- Updated lobby flow to use sequential piece order (1 -> 2 -> ... -> 10 -> 1) persisted in session storage.
+- Replaced delayed timer navigation with immediate Next route push wrapped in View Transition API when available.
+- Added `app/pieces/[id]/loading.tsx` to provide true App Router loading transition continuity.
+- Fixed homepage hydration mismatch by normalizing dynamic background inline style values to deterministic string precision and canonical RGB format across SSR/CSR.
+- Implemented Piece 2 (`Latent Bloom`) with interactive node activation, branching bloom structures, and collapsing geometric memory traces.
+- Added clear piece navigation controls next to `back to lobby` (prev/next + direct 1..10 links) across piece views.
+- Simplified lobby sequence behavior: removed session-persisted next-piece memory so page reload always restarts sequencing from Piece 1.
 
 ### TODO
 - Add unique full experiences for pieces 2-10.

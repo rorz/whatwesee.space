@@ -5,7 +5,12 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProper
 
 const WORDS = ["WHAT", "WE", "SEE"];
 const WORD_GAP = 4;
-const GRAY_TONES = ["#151517", "#101012", "#1a1a1d", "#131316"];
+const GRAY_TONES = [
+  "rgb(21, 21, 23)",
+  "rgb(16, 16, 18)",
+  "rgb(26, 26, 29)",
+  "rgb(19, 19, 22)",
+];
 const SWARM_OFFSETS = [
   [0, 0, 3],
   [1, 0, 2],
@@ -23,10 +28,10 @@ type BackgroundTile = {
   row: number;
   col: number;
   tone: string;
-  opacityBase: number;
-  opacityPeak: number;
-  shimmerDuration: number;
-  shimmerDelay: number;
+  opacityBase: string;
+  opacityPeak: string;
+  shimmerDuration: string;
+  shimmerDelay: string;
   animate: boolean;
 };
 
@@ -44,6 +49,10 @@ type TransitionCell = {
   offsetX: number;
   offsetY: number;
   rotate: number;
+};
+
+type DocumentWithViewTransition = Document & {
+  startViewTransition?: (updateCallback: () => void | Promise<void>) => void;
 };
 
 type BackgroundLayerProps = {
@@ -76,10 +85,10 @@ const BackgroundLayer = memo(function BackgroundLayer({
         };
 
         if (tile.animate) {
-          style.animationDuration = `${tile.shimmerDuration.toFixed(2)}s`;
-          style.animationDelay = `${tile.shimmerDelay.toFixed(2)}s`;
-          style["--wws-opacity-min"] = tile.opacityBase.toFixed(3);
-          style["--wws-opacity-max"] = tile.opacityPeak.toFixed(3);
+          style.animationDuration = `${tile.shimmerDuration}s`;
+          style.animationDelay = `${tile.shimmerDelay}s`;
+          style["--wws-opacity-min"] = tile.opacityBase;
+          style["--wws-opacity-max"] = tile.opacityPeak;
         }
 
         return (
@@ -115,7 +124,8 @@ export default function Home() {
   const activeEyesRef = useRef<number[]>([]);
   const rafRef = useRef<number | null>(null);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
-  const transitionTimerRef = useRef<number | null>(null);
+  const transitionFrameRef = useRef<number | null>(null);
+  const nextPieceRef = useRef(1);
 
   useEffect(() => {
     const syncGrid = () => setGridSize(getGridSize(window.innerWidth, window.innerHeight));
@@ -130,6 +140,12 @@ export default function Home() {
     }, 190);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    for (let piece = 1; piece <= 10; piece += 1) {
+      router.prefetch(`/pieces/${piece}`);
+    }
+  }, [router]);
 
   const { cols, rows } = gridSize;
   const totalTiles = cols * rows;
@@ -150,8 +166,10 @@ export default function Home() {
         const noiseA = seededNoise(index * 17 + 7);
         const noiseB = seededNoise(index * 31 + 13);
         const noiseC = seededNoise(index * 47 + 19);
-        const opacityBase = 0.12 + noiseA * 0.12;
-        const opacityPeak = opacityBase + 0.08 + noiseB * 0.06;
+        const opacityBase = (0.12 + noiseA * 0.12).toFixed(6);
+        const opacityPeak = (
+          Number(opacityBase) + 0.08 + noiseB * 0.06
+        ).toFixed(6);
 
         return {
           index,
@@ -160,8 +178,8 @@ export default function Home() {
           tone: GRAY_TONES[Math.floor(noiseA * GRAY_TONES.length)],
           opacityBase,
           opacityPeak,
-          shimmerDuration: 8 + noiseB * 8,
-          shimmerDelay: -(noiseC * 8),
+          shimmerDuration: (8 + noiseB * 8).toFixed(2),
+          shimmerDelay: (-(noiseC * 8)).toFixed(2),
           animate: noiseC > 0.74,
         };
       }),
@@ -379,6 +397,9 @@ export default function Home() {
       if (rafRef.current !== null) {
         window.cancelAnimationFrame(rafRef.current);
       }
+      if (transitionFrameRef.current !== null) {
+        window.cancelAnimationFrame(transitionFrameRef.current);
+      }
       clearActiveEyes();
     },
     [clearActiveEyes],
@@ -421,30 +442,35 @@ export default function Home() {
       return;
     }
 
-    const piece = Math.floor(Math.random() * 10) + 1;
+    const piece = nextPieceRef.current;
+    const nextPiece = piece === 10 ? 1 : piece + 1;
+    nextPieceRef.current = nextPiece;
+
     const seed = Math.floor(Math.random() * 1_000_000);
+    const href = `/pieces/${piece}`;
+    const doc = document as DocumentWithViewTransition;
 
     setTargetPiece(piece);
     setTransitionSeed(seed);
     setIsTransitioning(true);
+    router.prefetch(href);
 
-    if (transitionTimerRef.current !== null) {
-      window.clearTimeout(transitionTimerRef.current);
+    if (transitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(transitionFrameRef.current);
     }
 
-    transitionTimerRef.current = window.setTimeout(() => {
-      router.push(`/pieces/${piece}`);
-    }, 920);
-  }, [isTransitioning, router]);
+    transitionFrameRef.current = window.requestAnimationFrame(() => {
+      transitionFrameRef.current = null;
 
-  useEffect(
-    () => () => {
-      if (transitionTimerRef.current !== null) {
-        window.clearTimeout(transitionTimerRef.current);
+      if (typeof doc.startViewTransition === "function") {
+        doc.startViewTransition(() => {
+          router.push(href);
+        });
+      } else {
+        router.push(href);
       }
-    },
-    [],
-  );
+    });
+  }, [isTransitioning, router]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">

@@ -212,3 +212,59 @@ body {
     transform: translate(-50%, -56%) scale(1.08);
   }
 }
+
+.wws-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow: hidden;
+  background: rgb(0 0 0 / 94%);
+}
+
+.wws-loading-grid {
+  position: absolute;
+  inset: -6%;
+  display: grid;
+  grid-template-columns: repeat(18, minmax(0, 1fr));
+  grid-template-rows: repeat(12, minmax(0, 1fr));
+  gap: 0.3rem;
+  transform: rotate(-3deg) scale(1.05);
+}
+
+.wws-loading-cell {
+  border: 1px solid rgb(0 0 0 / 74%);
+  opacity: 0.24;
+  animation-name: wws-loading-cell;
+  animation-duration: var(--wws-loading-duration, 1.4s);
+  animation-delay: var(--wws-loading-delay, 0s);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.wws-loading-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgb(255 255 255 / 24%);
+  background: rgb(0 0 0 / 88%);
+  padding: 0.62rem 1rem;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: white;
+}
+
+@keyframes wws-loading-cell {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
