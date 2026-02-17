@@ -43,3 +43,52 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 1 token chip readability/styling pass:
+  - Token blocks are now rectangular (width scales with token length) instead of forced squares.
+  - Removed token block borders for cleaner fields of color.
+  - Switched in-canvas token text to smaller, bolder white pixel lettering.
+  - Updated token collision bounds to use width/height so movement and barrier collisions stay coherent.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Route architecture refactor for pieces:
+  - Replaced dynamic `/pieces/[id]` routing with explicit numbered pages: `/pieces/1` ... `/pieces/10`.
+  - Added `/pieces` index redirect to `/pieces/1`.
+  - Moved route loading UI to segment-level `/app/pieces/loading.tsx` so transitions still apply across numbered pages.
+- Factored shared scaffolding into reusable modules:
+  - `app/pieces/_components/piece-view-client.tsx` now holds the interactive client renderer.
+  - `app/pieces/_components/piece-route-page.tsx` centralizes server-side page composition.
+  - `app/pieces/_lib/piece-constants.ts` centralizes piece count/titles/wrap helpers.
+  - `app/pieces/_lib/token-pool.ts` centralizes server token corpus generation.
+- Removed legacy dynamic route file `/app/pieces/[id]/page.tsx` and cleaned stale type metadata.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 1 interaction update:
+  - Added hover-driven dynamic ceiling control: cursor Y position on the canvas now sets the `y-min barrier` height in real time.
+  - On pointer leave, ceiling smoothly reverts to default ratio-based height.
+  - Added safety clamps to keep barrier within stable visual/physics bounds.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece route architecture simplification (user-requested):
+  - Removed the shared route multiplexer (`piece-view-client` + `piece-route-page`) that handled all pieces in one file.
+  - Piece 1 now has its own dedicated scene module at `app/pieces/1/token-ceiling-scene.tsx` and is wired directly from `app/pieces/1/page.tsx`.
+  - Piece 2 now has its own dedicated scene module at `app/pieces/2/latent-bloom-scene.tsx` and is wired directly from `app/pieces/2/page.tsx`.
+  - Pieces 3-10 now route directly to a shared placeholder scaffold from their own numbered page files.
+  - Shared scaffolding retained only for navigation/placeholder/constants/token-pool.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Routing architecture adjustment (user-requested):
+  - Reverted pieces back to a dynamic route at `app/pieces/[id]/page.tsx`.
+  - Implemented explicit scene mapping object in the route layer (`pieceId -> scene renderer`).
+  - Kept per-piece logic split into dedicated modules:
+    - `app/pieces/_scenes/token-ceiling-scene.tsx`
+    - `app/pieces/_scenes/latent-bloom-scene.tsx`
+  - Placeholder rendering remains shared for unimplemented pieces.
+  - Removed numbered `app/pieces/1..10/page.tsx` route files.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Restored loading boundary to dynamic segment path: `app/pieces/[id]/loading.tsx`.
