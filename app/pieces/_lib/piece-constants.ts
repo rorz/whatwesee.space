@@ -5,7 +5,7 @@ export const PIECE_TITLES = [
   "Latent Bloom",
   "Evals",
   "Quanta",
-  "Soft Prompt",
+  "Rolling Shutter",
   "State Mirror",
   "Silent Branch",
   "Fork Pulse",

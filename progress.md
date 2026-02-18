@@ -201,3 +201,19 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 5 added and titled `Rolling Shutter`:
+  - Updated title slot #5 in `app/pieces/_lib/piece-constants.ts`.
+  - Wired scene mapping in `app/pieces/[id]/page.tsx` to render new `RollingShutterScene` for piece ID 5.
+  - Updated placeholder copy to indicate pieces 1-5 are now available.
+- Implemented Unsplash-backed rapid image feed:
+  - Added server proxy route `app/api/unsplash/random/route.ts` to request squarish random photos from Unsplash API in bounded batches (`count <= 30`).
+  - Route maps payload to low-res square-friendly URLs and returns attribution links with UTM params.
+  - Route gracefully returns empty feed metadata when `UNSPLASH_ACCESS_KEY` is missing or API request fails.
+- Implemented scene `app/pieces/_scenes/rolling-shutter-scene.tsx`:
+  - Rapid frame cycling at ~0.2s cadence.
+  - Buffered queue behavior: prefetches batches and rotates from local buffer to avoid per-frame API calls.
+  - Visual treatment: square frame, rolling scanlines, jittered per-frame transforms.
+  - Attribution surface for current frame (`Photo by ... on Unsplash`) and fallback notice when key is not set.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.

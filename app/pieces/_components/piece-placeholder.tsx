@@ -16,7 +16,7 @@ export default function PiecePlaceholder({ pieceId, title }: PiecePlaceholderPro
         </p>
         <h1 className="font-pixel-square text-4xl text-lime-300 sm:text-5xl">{title}</h1>
         <p className="font-sans text-sm text-white/80">
-          This chamber is loading soon. Pieces 1, 2, 3, and 4 are currently available.
+          This chamber is loading soon. Pieces 1, 2, 3, 4, and 5 are currently available.
         </p>
         <PieceNavigationControls pieceId={pieceId} />
       </div>
