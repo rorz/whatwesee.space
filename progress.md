@@ -439,3 +439,54 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) performance optimization pass:
+  - Confirmed render path already uses a single `gl.drawArrays(gl.POINTS, ...)` draw call; instancing is not the main bottleneck here.
+  - Reduced CPU simulation cost in `app/pieces/_scenes/quanta-scene.tsx` by:
+    - Adding precomputed node inverses and fold direction vectors to avoid repeated per-point trig/division.
+    - Caching ribbon geometry per frame (`buildRibbonFrameSamples`) instead of recomputing per point.
+    - Removing per-point object/array allocations in the hot loop (reused `Float32Array` force accumulator + dedicated eye-force helper).
+    - Hoisting repeated frame constants (`damping`, `safety`, blend weights) out of the per-point loop.
+    - Initializing WebGL attribute pointers once instead of resetting each frame.
+  - Added adaptive point density based on device capability / reduced-motion preference:
+    - `12000` (low power), `18000` (medium), `26000` (high).
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) speed change (user-requested):
+  - Increased overall simulation speed by `3x` in `app/pieces/_scenes/quanta-scene.tsx` via `simulationSpeed = 3`.
+  - Applied speed multiplier to time progression, morph progression, force integration, and position integration.
+  - Added a stability clamp on accelerated step size (`stepDt <= 0.09`) to avoid runaway jumps on frame drops.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 1 (`Token Ceiling`) performance optimization pass (no material visual/behavior changes):
+  - Removed repeated per-frame layout reads by caching viewport dimensions and derived geometry (`laneWidth`, cannon x positions, default ceiling bounds) on resize.
+  - Cached ceiling gradient and only rebuilt it when width/ceiling position changes.
+  - Reduced hot-loop string work by precomputing token fill style/font and token half-dimensions at spawn.
+  - Reduced debris draw string churn by precomputing per-bit fill color and using `globalAlpha` for fade.
+  - Replaced pointer move `getBoundingClientRect` reads with `event.offsetY`.
+  - Added conservative offscreen draw culling for tokens (physics unchanged; only skip drawing when fully off-canvas).
+  - Kept spawn rate, physics constants, collision response, and scene visuals otherwise intact.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 1 runtime verification:
+  - Attempted Playwright check against `/pieces/1`, but Chromium launch is blocked in this sandbox (`mach_port_rendezvous` permission denied), so no screenshot/runtime artifact could be captured in-session.
+- Piece 7 (`Hypnogagia`) interaction smoothing + deswirl tuning:
+  - Replaced binary pointer-active warp gating with motion-driven warp energy (`pointer.motion` + `pointer.boost`) that decays over idle time.
+  - Added eased interpolation for `warpCenter`, `warpRadius`, and `warpStrength` to remove hard snap when pointer leaves canvas.
+  - Pointer leave no longer hard-resets boost; effect now unwinds smoothly from the last pointer locus.
+  - Node pull/swirl forces now scale with motion influence, and node hole-fade is keyed to current `warpStrength` instead of raw pointer presence.
+  - Added idle-aware pointer tracking (`hasPosition`, `idleTime`) so stopping cursor movement naturally deswirls the scene.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Attempted required Playwright loop with `web_game_playwright_client` and an alternate Chrome-path verifier script; browser launch is blocked in this sandbox environment (`browserType.launch ... closed` / permission-related launch failure), so screenshot/state verification could not be completed in-session.
+- Piece 7 (`Hypnogagia`) follow-up tuning (user feedback: easier return-to-nodes, less max swirl):
+  - Reduced swirl ceiling and pull intensity by lowering warp pulse amplitude, warp strength formula coefficients, and pointer influence cap.
+  - Made deswirl substantially faster when the cursor stops moving by switching motion/idle decay to real-time (`dt`) and increasing active/inactive decay rates.
+  - Increased warp scalar easing speed so visual unwind tracks the faster motion decay.
+  - Slightly reduced node velocity damping to keep movement fluid while still allowing intuitive reversion.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.

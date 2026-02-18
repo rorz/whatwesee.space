@@ -553,7 +553,15 @@ export default function HypnogagiaScene() {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-    const pointer = { x: 0, y: 0, active: false, boost: 0 };
+    const pointer = {
+      x: 0,
+      y: 0,
+      active: false,
+      hasPosition: false,
+      boost: 0,
+      motion: 0,
+      idleTime: 999,
+    };
 
     let viewportWidth = 1;
     let viewportHeight = 1;
@@ -650,6 +658,13 @@ export default function HypnogagiaScene() {
       radiusY = viewportHeight * 0.38;
       updateRenderTarget();
 
+      if (!pointer.hasPosition) {
+        pointer.x = viewportWidth * 0.5;
+        pointer.y = viewportHeight * 0.5;
+        warpCenterX = pointer.x;
+        warpCenterY = pointer.y;
+      }
+
       if (nodes.length === 0) {
         initializeNodes();
       } else {
@@ -665,46 +680,6 @@ export default function HypnogagiaScene() {
       }
     };
 
-    const destroyNodesAt = (x: number, y: number) => {
-      const blastRadius = Math.max(58, Math.min(viewportWidth, viewportHeight) * 0.15);
-      let hitCount = 0;
-
-      for (let index = 0; index < nodes.length; index += 1) {
-        const node = nodes[index];
-        const dx = node.x - x;
-        const dy = node.y - y;
-        const dist = Math.hypot(dx, dy) + 0.0001;
-
-        if (dist > blastRadius) {
-          continue;
-        }
-
-        const impact = 1 - dist / blastRadius;
-        if (impact < 0.08) {
-          continue;
-        }
-
-        node.life = 0;
-        node.respawn = Math.max(node.respawn, 0.7 + randomRange(rng, 0, 2.2));
-        node.vx += (dx / dist) * (2 + impact * 18 + randomRange(rng, -1, 1));
-        node.vy += (dy / dist) * (2 + impact * 18 + randomRange(rng, -1, 1));
-        node.phase += impact * 0.9;
-        hitCount += 1;
-      }
-
-      if (hitCount === 0 && hoveredNodeIndex >= 0) {
-        const node = nodes[hoveredNodeIndex];
-        node.life = 0;
-        node.respawn = Math.max(node.respawn, 0.85 + randomRange(rng, 0, 1.6));
-        node.vx += randomRange(rng, -8, 8);
-        node.vy += randomRange(rng, -8, 8);
-        hitCount = 1;
-      }
-
-      screenShake = clamp(screenShake + 0.24 + hitCount * 0.022, 0, 1.6);
-      pointer.boost = clamp(pointer.boost + 0.45, 0, 1.6);
-    };
-
     const simulate = (dtSeconds: number) => {
       const dt = clamp(dtSeconds, 0.001, 0.05);
       const simDt = dt * 0.1;
@@ -712,6 +687,10 @@ export default function HypnogagiaScene() {
       simulationTime += simDt;
 
       pointer.boost = Math.max(0, pointer.boost - simDt * 0.68);
+      pointer.idleTime += dt;
+      const idlePenalty = pointer.idleTime > 0.06 ? (pointer.idleTime - 0.06) * 2.8 : 0;
+      const motionDecay = (pointer.active ? 1.35 : 3.9) + idlePenalty;
+      pointer.motion = Math.max(0, pointer.motion - dt * motionDecay);
       screenShake = Math.max(0, screenShake - simDt * 1.35);
 
       const motifPhase = simulationTime / 13;
@@ -769,23 +748,28 @@ export default function HypnogagiaScene() {
 
       const pointerRadius = Math.max(130, Math.min(viewportWidth, viewportHeight) * 0.28);
       const pointerRadiusSq = pointerRadius * pointerRadius;
+      const defaultWarpRadius = Math.max(220, Math.min(viewportWidth, viewportHeight) * 0.74);
+      const warpPulse =
+        0.38 + (0.5 + 0.5 * Math.sin(simulationTime * 8.2 + pointer.boost * 5.1)) * 0.52;
+      const isWarpEngaged = pointer.hasPosition && (pointer.motion > 0.015 || pointer.boost > 0.02);
+      const motionEnergy = pointer.motion * (pointer.active ? 1 : 0.78);
+      const warpSpan = clamp(motionEnergy + pointer.boost, 0, 2.4);
+      const targetWarpCenterX = isWarpEngaged ? pointer.x : viewportWidth * 0.5;
+      const targetWarpCenterY = isWarpEngaged ? pointer.y : viewportHeight * 0.5;
+      const targetWarpRadius = isWarpEngaged
+        ? Math.max(250, Math.min(viewportWidth, viewportHeight) * (0.88 + 0.12 * warpSpan))
+        : defaultWarpRadius;
+      const targetWarpStrength = isWarpEngaged
+        ? clamp(motionEnergy * (2.4 + warpPulse * 0.8) + pointer.boost * 1.8, 0, 6.5)
+        : 0;
+      const centerEase = 1 - Math.exp(-simDt * 13);
+      const scalarEase = 1 - Math.exp(-simDt * 16);
+      warpCenterX += (targetWarpCenterX - warpCenterX) * centerEase;
+      warpCenterY += (targetWarpCenterY - warpCenterY) * centerEase;
+      warpRadius += (targetWarpRadius - warpRadius) * scalarEase;
+      warpStrength += (targetWarpStrength - warpStrength) * scalarEase;
 
-      if (pointer.active) {
-        warpCenterX = pointer.x;
-        warpCenterY = pointer.y;
-        warpRadius = Math.max(
-          260,
-          Math.min(viewportWidth, viewportHeight) * (1.08 + 0.35 * pointer.boost),
-        );
-        const warpPulse =
-          0.52 + (0.5 + 0.5 * Math.sin(simulationTime * 8.2 + pointer.boost * 5.1)) * 0.76;
-        warpStrength = clamp(3.2 + pointer.boost * 2.9 + warpPulse, 0, 9);
-      } else {
-        warpCenterX = viewportWidth * 0.5;
-        warpCenterY = viewportHeight * 0.5;
-        warpRadius = Math.max(220, Math.min(viewportWidth, viewportHeight) * 0.74);
-        warpStrength = Math.max(0, warpStrength - simDt * 4.8);
-      }
+      const pointerInfluence = clamp(pointer.motion + pointer.boost * 0.7, 0, 1.25);
 
       destroyedCount = 0;
 
@@ -869,22 +853,22 @@ export default function HypnogagiaScene() {
         node.vx += flowX * (0.02 + streamStrength * 0.025) * dtFrames * vitality;
         node.vy += flowY * (0.02 + streamStrength * 0.025) * dtFrames * vitality;
 
-        if (pointer.active && node.life > 0.08) {
+        if (pointer.active && node.life > 0.08 && pointerInfluence > 0.01) {
           const dx = pointer.x - node.x;
           const dy = pointer.y - node.y;
           const distSq = dx * dx + dy * dy;
           if (distSq < pointerRadiusSq) {
             const pull = Math.exp(-distSq / pointerRadiusSq);
-            const pointerForce = (0.018 + pointer.boost * 0.065) * pull * dtFrames;
+            const pointerForce = (0.006 + pointerInfluence * 0.043) * pull * dtFrames;
             node.vx += dx * pointerForce;
             node.vy += dy * pointerForce;
-            const swirlForce = (0.006 + pointer.boost * 0.022) * pull * dtFrames;
+            const swirlForce = (0.0022 + pointerInfluence * 0.014) * pull * dtFrames;
             node.vx += -dy * swirlForce;
             node.vy += dx * swirlForce;
           }
         }
 
-        const damping = Math.pow(0.83 + node.life * 0.11, dtFrames);
+        const damping = Math.pow(0.845 + node.life * 0.105, dtFrames);
         node.vx *= damping;
         node.vy *= damping;
         node.x += node.vx * dtFrames;
@@ -899,7 +883,7 @@ export default function HypnogagiaScene() {
         let alpha = alphaBase * (0.12 + node.life * 0.88);
         let size = (1.1 + node.spark * 1.9 + pulse * 1.8) * (0.35 + node.life * 0.65);
 
-        if (pointer.active) {
+        if (warpStrength > 0.001) {
           const dxWarp = node.x - warpCenterX;
           const dyWarp = node.y - warpCenterY;
           const normWarp = Math.hypot(dxWarp, dyWarp) / Math.max(1, warpRadius);
@@ -1254,22 +1238,41 @@ export default function HypnogagiaScene() {
 
     const onPointerMove = (event: PointerEvent) => {
       const bounds = canvas.getBoundingClientRect();
-      pointer.x = event.clientX - bounds.left;
-      pointer.y = event.clientY - bounds.top;
+      const nextX = event.clientX - bounds.left;
+      const nextY = event.clientY - bounds.top;
+      if (pointer.hasPosition) {
+        const travel = Math.hypot(nextX - pointer.x, nextY - pointer.y);
+        pointer.motion = clamp(pointer.motion + travel * 0.012, 0, 2.4);
+      } else {
+        pointer.motion = Math.max(pointer.motion, 0.3);
+      }
+      pointer.x = nextX;
+      pointer.y = nextY;
       pointer.active = true;
+      pointer.hasPosition = true;
+      pointer.idleTime = 0;
     };
 
     const onPointerDown = (event: PointerEvent) => {
       const bounds = canvas.getBoundingClientRect();
-      pointer.x = event.clientX - bounds.left;
-      pointer.y = event.clientY - bounds.top;
+      const nextX = event.clientX - bounds.left;
+      const nextY = event.clientY - bounds.top;
+      if (pointer.hasPosition) {
+        const travel = Math.hypot(nextX - pointer.x, nextY - pointer.y);
+        pointer.motion = clamp(pointer.motion + travel * 0.012, 0, 2.4);
+      } else {
+        pointer.motion = Math.max(pointer.motion, 0.3);
+      }
+      pointer.x = nextX;
+      pointer.y = nextY;
       pointer.active = true;
-      destroyNodesAt(pointer.x, pointer.y);
+      pointer.hasPosition = true;
+      pointer.idleTime = 0;
     };
 
     const onPointerLeave = () => {
       pointer.active = false;
-      pointer.boost = 0;
+      pointer.idleTime = Math.max(pointer.idleTime, 0.14);
     };
 
     let rafId = 0;

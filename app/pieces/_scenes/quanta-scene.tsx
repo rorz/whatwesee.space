@@ -9,6 +9,8 @@ type CloudNode = {
   y: number;
   rx: number;
   ry: number;
+  invRxSq: number;
+  invRySq: number;
   weight: number;
 };
 
@@ -26,10 +28,24 @@ type CloudRibbon = {
 
 type CloudFold = {
   angle: number;
+  cosAngle: number;
+  sinAngle: number;
+  normalX: number;
+  normalY: number;
   frequency: number;
   amplitude: number;
   phase: number;
   speed: number;
+};
+
+type RibbonFrameSample = {
+  ax: number;
+  ay: number;
+  segDx: number;
+  segDy: number;
+  segLenSq: number;
+  widthSq: number;
+  weight: number;
 };
 
 type CloudState = {
@@ -98,11 +114,15 @@ function createCloudState(seed: number): CloudState {
 
   const nodes: CloudNode[] = [];
   for (let index = 0; index < nodeCount; index += 1) {
+    const rx = randomRange(rng, 0.16, 0.48);
+    const ry = randomRange(rng, 0.14, 0.44);
     nodes.push({
       x: randomRange(rng, -0.95, 0.95),
       y: randomRange(rng, -0.86, 0.86),
-      rx: randomRange(rng, 0.16, 0.48),
-      ry: randomRange(rng, 0.14, 0.44),
+      rx,
+      ry,
+      invRxSq: 1 / (rx * rx + 0.0001),
+      invRySq: 1 / (ry * ry + 0.0001),
       weight: rng() > 0.24 ? randomRange(rng, 0.7, 1.5) : -randomRange(rng, 0.45, 1.1),
     });
   }
@@ -124,8 +144,15 @@ function createCloudState(seed: number): CloudState {
 
   const folds: CloudFold[] = [];
   for (let index = 0; index < foldCount; index += 1) {
+    const angle = randomRange(rng, 0, Math.PI * 2);
+    const cosAngle = Math.cos(angle);
+    const sinAngle = Math.sin(angle);
     folds.push({
-      angle: randomRange(rng, 0, Math.PI * 2),
+      angle,
+      cosAngle,
+      sinAngle,
+      normalX: -sinAngle,
+      normalY: cosAngle,
       frequency: randomRange(rng, 2.2, 8.4),
       amplitude: randomRange(rng, 0.03, 0.1),
       phase: randomRange(rng, 0, Math.PI * 2),
@@ -156,51 +183,8 @@ function createCloudState(seed: number): CloudState {
   };
 }
 
-function applyCloudForces(
-  state: CloudState,
-  x: number,
-  y: number,
-  baseX: number,
-  baseY: number,
-  time: number,
-  phase: number,
-  weight: number,
-  force: { x: number; y: number },
-): void {
-  if (weight <= 0.0001) {
-    return;
-  }
-
-  const scale = state.scale;
-  force.x += (baseX * scale - x) * 0.62 * weight;
-  force.y += (baseY * scale - y) * 0.62 * weight;
-
-  for (let index = 0; index < state.folds.length; index += 1) {
-    const fold = state.folds[index];
-    const along =
-      baseX * Math.cos(fold.angle) +
-      baseY * Math.sin(fold.angle) +
-      state.driftX * x * 1.6 +
-      state.driftY * y * 1.6;
-    const wave = Math.sin(along * fold.frequency + time * fold.speed + fold.phase + phase * 6.1);
-    const normalX = -Math.sin(fold.angle);
-    const normalY = Math.cos(fold.angle);
-    const strength = fold.amplitude * wave * weight * 2.6;
-    force.x += normalX * strength;
-    force.y += normalY * strength;
-  }
-
-  for (let index = 0; index < state.nodes.length; index += 1) {
-    const node = state.nodes[index];
-    const dx = x - node.x;
-    const dy = y - node.y;
-    const influence = Math.exp(
-      -((dx * dx) / (node.rx * node.rx + 0.0001) + (dy * dy) / (node.ry * node.ry + 0.0001)),
-    );
-    const pull = node.weight * influence * weight * 3.8;
-    force.x += -dx * pull;
-    force.y += -dy * pull;
-  }
+function buildRibbonFrameSamples(state: CloudState, time: number): RibbonFrameSample[] {
+  const samples: RibbonFrameSample[] = [];
 
   for (let index = 0; index < state.ribbons.length; index += 1) {
     const ribbon = state.ribbons[index];
@@ -220,55 +204,116 @@ function applyCloudForces(
 
     const segDx = bx - ax;
     const segDy = by - ay;
-    const segLenSq = segDx * segDx + segDy * segDy + 0.0001;
-    const t = clamp(((x - ax) * segDx + (y - ay) * segDy) / segLenSq, 0, 1);
-    const nearestX = ax + segDx * t;
-    const nearestY = ay + segDy * t;
+
+    samples.push({
+      ax,
+      ay,
+      segDx,
+      segDy,
+      segLenSq: segDx * segDx + segDy * segDy + 0.0001,
+      widthSq: ribbon.width * ribbon.width + 0.0001,
+      weight: ribbon.weight,
+    });
+  }
+
+  return samples;
+}
+
+function applyEyeForces(
+  x: number,
+  y: number,
+  eyeX: number,
+  eyeY: number,
+  eyeRadius: number,
+  eyeInfluence: number,
+  force: Float32Array,
+): void {
+  const dx = x - eyeX;
+  const dy = y - eyeY;
+  const dist = Math.hypot(dx, dy) + 0.0001;
+
+  const ringDist = dist - eyeRadius;
+  const ring = Math.exp(-(ringDist * ringDist) / (eyeRadius * eyeRadius * 0.58 + 0.0001));
+  force[0] += (dx / dist) * ring * eyeInfluence * 0.95;
+  force[1] += (dy / dist) * ring * eyeInfluence * 0.95;
+
+  const pupil = Math.exp(-(dist * dist) / (eyeRadius * eyeRadius * 0.52 + 0.0001));
+  force[0] += -dx * pupil * eyeInfluence * 1.5;
+  force[1] += -dy * pupil * eyeInfluence * 1.5;
+}
+
+function applyCloudForces(
+  state: CloudState,
+  ribbonSamples: RibbonFrameSample[],
+  x: number,
+  y: number,
+  baseX: number,
+  baseY: number,
+  time: number,
+  phase: number,
+  weight: number,
+  force: Float32Array,
+): void {
+  if (weight <= 0.0001) {
+    return;
+  }
+
+  const scale = state.scale;
+  force[0] += (baseX * scale - x) * 0.62 * weight;
+  force[1] += (baseY * scale - y) * 0.62 * weight;
+
+  for (let index = 0; index < state.folds.length; index += 1) {
+    const fold = state.folds[index];
+    const along =
+      baseX * fold.cosAngle +
+      baseY * fold.sinAngle +
+      state.driftX * x * 1.6 +
+      state.driftY * y * 1.6;
+    const wave = Math.sin(along * fold.frequency + time * fold.speed + fold.phase + phase * 6.1);
+    const strength = fold.amplitude * wave * weight * 2.6;
+    force[0] += fold.normalX * strength;
+    force[1] += fold.normalY * strength;
+  }
+
+  for (let index = 0; index < state.nodes.length; index += 1) {
+    const node = state.nodes[index];
+    const dx = x - node.x;
+    const dy = y - node.y;
+    const influence = Math.exp(-(dx * dx * node.invRxSq + dy * dy * node.invRySq));
+    const pull = node.weight * influence * weight * 3.8;
+    force[0] += -dx * pull;
+    force[1] += -dy * pull;
+  }
+
+  for (let index = 0; index < ribbonSamples.length; index += 1) {
+    const ribbon = ribbonSamples[index];
+    const t = clamp(((x - ribbon.ax) * ribbon.segDx + (y - ribbon.ay) * ribbon.segDy) / ribbon.segLenSq, 0, 1);
+    const nearestX = ribbon.ax + ribbon.segDx * t;
+    const nearestY = ribbon.ay + ribbon.segDy * t;
 
     const nx = nearestX - x;
     const ny = nearestY - y;
     const distSq = nx * nx + ny * ny;
-    const influence = Math.exp(-distSq / (ribbon.width * ribbon.width + 0.0001));
+    const influence = Math.exp(-distSq / ribbon.widthSq);
     const pull = influence * ribbon.weight * weight * 1.45;
 
-    force.x += nx * pull;
-    force.y += ny * pull;
+    force[0] += nx * pull;
+    force[1] += ny * pull;
   }
 
   const symmetryBias = state.symmetry * (0.24 + state.eyeHint * 0.76) * weight;
   const mirrorX = state.axisX - (x - state.axisX);
   const symmetryMask = Math.exp(-Math.abs(y - state.eyeY) * 1.9);
-  force.x += (mirrorX - x) * symmetryBias * symmetryMask;
+  force[0] += (mirrorX - x) * symmetryBias * symmetryMask;
 
   const eyeInfluence = state.eyeHint * weight;
   if (eyeInfluence > 0.01) {
     const leftEyeX = state.axisX - state.eyeSeparation * 0.5;
     const rightEyeX = state.axisX + state.eyeSeparation * 0.5;
     const eyeY = state.eyeY;
-    const eyeRadius = state.eyeRadius;
 
-    const eyeCenters: Array<[number, number]> = [
-      [leftEyeX, eyeY],
-      [rightEyeX, eyeY],
-    ];
-
-    for (let eyeIndex = 0; eyeIndex < eyeCenters.length; eyeIndex += 1) {
-      const eye = eyeCenters[eyeIndex];
-      const ex = eye[0];
-      const ey = eye[1];
-      const dx = x - ex;
-      const dy = y - ey;
-      const dist = Math.hypot(dx, dy) + 0.0001;
-
-      const ringDist = dist - eyeRadius;
-      const ring = Math.exp(-(ringDist * ringDist) / (eyeRadius * eyeRadius * 0.58 + 0.0001));
-      force.x += (dx / dist) * ring * eyeInfluence * 0.95;
-      force.y += (dy / dist) * ring * eyeInfluence * 0.95;
-
-      const pupil = Math.exp(-(dist * dist) / (eyeRadius * eyeRadius * 0.52 + 0.0001));
-      force.x += -dx * pupil * eyeInfluence * 1.5;
-      force.y += -dy * pupil * eyeInfluence * 1.5;
-    }
+    applyEyeForces(x, y, leftEyeX, eyeY, state.eyeRadius, eyeInfluence, force);
+    applyEyeForces(x, y, rightEyeX, eyeY, state.eyeRadius, eyeInfluence, force);
 
     const localX = (x - state.axisX) / Math.max(0.01, state.mouthWidth);
     const smileY = state.mouthY + Math.sin(localX * Math.PI) * state.mouthArc;
@@ -276,15 +321,15 @@ function applyCloudForces(
     const mouthBand =
       Math.exp(-(mouthDelta * mouthDelta) / 0.018) * Math.exp(-Math.abs(localX) * 1.35);
 
-    force.y += mouthDelta * mouthBand * eyeInfluence * 1.3;
-    force.x += -(x - state.axisX) * mouthBand * eyeInfluence * 0.16;
+    force[1] += mouthDelta * mouthBand * eyeInfluence * 1.3;
+    force[0] += -(x - state.axisX) * mouthBand * eyeInfluence * 0.16;
   }
 
   const turbulence =
     Math.sin((x + baseX) * 3.7 + time * 0.51 + phase * 11.2) *
     Math.cos((y - baseY) * 4.3 + time * 0.43 + phase * 7.4);
-  force.x += Math.cos(turbulence + phase * 5.7) * 0.018 * weight;
-  force.y += Math.sin(turbulence - phase * 3.9) * 0.018 * weight;
+  force[0] += Math.cos(turbulence + phase * 5.7) * 0.018 * weight;
+  force[1] += Math.sin(turbulence - phase * 3.9) * 0.018 * weight;
 }
 
 function createShader(
@@ -408,7 +453,16 @@ export default function QuantaScene() {
       return;
     }
 
-    const pointCount = 26000;
+    const navigatorInfo = navigator as Navigator & { deviceMemory?: number };
+    const hardwareThreads = navigatorInfo.hardwareConcurrency ?? 8;
+    const deviceMemory = navigatorInfo.deviceMemory ?? 8;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pointCount =
+      prefersReducedMotion || hardwareThreads <= 4 || deviceMemory <= 4
+        ? 12000
+        : hardwareThreads <= 8 || deviceMemory <= 8
+          ? 18000
+          : 26000;
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
     const loadSeed = getRandomUint32();
     const angleOffset = seededNoise(loadSeed * 0.0000013 + 0.37) * Math.PI * 2;
@@ -476,6 +530,8 @@ export default function QuantaScene() {
     let morphElapsed = 0;
     let morphDuration = (currentState.duration + nextState.duration) * 0.5;
     let aspectScaleX = 1;
+    let pointSize = 4;
+    const simulationSpeed = 3;
 
     let rafId = 0;
     let lastTime = performance.now();
@@ -492,28 +548,41 @@ export default function QuantaScene() {
 
       gl.viewport(0, 0, canvas.width, canvas.height);
       aspectScaleX = Math.min(1, (height / width) * 1.2);
+      pointSize = Math.min(7.2, Math.max(3.2, dpr * 3.2));
+      gl.uniform1f(pointSizeLocation, pointSize);
     };
 
-    resize();
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, alphaBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, alphas, gl.STATIC_DRAW);
+    gl.useProgram(program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, renderPositions.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(colorLocation);
+    gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, alphaBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, alphas, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(alphaLocation);
+    gl.vertexAttribPointer(alphaLocation, 1, gl.FLOAT, false, 0, 0);
+
+    resize();
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    const force = new Float32Array(2);
+    const safety = 0.992;
 
     const frame = (now: number) => {
       const dt = Math.min(0.033, (now - lastTime) / 1000);
       lastTime = now;
-      const time = now * 0.001;
+      const stepDt = Math.min(0.09, dt * simulationSpeed);
+      const time = now * 0.001 * simulationSpeed;
 
-      morphElapsed += dt;
+      morphElapsed += stepDt;
       let morph = morphElapsed / morphDuration;
 
       if (morph >= 1) {
@@ -526,6 +595,11 @@ export default function QuantaScene() {
       }
 
       const blend = smoothstep01(morph);
+      const currentWeight = 1 - blend;
+      const nextWeight = blend;
+      const damping = Math.exp(-stepDt * 4.6);
+      const currentRibbonSamples = buildRibbonFrameSamples(currentState, time);
+      const nextRibbonSamples = buildRibbonFrameSamples(nextState, time);
 
       for (let index = 0; index < pointCount; index += 1) {
         const offsetIndex = index * 2;
@@ -535,20 +609,41 @@ export default function QuantaScene() {
         let x = currentPositions[offsetIndex];
         let y = currentPositions[offsetIndex + 1];
 
-        const force = { x: 0, y: 0 };
+        force[0] = 0;
+        force[1] = 0;
         const phase = phaseOffsets[index];
 
-        applyCloudForces(currentState, x, y, baseX, baseY, time, phase, 1 - blend, force);
-        applyCloudForces(nextState, x, y, baseX, baseY, time, phase, blend, force);
+        applyCloudForces(
+          currentState,
+          currentRibbonSamples,
+          x,
+          y,
+          baseX,
+          baseY,
+          time,
+          phase,
+          currentWeight,
+          force,
+        );
+        applyCloudForces(
+          nextState,
+          nextRibbonSamples,
+          x,
+          y,
+          baseX,
+          baseY,
+          time,
+          phase,
+          nextWeight,
+          force,
+        );
 
-        const damping = Math.exp(-dt * 4.6);
-        velocities[offsetIndex] = velocities[offsetIndex] * damping + force.x * dt * 2.4;
-        velocities[offsetIndex + 1] = velocities[offsetIndex + 1] * damping + force.y * dt * 2.4;
+        velocities[offsetIndex] = velocities[offsetIndex] * damping + force[0] * stepDt * 2.4;
+        velocities[offsetIndex + 1] = velocities[offsetIndex + 1] * damping + force[1] * stepDt * 2.4;
 
-        x += velocities[offsetIndex] * dt;
-        y += velocities[offsetIndex + 1] * dt;
+        x += velocities[offsetIndex] * stepDt;
+        y += velocities[offsetIndex + 1] * stepDt;
 
-        const safety = 0.992;
         if (x > safety || x < -safety) {
           velocities[offsetIndex] *= -0.4;
         }
@@ -569,23 +664,8 @@ export default function QuantaScene() {
       gl.clearColor(0.95, 0.965, 0.988, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
 
-      gl.useProgram(program);
-
-      const pointSize = Math.min(7.2, Math.max(3.2, (window.devicePixelRatio || 1) * 3.2));
-      gl.uniform1f(pointSizeLocation, pointSize);
-
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderPositions);
-      gl.enableVertexAttribArray(positionLocation);
-      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-      gl.enableVertexAttribArray(colorLocation);
-      gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, alphaBuffer);
-      gl.enableVertexAttribArray(alphaLocation);
-      gl.vertexAttribPointer(alphaLocation, 1, gl.FLOAT, false, 0, 0);
 
       gl.drawArrays(gl.POINTS, 0, pointCount);
       rafId = window.requestAnimationFrame(frame);

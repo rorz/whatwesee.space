@@ -11,12 +11,16 @@ type Token = {
   vx: number;
   vy: number;
   width: number;
+  halfWidth: number;
   height: number;
+  halfHeight: number;
   angle: number;
   spin: number;
   hue: number;
   saturation: number;
   lightness: number;
+  fillStyle: string;
+  textFont: string;
   label: string;
 };
 
@@ -31,6 +35,7 @@ type CeilingBit = {
   maxLife: number;
   hue: number;
   lightness: number;
+  fillStyle: string;
 };
 
 const FALLBACK_TOKEN_POOL = [
@@ -56,12 +61,16 @@ function emptyToken(): Token {
     vx: 0,
     vy: 0,
     width: 0,
+    halfWidth: 0,
     height: 0,
+    halfHeight: 0,
     angle: 0,
     spin: 0,
     hue: 0,
     saturation: 0,
     lightness: 0,
+    fillStyle: "hsl(0 0% 0%)",
+    textFont: "800 6px var(--font-geist-pixel-square), monospace",
     label: "DATA",
   };
 }
@@ -78,6 +87,7 @@ function emptyCeilingBit(): CeilingBit {
     maxLife: 0,
     hue: 0,
     lightness: 0,
+    fillStyle: "hsl(0 0% 0%)",
   };
 }
 
@@ -111,6 +121,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
     const maxCeilingBits = 1500;
     const gravity = 840;
     const ceilingRatio = 0.1;
+    const ceilingMinY = 28;
     const spawnRate = 235;
     const cannonCount = 7;
     const tokens = Array.from({ length: maxTokens }, emptyToken);
@@ -122,27 +133,47 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
     let pointerCeilingY: number | null = null;
     let rafId = 0;
     let lastTime = performance.now();
+    let viewportWidth = 1;
+    let viewportHeight = 1;
+    let laneWidth = 1;
+    let defaultCeilingY = 52;
+    let ceilingMaxY = 88;
+    let floorY = 190;
+    const cannonX = new Float32Array(cannonCount);
+    let ceilingGradient: CanvasGradient | null = null;
+    let ceilingGradientWidth = -1;
+    let ceilingGradientY = -1;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      viewportWidth = window.innerWidth;
+      viewportHeight = window.innerHeight;
+      laneWidth = viewportWidth / (cannonCount + 1);
+      defaultCeilingY = Math.max(52, viewportHeight * ceilingRatio);
+      ceilingMaxY = Math.max(ceilingMinY + 36, viewportHeight - 112);
+      floorY = viewportHeight + 90;
+      for (let cannon = 0; cannon < cannonCount; cannon += 1) {
+        cannonX[cannon] = laneWidth * (cannon + 1);
+      }
+      ceilingGradient = null;
+      ceilingGradientWidth = -1;
+      ceilingGradientY = -1;
+
+      canvas.width = Math.floor(viewportWidth * dpr);
+      canvas.height = Math.floor(viewportHeight * dpr);
+      canvas.style.width = `${viewportWidth}px`;
+      canvas.style.height = `${viewportHeight}px`;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const spawnToken = (width: number, height: number) => {
+    const spawnToken = () => {
       const token = tokens[spawnIndex % maxTokens];
       const lane = spawnIndex % cannonCount;
-      const laneWidth = width / (cannonCount + 1);
-      const originX = laneWidth * (lane + 1) + (Math.random() - 0.5) * laneWidth * 0.36;
+      const originX = cannonX[lane] + (Math.random() - 0.5) * laneWidth * 0.36;
 
       token.active = true;
       token.x = originX;
-      token.y = height + 14 + Math.random() * 40;
+      token.y = viewportHeight + 14 + Math.random() * 40;
       token.vx = (Math.random() - 0.5) * 260 + (lane - (cannonCount - 1) / 2) * 34;
       token.vy = -(860 + Math.random() * 980);
       token.angle = Math.random() * Math.PI * 2;
@@ -150,6 +181,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       token.hue = Math.random() * 360;
       token.saturation = 86 + Math.random() * 13;
       token.lightness = 52 + Math.random() * 18;
+      token.fillStyle = `hsl(${token.hue} ${token.saturation}% ${token.lightness}%)`;
       token.label =
         labelPool[
           (spawnIndex + Math.floor(Math.random() * labelPool.length)) % labelPool.length
@@ -159,6 +191,9 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
         token.height * 1.12,
         token.height * (0.72 + token.label.length * 0.3),
       );
+      token.halfWidth = token.width * 0.5;
+      token.halfHeight = token.height * 0.5;
+      token.textFont = `800 ${Math.max(5.8, token.height * 0.35)}px var(--font-geist-pixel-square), monospace`;
 
       spawnIndex += 1;
     };
@@ -186,6 +221,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
         bit.life = bit.maxLife;
         bit.hue = (hue + (Math.random() - 0.5) * 24 + 360) % 360;
         bit.lightness = 58 + Math.random() * 22;
+        bit.fillStyle = `hsl(${bit.hue} 95% ${bit.lightness}%)`;
       }
     };
 
@@ -193,12 +229,10 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       context.save();
       context.translate(token.x, token.y);
       context.rotate(token.angle);
-      context.fillStyle = `hsl(${token.hue} ${token.saturation}% ${token.lightness}%)`;
-      context.fillRect(-token.width / 2, -token.height / 2, token.width, token.height);
+      context.fillStyle = token.fillStyle;
+      context.fillRect(-token.halfWidth, -token.halfHeight, token.width, token.height);
       context.fillStyle = "rgba(255,255,255,0.96)";
-      context.font = `800 ${Math.max(5.8, token.height * 0.35)}px var(--font-geist-pixel-square), monospace`;
-      context.textAlign = "center";
-      context.textBaseline = "middle";
+      context.font = token.textFont;
       context.fillText(token.label, 0, 0);
       context.restore();
     };
@@ -208,13 +242,13 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       const side = Math.max(1, Math.round(bit.size * (0.7 + alpha * 0.55)));
       const x = Math.round(bit.x - side * 0.5);
       const y = Math.round(bit.y - side * 0.5);
-      context.fillStyle = `hsla(${bit.hue} 95% ${bit.lightness}% / ${alpha * 0.95})`;
+      context.globalAlpha = alpha * 0.95;
+      context.fillStyle = bit.fillStyle;
       context.fillRect(x, y, side, side);
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      const bounds = canvas.getBoundingClientRect();
-      pointerCeilingY = event.clientY - bounds.top;
+      pointerCeilingY = event.offsetY;
     };
 
     const onPointerLeave = () => {
@@ -227,29 +261,35 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       const dt = Math.min(0.033, (now - lastTime) / 1000);
       lastTime = now;
 
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      const defaultCeilingY = Math.max(52, height * ceilingRatio);
-      const ceilingMinY = 28;
-      const ceilingMaxY = Math.max(ceilingMinY + 36, height - 112);
+      const width = viewportWidth;
+      const height = viewportHeight;
       const ceilingY =
         pointerCeilingY === null
           ? defaultCeilingY
           : clamp(pointerCeilingY, ceilingMinY, ceilingMaxY);
-      const floorY = height + 90;
+      const ceilingGradientYKey = Math.round((ceilingY + 8) * 2) / 2;
 
       spawnAccumulator += dt * spawnRate;
       while (spawnAccumulator >= 1) {
         spawnAccumulator -= 1;
-        spawnToken(width, height);
+        spawnToken();
       }
 
+      context.globalAlpha = 1;
       context.fillStyle = "rgba(3, 5, 9, 0.24)";
       context.fillRect(0, 0, width, height);
 
-      const ceilingGradient = context.createLinearGradient(0, 0, 0, ceilingY + 8);
-      ceilingGradient.addColorStop(0, "rgba(255, 122, 25, 0.16)");
-      ceilingGradient.addColorStop(1, "rgba(255, 122, 25, 0)");
+      if (
+        !ceilingGradient ||
+        ceilingGradientWidth !== width ||
+        ceilingGradientY !== ceilingGradientYKey
+      ) {
+        ceilingGradient = context.createLinearGradient(0, 0, 0, ceilingGradientYKey);
+        ceilingGradient.addColorStop(0, "rgba(255, 122, 25, 0.16)");
+        ceilingGradient.addColorStop(1, "rgba(255, 122, 25, 0)");
+        ceilingGradientWidth = width;
+        ceilingGradientY = ceilingGradientYKey;
+      }
       context.fillStyle = ceilingGradient;
       context.fillRect(0, 0, width, ceilingY + 8);
       context.strokeStyle = "rgba(255, 122, 25, 0.86)";
@@ -265,13 +305,13 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       context.textBaseline = "top";
       context.fillText("y-min barrier", 14, Math.max(8, ceilingY - 18));
 
-      const cannonWidth = width / (cannonCount + 1);
       for (let cannon = 0; cannon < cannonCount; cannon += 1) {
-        const x = cannonWidth * (cannon + 1);
         context.fillStyle = "rgba(255, 122, 25, 0.4)";
-        context.fillRect(x - 8, height - 18, 16, 18);
+        context.fillRect(cannonX[cannon] - 8, height - 18, 16, 18);
       }
 
+      context.textAlign = "center";
+      context.textBaseline = "middle";
       for (let i = 0; i < maxTokens; i += 1) {
         const token = tokens[i];
         if (!token.active) {
@@ -283,8 +323,8 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
         token.y += token.vy * dt;
         token.angle += token.spin * dt;
 
-        const halfWidth = token.width / 2;
-        const halfHeight = token.height / 2;
+        const halfWidth = token.halfWidth;
+        const halfHeight = token.halfHeight;
 
         if (token.y - halfHeight <= ceilingY && token.vy < 0) {
           const impactVelocity = token.vy;
@@ -305,6 +345,15 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
 
         if (token.y - halfHeight > floorY) {
           token.active = false;
+          continue;
+        }
+
+        if (
+          token.x + halfWidth < -12 ||
+          token.x - halfWidth > width + 12 ||
+          token.y + halfHeight < -16 ||
+          token.y - halfHeight > height + 16
+        ) {
           continue;
         }
 
@@ -335,6 +384,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
 
         drawCeilingBit(bit);
       }
+      context.globalAlpha = 1;
 
       rafId = window.requestAnimationFrame(frame);
     };
