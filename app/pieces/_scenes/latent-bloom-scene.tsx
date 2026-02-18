@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type Vec2 = {
   x: number;
@@ -733,17 +732,15 @@ export default function LatentBloomScene() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_55%_40%,rgba(125,171,102,0.12),transparent_58%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-black/20 bg-white/70 px-4 py-4 backdrop-blur-sm relative">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-emerald-900/78">
-          Exhibition Piece 2 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={6} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-emerald-900 sm:text-4xl">
           Latent Bloom
         </h1>
         <p className="font-sans text-xs leading-relaxed text-black/78 sm:text-sm">
-          A kinetic ink-garden: branch canopies split, fork, and flower into vivid micro-blooms.
-          Click to plant fresh trunks and drag to bend growth into new botanical currents.
+          Click spawns growth seeds, and drag bends branch trajectories as canopies and blooms
+          expand over time. The growth feels responsive and unexpectedly tender.
         </p>
-        <PieceNavigationControls pieceId={2} />
+        <PieceNavigationControls pieceId={6} hideQuickLinks />
       </div>
     </div>
   );

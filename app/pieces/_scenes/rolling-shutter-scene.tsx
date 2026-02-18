@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 import type { RollingShutterFrame } from "../_lib/rolling-shutter-types";
 
 const ROTATION_INTERVAL_MS = 200;
@@ -16,13 +15,6 @@ const NAME_LIFETIME_MS = 5000;
 const NAME_SPAWN_INTERVAL_MS = 560;
 const NAME_TICK_INTERVAL_MS = 80;
 const MAX_NAME_BUBBLES = 20;
-
-const MYSTIC_LOADING_LINES = [
-  "Summoning latent reels",
-  "Threading fractured memory",
-  "Listening for distant shutters",
-  "Aligning the hidden archive",
-] as const;
 
 const OPEN_IMAGES_DOWNLOAD_PAGE =
   "https://storage.googleapis.com/openimages/web/download_v7.html#download-manually";
@@ -61,16 +53,15 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function makeFallbackImage(index: number): RollingShutterFrame {
-  const warm = Math.floor(55 + seededNoise(index * 2.1 + 3.7) * 95);
-  const mid = Math.floor(28 + seededNoise(index * 3.8 + 9.2) * 55);
-  const deep = Math.floor(15 + seededNoise(index * 5.4 + 2.8) * 35);
+  const base = Math.floor(30 + seededNoise(index * 2.1 + 3.7) * 32);
+  const high = Math.min(255, base + 42);
 
   const svg = `
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 560 560'>
       <defs>
         <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-          <stop offset='0%' stop-color='rgb(${warm},${mid},${deep})'/>
-          <stop offset='100%' stop-color='rgb(${Math.min(255, warm + 35)},${Math.min(255, mid + 25)},${Math.min(255, deep + 20)})'/>
+          <stop offset='0%' stop-color='rgb(${base},${base},${base})'/>
+          <stop offset='100%' stop-color='rgb(${high},${high},${high})'/>
         </linearGradient>
         <radialGradient id='r' cx='50%' cy='46%' r='62%'>
           <stop offset='0%' stop-color='rgba(255,255,255,0.18)'/>
@@ -620,24 +611,19 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
   }, [currentFrame.id, loadedSrcByFrameId]);
 
   const visibleFrameSrc = loadedSrcByFrameId[currentFrame.id] ?? lastVisibleSrc;
-  const loadingLine =
-    MYSTIC_LOADING_LINES[Math.floor((clock / 1800) % MYSTIC_LOADING_LINES.length)] ??
-    MYSTIC_LOADING_LINES[0];
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#020202]">
       <div className="absolute left-4 top-4 z-30 flex max-w-md flex-col gap-3 border border-white/15 bg-black/55 px-4 py-4 backdrop-blur-sm">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-white/58">
-          Exhibition Piece 5 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={5} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-orange-200 sm:text-4xl">
           Rolling Shutter
         </h1>
         <p className="font-sans text-xs leading-relaxed text-white/80 sm:text-sm">
-          A low-res flood of images flips every 0.2 seconds, creating false continuity from
-          unrelated frames.
+          The central frame cycles through sourced images at a fixed interval while overlays stay
+          constant. The rapid turnover feels restless and slightly disorienting.
         </p>
-        <PieceNavigationControls pieceId={5} />
+        <PieceNavigationControls pieceId={5} hideQuickLinks />
       </div>
 
       <div className="absolute left-1/2 top-1/2 z-10 w-[min(84vmin,860px)] -translate-x-1/2 -translate-y-1/2">
@@ -654,22 +640,17 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
           />
 
           {!hasLoadedRealImage ? (
-            <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_50%,rgba(18,30,50,0.18),rgba(0,0,0,0.72)_62%,rgba(0,0,0,0.9)_100%)]">
+            <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center bg-black">
               <div
-                className="h-40 w-40 rounded-full border border-white/30"
+                className="h-40 w-40 rounded-full border-2 border-white/85"
                 style={{
-                  boxShadow: "0 0 32px rgba(120,180,255,0.35), inset 0 0 24px rgba(255,255,255,0.1)",
+                  boxShadow: "0 0 0 2px rgba(255,255,255,0.18), inset 0 0 0 1px rgba(255,255,255,0.32)",
                   transform: `rotate(${((clock / 24) % 360).toFixed(2)}deg)`,
                 }}
               />
-              <div className="mt-6 space-y-2 text-center">
-                <p className="font-pixel-square text-2xl tracking-[0.06em] text-cyan-100">
-                  VEIL LIFT
-                </p>
-                <p className="font-sans text-xs uppercase tracking-[0.18em] text-cyan-100/75">
-                  {loadingLine}
-                </p>
-              </div>
+              <p className="mt-8 px-6 text-center font-sans text-2xl font-extrabold tracking-[0.02em] text-white sm:text-3xl">
+                Loading... Please hold...
+              </p>
             </div>
           ) : null}
         </div>

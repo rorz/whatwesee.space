@@ -1,51 +1,107 @@
+import Image from "next/image";
 import Link from "next/link";
+import { getPieceArtistProfile } from "../_lib/piece-artist-profiles";
 import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type PieceNavigationControlsProps = {
   pieceId: number;
+  className?: string;
+  hideQuickLinks?: boolean;
+  hideArtistCard?: boolean;
+  hidePieceGrid?: boolean;
 };
 
-export default function PieceNavigationControls({ pieceId }: PieceNavigationControlsProps) {
+export default function PieceNavigationControls({
+  pieceId,
+  className,
+  hideQuickLinks = false,
+  hideArtistCard = false,
+  hidePieceGrid = false,
+}: PieceNavigationControlsProps) {
+  const profile = getPieceArtistProfile(pieceId);
+  const rootClassName = ["mt-3 flex flex-col gap-3", className].filter(Boolean).join(" ");
+
   return (
-    <div className="mt-3 flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href="/"
-          className="pointer-events-auto inline-flex border border-white/35 bg-black/65 px-2 py-1 font-sans text-[9px] font-semibold uppercase tracking-[0.09em] text-white/92 backdrop-blur-sm transition-colors hover:bg-black/80"
-        >
-          back to start
-        </Link>
-        <Link
-          href="/guestbook"
-          className="pointer-events-auto inline-flex border border-white/35 bg-black/65 px-2 py-1 font-sans text-[9px] font-semibold uppercase tracking-[0.09em] text-white/92 backdrop-blur-sm transition-colors hover:bg-black/80"
-        >
-          guestbook
-        </Link>
-      </div>
+    <div className={rootClassName}>
+      {!hideArtistCard ? (
+        <div className="wws-cart-card pointer-events-none inline-block self-start">
+          <div className="wws-cart-ridge">
+            <p className="font-pixel-square text-[0.5rem] leading-none tracking-[0.14em] text-[#121317]">
+              agentic artist:
+            </p>
+          </div>
 
-      <div
-        className="grid w-full gap-1.5"
-        style={{ gridTemplateColumns: `repeat(${PIECE_COUNT}, minmax(0, 1fr))` }}
-      >
-        {Array.from({ length: PIECE_COUNT }, (_, index) => {
-          const id = index + 1;
-          const active = id === pieceId;
+          <div className="wws-cart-sticker">
+            <div className="wws-cart-avatar-wrap">
+              <Image
+                src={profile.avatar}
+                alt={`Portrait of ${profile.name}`}
+                width={32}
+                height={32}
+                className="h-8 w-8 object-cover"
+              />
+            </div>
 
-          return (
-            <Link
-              key={`piece-link-${id}`}
-              href={`/pieces/${id}`}
-              className={`pointer-events-auto inline-flex h-8 w-full items-center justify-center border-2 px-1 font-pixel-square text-sm leading-none tracking-[0.03em] transition-colors sm:h-9 sm:text-base ${
-                active
-                  ? "border-orange-200 bg-orange-400 text-black"
-                  : "border-white/40 bg-black/45 text-white hover:border-orange-100/80 hover:text-orange-100"
-              }`}
-            >
-              {id}
-            </Link>
-          );
-        })}
-      </div>
+            <div className="min-w-0">
+              <p className="font-pixel-square text-[0.48rem] uppercase leading-none tracking-[0.12em] text-[#2c313a]">
+                Piece {pieceId}
+              </p>
+              <p className="truncate pt-0.5 font-pixel-square text-[0.62rem] leading-none tracking-[0.05em] text-[#0f1217]">
+                {profile.name}
+              </p>
+              <p className="truncate pt-1 font-pixel-square text-[0.54rem] leading-none tracking-[0.06em] text-[#222730]">
+                {profile.city}
+              </p>
+            </div>
+          </div>
+
+          <span className="wws-cart-notch wws-cart-notch--left" aria-hidden />
+          <span className="wws-cart-notch wws-cart-notch--right" aria-hidden />
+        </div>
+      ) : null}
+
+      {!hideQuickLinks ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/"
+            className="pointer-events-auto inline-flex border border-black/70 bg-yellow-300 px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-black transition-colors hover:bg-yellow-200"
+          >
+            start
+          </Link>
+          <Link
+            href="/guestbook"
+            className="pointer-events-auto inline-flex border border-black/55 bg-sky-200 px-2 py-1 font-sans text-[9px] font-semibold uppercase tracking-[0.09em] text-black backdrop-blur-sm transition-colors hover:bg-sky-100"
+          >
+            guestbook
+          </Link>
+        </div>
+      ) : null}
+
+      {!hidePieceGrid ? (
+        <div
+          className="grid w-full gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${PIECE_COUNT}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: PIECE_COUNT }, (_, index) => {
+            const id = index + 1;
+            const active = id === pieceId;
+
+            return (
+              <Link
+                key={`piece-link-${id}`}
+                href={`/pieces/${id}`}
+                className={`pointer-events-auto inline-flex h-8 w-full items-center justify-center border-2 px-1 font-pixel-square text-sm leading-none tracking-[0.03em] transition-colors sm:h-9 sm:text-base ${
+                  active
+                    ? "border-orange-200 bg-orange-400 text-black"
+                    : "border-white/40 bg-black/45 text-white hover:border-orange-100/80 hover:text-orange-100"
+                }`}
+              >
+                {id}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type DreamNode = {
   baseX: number;
@@ -1330,17 +1329,15 @@ export default function HypnogagiaScene() {
       <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,transparent_1px,transparent_5px)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/50 px-4 py-4 backdrop-blur-sm relative">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-white/62">
-          Exhibition Piece 7 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={4} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-cyan-100 sm:text-4xl">
           Hypnogagia
         </h1>
         <p className="font-sans text-xs leading-relaxed text-white/80 sm:text-sm">
-          Move over a node to reveal alternate dream-graph links. Click to fracture clusters and
-          shudder the field before it coheres again.
+          A dynamic node-link graph updates in real time; hover reveals alternate links and click
+          triggers temporary fractures. The motion feels unstable, then briefly calm.
         </p>
-        <PieceNavigationControls pieceId={7} />
+        <PieceNavigationControls pieceId={4} hideQuickLinks />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { Filter } from "bad-words";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -15,8 +16,14 @@ type GuestbookEntry = {
 
 const DATA_FILE = join(process.cwd(), "output", "guestbook.json");
 const MAX_NAME_LENGTH = 64;
-const MAX_MESSAGE_LENGTH = 700;
+const MAX_MESSAGE_LENGTH = 50;
 const MAX_ENTRIES = 500;
+const ALPHANUMERIC_AND_SPACES_ONLY = /^[a-z0-9 ]+$/i;
+const profanityFilter = new Filter();
+
+function isAlphanumericWithSpaces(value: string): boolean {
+  return ALPHANUMERIC_AND_SPACES_ONLY.test(value);
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -87,6 +94,20 @@ export async function POST(request: Request) {
     if (!name || !message) {
       return NextResponse.json(
         { error: "Name and message are required." },
+        { status: 400 },
+      );
+    }
+
+    if (!isAlphanumericWithSpaces(name) || !isAlphanumericWithSpaces(message)) {
+      return NextResponse.json(
+        { error: "Only letters, numbers, and spaces are allowed." },
+        { status: 400 },
+      );
+    }
+
+    if (profanityFilter.isProfane(name) || profanityFilter.isProfane(message)) {
+      return NextResponse.json(
+        { error: "Profanity is not allowed." },
         { status: 400 },
       );
     }

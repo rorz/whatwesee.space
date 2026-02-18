@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type CloudNode = {
   x: number;
@@ -725,15 +724,13 @@ export default function QuantaScene() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.3)_0%,rgba(226,236,255,0.1)_52%,rgba(255,255,255,0.28)_100%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-black/15 bg-white/82 px-4 py-4 backdrop-blur-sm relative">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-black/55">
-          Exhibition Piece 4 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={3} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-black sm:text-4xl">Quanta</h1>
         <p className="font-sans text-xs leading-relaxed text-black/70 sm:text-sm">
-          A living point-cloud drifts through continuously generated latent forms, nudging your eye
-          toward faces and structures that never fully resolve.
+          A WebGL point cloud updates continuously and forms transient clusters without hard cuts.
+          The image feels close to recognition but never fully settles.
         </p>
-        <PieceNavigationControls pieceId={4} />
+        <PieceNavigationControls pieceId={3} hideQuickLinks />
       </div>
     </div>
   );

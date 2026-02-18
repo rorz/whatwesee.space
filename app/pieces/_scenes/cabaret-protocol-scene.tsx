@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 const POSITIVE_MANTRA_LINES = [
   "We can hold each other up.",
@@ -946,18 +945,16 @@ export default function CabaretProtocolScene() {
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-pointer" />
 
       <div className="absolute left-4 top-4 z-20 w-[min(440px,92vw)] -rotate-[1.2deg] border-2 border-[#2f1742] bg-[#ffe56f]/95 px-5 py-4 shadow-[8px_8px_0px_#2f1742]">
-        <p className="font-sans text-[11px] uppercase tracking-[0.13em] text-[#602078]">
-          Exhibition Piece 9 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={9} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-[#251136] sm:text-4xl">
           Cabaret Protocol
         </h1>
         <p className="mt-2 font-sans text-sm leading-relaxed text-[#2f1742]/88">
-          Named agents track your touch as an emotional protocol: press darkens the room and makes
-          every face frown, release floods the stage with ecstatic light.
+          Named agents render in a stage layout with state-based expressions; press-and-hold sets a
+          negative state and release restores positive. The switch reads like mood on command.
         </p>
         <div className="mt-3">
-          <PieceNavigationControls pieceId={9} />
+          <PieceNavigationControls pieceId={9} hideQuickLinks />
         </div>
       </div>
 

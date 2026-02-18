@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type EvalCard = {
   active: boolean;
@@ -737,15 +736,13 @@ export default function EvalsScene() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(255,255,255,0.05),transparent_62%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-slate-200">
-          Exhibition Piece 3 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={8} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-white sm:text-4xl">Evals</h1>
         <p className="font-sans text-xs leading-relaxed text-white/84 sm:text-sm">
-          Inside the singularity, static screams while verdict cards keep arriving: almost all
-          wrong, only rarely right.
+          Verdict cards spawn near center, drift outward, and decay while pointer input increases
+          local turnover. The cycle feels judgmental and hard to exit.
         </p>
-        <PieceNavigationControls pieceId={3} />
+        <PieceNavigationControls pieceId={8} hideQuickLinks />
       </div>
     </div>
   );

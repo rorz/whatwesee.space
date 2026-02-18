@@ -966,3 +966,148 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Exhibition sequencing + curatorial copy pass (user-requested):
+  - Reordered canonical piece sequence in `/app/pieces/_lib/piece-constants.ts` to:
+    1) Token Ceiling, 2) Prompt Cage, 3) Quanta, 4) Hypnogagia, 5) Rolling Shutter, 6) Latent Bloom, 7) Fed Prompts, 8) Evals, 9) Cabaret Protocol.
+  - Updated dynamic route scene mapping in `/app/pieces/[id]/page.tsx` to match the new sequence.
+  - Updated all scene placards to the new exhibition numbering and aligned nav highlighting (`pieceId`) to the reordered IDs.
+  - Rewrote scene descriptions in all nine piece scene files with tighter museum-style language while preserving behavior accuracy.
+  - Updated homepage curatorial framing text in `/app/page.tsx`.
+  - Added an editable human-authored file at `/public/rory-human.txt` and wired homepage `About Rory` section to load from it.
+  - Replaced default app metadata in `/app/layout.tsx` with exhibition-specific title/description.
+- Verification:
+  - `pnpm exec eslint app/page.tsx app/layout.tsx app/pieces/_lib/piece-constants.ts 'app/pieces/[id]/page.tsx' app/pieces/_scenes/token-ceiling-scene.tsx app/pieces/_scenes/prompt-cage-scene.tsx app/pieces/_scenes/quanta-scene.tsx app/pieces/_scenes/hypnogagia-scene.tsx app/pieces/_scenes/rolling-shutter-scene.tsx app/pieces/_scenes/latent-bloom-scene.tsx app/pieces/_scenes/prompt-feed-scene.tsx app/pieces/_scenes/evals-scene.tsx app/pieces/_scenes/cabaret-protocol-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Curatorial voice refinement pass (user-requested):
+  - Rewrote plaque descriptions across all nine scene files for a more personable museum-curator tone with explicit story/reasoning links between works.
+  - Updated homepage intro copy in `/app/page.tsx` to frame the show as a narrative arc and guide visitor attention.
+- Verification:
+  - `pnpm exec eslint app/page.tsx app/pieces/_scenes/token-ceiling-scene.tsx app/pieces/_scenes/prompt-cage-scene.tsx app/pieces/_scenes/quanta-scene.tsx app/pieces/_scenes/hypnogagia-scene.tsx app/pieces/_scenes/rolling-shutter-scene.tsx app/pieces/_scenes/latent-bloom-scene.tsx app/pieces/_scenes/prompt-feed-scene.tsx app/pieces/_scenes/evals-scene.tsx app/pieces/_scenes/cabaret-protocol-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 loading-state copy/style adjustment (user request):
+  - Converted preload visuals to pure monochrome (grayscale fallback artwork + black loading overlay + white ring).
+  - Replaced loading copy with exact requested message: `Loading... Please hold...` in bold crisp white text.
+  - Removed prior poetic loading lines and color accents from the loading state.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Copy tone adjustment pass (user-requested):
+  - Rewrote homepage framing copy and all nine piece descriptions for plainer, more engaging language with maintained artistic tone.
+  - Kept the previously established exhibition arc and sequencing intact while reducing abstraction and jargon.
+- Verification:
+  - `pnpm exec eslint app/page.tsx app/pieces/_scenes/token-ceiling-scene.tsx app/pieces/_scenes/prompt-cage-scene.tsx app/pieces/_scenes/quanta-scene.tsx app/pieces/_scenes/hypnogagia-scene.tsx app/pieces/_scenes/rolling-shutter-scene.tsx app/pieces/_scenes/latent-bloom-scene.tsx app/pieces/_scenes/prompt-feed-scene.tsx app/pieces/_scenes/evals-scene.tsx app/pieces/_scenes/cabaret-protocol-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece-level artist profile pass (user-requested):
+  - Pulled 9 random source photos from `/Users/rorz/data_out/what-we-see/profiles`.
+  - Copied and resized them to tiny static avatars (`48x48`) at `/public/profiles/piece-1.jpg` ... `/public/profiles/piece-9.jpg`.
+  - Added static per-piece profile registry in `/app/pieces/_lib/piece-artist-profiles.ts` with made-up artist name + city + avatar path.
+  - Updated `/app/pieces/_components/piece-navigation-controls.tsx` to render an `Artist Profile` block for the active piece.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx app/pieces/_lib/piece-artist-profiles.ts` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Artist card visual redesign (user-requested):
+  - Reworked the piece profile block in `/app/pieces/_components/piece-navigation-controls.tsx` into a mini cartridge layout.
+  - Added Game Boy-inspired shell styling in `/app/globals.css`:
+    - ridged top cap,
+    - inset sticker panel,
+    - bottom cartridge notches,
+    - pixel-line texture overlays,
+    - animated diagonal gloss sweep (`wws-cart-gloss`).
+  - Updated avatar framing from circular portrait to square pixel-frame treatment for better cartridge fidelity.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Artist card flattening pass (user-requested):
+  - Removed animated gloss and pseudo-element overlays from `wws-cart-card` in `/app/globals.css`.
+  - Replaced gradient and shaded cartridge treatments with flat fills for shell, ridge, sticker, and avatar frame.
+  - Kept cartridge silhouette/notches and compact sizing intact while making the card fully static.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Artist card color tweak (user-requested):
+  - Updated cartridge shell treatment in `/app/globals.css` to pure white for card body, ridge, sticker, avatar frame, and bottom notches.
+- Verification:
+  - `pnpm exec tsc --noEmit` passes.
+- Piece nav button color pass (user-requested):
+  - Updated `/app/pieces/_components/piece-navigation-controls.tsx` so:
+    - `back to start` uses yellow background with black text.
+    - `guestbook` uses light sky-blue background with black text.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx` passes.
+- Guestbook minimalism overhaul (user-requested):
+  - Rebuilt `/app/guestbook/page.tsx` to a canvas-first layout with extreme UI reduction.
+  - Removed section headers/cards/labels and list framing; entries now render as deterministic "splats" across the canvas using varied position/rotation/size/opacity.
+  - Simplified controls to tiny nav links plus a compact toggleable form (`name` + `message` placeholders only, minimal `post/close` actions).
+  - Kept guestbook API behavior unchanged (`GET/POST /api/guestbook`).
+  - Added procedural canvas background/splat pass that responds to entry distribution while preserving readability.
+- Verification:
+  - `pnpm exec eslint app/guestbook/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright runtime verification for `/guestbook` was attempted with `$WEB_GAME_CLIENT` and blocked by sandbox browser permissions; escalated retry was requested and rejected in-session.
+- Guestbook click + typography correction (user-requested):
+  - Fixed click-through bug in `/app/guestbook/page.tsx` by making the full entry overlay non-interactive (`pointer-events-none` on the absolute entries layer), so controls remain clickable.
+  - Removed bubble-like visual treatment by deleting radial-splat drawing from the canvas pass.
+  - Kept lined-paper style and added a subtle red margin line for notebook-paper character.
+  - Restyled entries to strict red-ink typed look: `"Courier New", Courier, monospace`, fixed red color, no rotation/scale jitter.
+- Verification:
+  - `pnpm exec eslint app/guestbook/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright runtime verification attempt for `/guestbook` was blocked by sandbox browser restrictions; escalated retry was requested and rejected in-session.
+- Start-button visibility pass (user-requested):
+  - Renamed remaining `back to start` label to `start` in `/app/pieces/_components/piece-navigation-controls.tsx`.
+  - Increased `start` button contrast and size in piece navigation (strong yellow chip, larger type/padding).
+  - Increased guestbook top-left `start` visibility in `/app/guestbook/page.tsx` using the same high-contrast yellow button styling.
+- Verification:
+  - `pnpm exec eslint app/guestbook/page.tsx app/pieces/_components/piece-navigation-controls.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece header navigation placement pass (user-requested):
+  - Replaced `Exhibition Piece X / 9` header lines in all nine scene overlays with top-positioned quick links (`back to start`, `guestbook`).
+  - Extended `/app/pieces/_components/piece-navigation-controls.tsx` with layout toggles:
+    - `hideQuickLinks`, `hideArtistCard`, `hidePieceGrid`, `className`.
+  - Scene usage now splits controls into two positions:
+    - top: quick links only,
+    - lower section: artist card + piece index grid (quick links hidden) to avoid duplication.
+  - Removed obsolete `PIECE_COUNT` imports from scene files where it became unused.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx app/pieces/_scenes/token-ceiling-scene.tsx app/pieces/_scenes/prompt-cage-scene.tsx app/pieces/_scenes/quanta-scene.tsx app/pieces/_scenes/hypnogagia-scene.tsx app/pieces/_scenes/rolling-shutter-scene.tsx app/pieces/_scenes/latent-bloom-scene.tsx app/pieces/_scenes/prompt-feed-scene.tsx app/pieces/_scenes/evals-scene.tsx app/pieces/_scenes/cabaret-protocol-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece description de-fluff pass (user-requested):
+  - Rewrote all nine scene plaque descriptions in a dry, factual style focused on rendered content, update behavior, and user input effects.
+  - Removed metaphor/curatorial language from per-piece descriptions while keeping each description specific to actual scene mechanics.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/token-ceiling-scene.tsx app/pieces/_scenes/prompt-cage-scene.tsx app/pieces/_scenes/quanta-scene.tsx app/pieces/_scenes/hypnogagia-scene.tsx app/pieces/_scenes/rolling-shutter-scene.tsx app/pieces/_scenes/latent-bloom-scene.tsx app/pieces/_scenes/prompt-feed-scene.tsx app/pieces/_scenes/evals-scene.tsx app/pieces/_scenes/cabaret-protocol-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Guestbook hard-input policy pass (user-requested):
+  - Added npm profanity filter dependency: `bad-words`.
+  - Server filter updates in `/app/api/guestbook/route.ts`:
+    - message limit reduced to `50` chars (`MAX_MESSAGE_LENGTH = 50`),
+    - strict alphanumeric-only validation for both `name` and `message` (`a-z`, `0-9`),
+    - profanity rejection for both fields using `bad-words` filter.
+  - Guestbook UI updates in `/app/guestbook/page.tsx`:
+    - input sanitization strips non-alphanumeric characters on change,
+    - message max length reduced to `50`,
+    - visible message counter nudge (`{message.length}/50`),
+    - entry styling split: `name` is blue, `message` remains red.
+- Verification:
+  - `pnpm exec eslint app/api/guestbook/route.ts app/guestbook/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Guestbook sign-button emphasis pass (user-requested):
+  - Updated `/app/guestbook/page.tsx` sign control to a much larger, bold, black button.
+  - Added inline quill icon SVG before the `sign` label.
+- Verification:
+  - `pnpm exec eslint app/guestbook/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Two-sentence style pass (user-requested):
+  - Updated all nine piece descriptions to a strict structure:
+    - sentence 1: dry/mechanical description,
+    - sentence 2: explicit emotional interpretation.
+  - Kept per-piece behavior references accurate to each scene implementation.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/token-ceiling-scene.tsx app/pieces/_scenes/prompt-cage-scene.tsx app/pieces/_scenes/quanta-scene.tsx app/pieces/_scenes/hypnogagia-scene.tsx app/pieces/_scenes/rolling-shutter-scene.tsx app/pieces/_scenes/latent-bloom-scene.tsx app/pieces/_scenes/prompt-feed-scene.tsx app/pieces/_scenes/evals-scene.tsx app/pieces/_scenes/cabaret-protocol-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Guestbook input policy tweak (user-requested):
+  - Allowed spaces in both server validation and UI sanitization while keeping punctuation/symbols blocked.
+  - Updated helper copy to `a-z, 0-9, spaces` for name and message placeholders.
+- Verification:
+  - `pnpm exec eslint app/api/guestbook/route.ts app/guestbook/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.

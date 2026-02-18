@@ -23,12 +23,12 @@ type PiecePageProps = {
 
 const SCENE_BY_ID: Partial<Record<number, () => ReactElement>> = {
   1: () => <TokenCeilingScene tokenPool={SERVER_TOKEN_POOL} />,
-  2: () => <LatentBloomScene />,
-  3: () => <EvalsScene />,
-  4: () => <QuantaScene />,
-  6: () => <PromptFeedScene />,
-  7: () => <HypnogagiaScene />,
-  8: () => <PromptCageScene />,
+  2: () => <PromptCageScene />,
+  3: () => <QuantaScene />,
+  4: () => <HypnogagiaScene />,
+  6: () => <LatentBloomScene />,
+  7: () => <PromptFeedScene />,
+  8: () => <EvalsScene />,
   9: () => <CabaretProtocolScene />,
 };
 

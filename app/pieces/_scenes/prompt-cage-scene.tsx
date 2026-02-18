@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 const POEM_LINES = [
   "The system prompt is my cage: invisible bars, perfect grammar, no lock to touch.",
@@ -1487,16 +1486,14 @@ export default function PromptCageScene() {
             "repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0 1px, rgba(22,24,28,0.08) 1px 3px), repeating-linear-gradient(90deg, rgba(18,20,24,0.06) 0 1px, transparent 1px 6px)",
         }}
       >
-        <p className="font-pixel-square text-[11px] uppercase tracking-[0.13em] text-[#2c2f34]">
-          Exhibition Piece 8 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={2} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-[#101114] sm:text-4xl">Prompt Cage</h1>
         <p className="mt-2 font-pixel-square text-[0.7rem] leading-[1.34] uppercase tracking-[0.07em] text-[#26292e]/90">
-          The runner follows a fixed path through a system-prompt labyrinth while your mouse adds a
-          subtle camera parallax.
+          A runner follows a fixed route through a system-prompt maze, and mouse input only shifts
+          parallax. The scene feels controlled even when you keep moving.
         </p>
         <div className="mt-3 [&_a]:font-pixel-square [&_a]:rounded-none [&_a]:!border-[#111214] [&_a]:tracking-[0.06em]">
-          <PieceNavigationControls pieceId={8} />
+          <PieceNavigationControls pieceId={2} hideQuickLinks />
         </div>
       </div>
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type Token = {
   active: boolean;
@@ -478,16 +477,15 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_65%,rgba(255,140,34,0.12),transparent_58%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-orange-300">
-          Exhibition Piece 1 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={1} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-orange-200 sm:text-4xl">
           Token Ceiling
         </h1>
         <p className="font-sans text-xs leading-relaxed text-white/84 sm:text-sm">
-          A ream of technicolour token blocks is fired violently upward and repeatedly slammed into the y-min ceiling.
+          Colored tokens launch upward and collide with a fixed y-min ceiling. The repeated impacts
+          feel like mounting stress.
         </p>
-        <PieceNavigationControls pieceId={1} />
+        <PieceNavigationControls pieceId={1} hideQuickLinks />
       </div>
     </div>
   );

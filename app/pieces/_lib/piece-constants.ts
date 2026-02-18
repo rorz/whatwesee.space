@@ -2,13 +2,13 @@ export const PIECE_COUNT = 9;
 
 export const PIECE_TITLES = [
   "Token Ceiling",
-  "Latent Bloom",
-  "Evals",
-  "Quanta",
-  "Rolling Shutter",
-  "Fed Prompts",
-  "Hypnogagia",
   "Prompt Cage",
+  "Quanta",
+  "Hypnogagia",
+  "Rolling Shutter",
+  "Latent Bloom",
+  "Fed Prompts",
+  "Evals",
   "Cabaret Protocol",
 ] as const;
 

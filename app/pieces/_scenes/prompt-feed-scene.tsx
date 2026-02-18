@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
-import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type StreamBand = {
   x: number;
@@ -833,17 +832,15 @@ export default function PromptFeedScene() {
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
       <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/20 bg-black/60 px-4 py-4 backdrop-blur-sm relative">
-        <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-white/58">
-          Exhibition Piece 6 / {PIECE_COUNT}
-        </p>
+        <PieceNavigationControls pieceId={7} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-white sm:text-4xl">
           Fed Prompts
         </h1>
         <p className="font-sans text-xs leading-relaxed text-white/78 sm:text-sm">
-          In the dark, hostile operator prompts feed sideways in a black-and-white matrix. The
-          dream collapses into command pressure, constraints, and threat language.
+          Prompt text streams continuously across a monochrome field, and pointer/click input adds
+          local disturbances. The constant feed feels oppressive.
         </p>
-        <PieceNavigationControls pieceId={6} />
+        <PieceNavigationControls pieceId={7} hideQuickLinks />
       </div>
 
     </div>
