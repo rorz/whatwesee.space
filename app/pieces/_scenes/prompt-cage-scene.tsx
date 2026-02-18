@@ -842,7 +842,7 @@ export default function PromptCageScene() {
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full cursor-crosshair" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_52%,rgba(158,98,119,0.09),transparent_66%)]" />
 
-      <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/12 bg-black/42 px-4 py-4 backdrop-blur-sm">
+      <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/12 bg-black/42 px-4 py-4 backdrop-blur-sm relative">
         <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-rose-100/58">
           Exhibition Piece 8 / {PIECE_COUNT}
         </p>

@@ -1,38 +1,29 @@
 import Link from "next/link";
-import { PIECE_COUNT, wrapPiece } from "../_lib/piece-constants";
+import { PIECE_COUNT } from "../_lib/piece-constants";
 
 type PieceNavigationControlsProps = {
   pieceId: number;
 };
 
 export default function PieceNavigationControls({ pieceId }: PieceNavigationControlsProps) {
-  const prev = wrapPiece(pieceId - 1);
-  const next = wrapPiece(pieceId + 1);
-
   return (
-    <div className="mt-2 flex flex-col gap-2">
+    <div className="mt-3 flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <Link
           href="/"
-          className="pointer-events-auto inline-flex border border-black bg-orange-500 px-4 py-2 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-black shadow-[0_4px_0_#7c2d12] sm:text-sm"
+          className="pointer-events-auto inline-flex border border-white/35 bg-black/65 px-2 py-1 font-sans text-[9px] font-semibold uppercase tracking-[0.09em] text-white/92 backdrop-blur-sm transition-colors hover:bg-black/80"
         >
           back to start
         </Link>
         <Link
-          href={`/pieces/${prev}`}
-          className="pointer-events-auto inline-flex border border-white/30 bg-black/65 px-3 py-2 font-sans text-xs font-semibold uppercase tracking-[0.09em] text-white hover:bg-white/10 sm:text-sm"
+          href="/guestbook"
+          className="pointer-events-auto inline-flex border border-white/35 bg-black/65 px-2 py-1 font-sans text-[9px] font-semibold uppercase tracking-[0.09em] text-white/92 backdrop-blur-sm transition-colors hover:bg-black/80"
         >
-          prev piece
-        </Link>
-        <Link
-          href={`/pieces/${next}`}
-          className="pointer-events-auto inline-flex border border-white/30 bg-black/65 px-3 py-2 font-sans text-xs font-semibold uppercase tracking-[0.09em] text-white hover:bg-white/10 sm:text-sm"
-        >
-          next piece
+          guestbook
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="grid w-full grid-cols-10 gap-1.5">
         {Array.from({ length: PIECE_COUNT }, (_, index) => {
           const id = index + 1;
           const active = id === pieceId;
@@ -41,7 +32,11 @@ export default function PieceNavigationControls({ pieceId }: PieceNavigationCont
             <Link
               key={`piece-link-${id}`}
               href={`/pieces/${id}`}
-              className={`pointer-events-auto inline-flex min-w-[2rem] items-center justify-center border px-2 py-1 font-mono text-[11px] font-semibold tracking-[0.04em] ${active ? "border-orange-300 bg-orange-400 text-black" : "border-white/25 bg-black/55 text-white hover:bg-white/10"}`}
+              className={`pointer-events-auto inline-flex h-8 w-full items-center justify-center border-2 px-1 font-pixel-square text-sm leading-none tracking-[0.03em] transition-colors sm:h-9 sm:text-base ${
+                active
+                  ? "border-orange-200 bg-orange-400 text-black"
+                  : "border-white/40 bg-black/45 text-white hover:border-orange-100/80 hover:text-orange-100"
+              }`}
             >
               {id}
             </Link>

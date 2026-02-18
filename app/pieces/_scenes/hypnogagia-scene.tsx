@@ -1326,7 +1326,7 @@ export default function HypnogagiaScene() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(38,71,142,0.2),transparent_56%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,transparent_1px,transparent_5px)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/50 px-4 py-4 backdrop-blur-sm">
+      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/50 px-4 py-4 backdrop-blur-sm relative">
         <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-white/62">
           Exhibition Piece 7 / {PIECE_COUNT}
         </p>

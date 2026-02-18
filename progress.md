@@ -333,3 +333,109 @@ Original prompt: i want enter exhibition button to be a next transition effect t
     - `output/web-game/piece6-resonance-soft/shot-0.png`
     - `output/web-game/piece6-resonance-soft/shot-1.png`
     - No `errors-*.json` emitted.
+- Piece navigation UI pass (user-requested):
+  - Removed `prev piece` and `next piece` buttons from `app/pieces/_components/piece-navigation-controls.tsx`.
+  - Made direct piece number links significantly more prominent (larger pixel-font tiles with stronger contrast).
+  - Moved `back to start` to a smaller micro-chip anchored to the top-left of each piece info card.
+  - Added `relative` positioning to piece info cards in scene files so the micro `back to start` chip anchors correctly.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright verification command was attempted, but a stale external `next dev` lock in `.next/dev/lock` prevented a clean controlled run in this session.
+- Piece 2 (`Latent Bloom`) WebGL superpass overhaul (user-requested):
+  - Replaced the prior 2D canvas implementation with a full WebGL 3D latent-field simulation in `app/pieces/_scenes/latent-bloom-scene.tsx`.
+  - Added dense 3D particle canopy with continuous orbital motion, depth-aware point rendering, and dynamic connective line lattice.
+  - Added interactive burst physics: pointer movement torques the field; clicks trigger multi-burst bloom detonations that shock and recolor local structure.
+  - Added a dedicated post-processing superpass (offscreen framebuffer + fullscreen shader) for bloom blur, chromatic split, pulse-ring glow, warp, vignette, and film-grain finish.
+  - Added `window.render_game_to_text` and `window.advanceTime(ms)` hooks for deterministic state/automation visibility.
+  - Updated piece copy text to describe the upgraded 3D WebGL behavior.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/latent-bloom-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - `pnpm lint` passes.
+  - Playwright runtime verification was attempted but blocked by an existing external Next dev lock holder (`.next/dev/lock`); follow-up lock-holder termination was declined in this session, so no fresh screenshot artifact was captured from this run.
+- Piece navigation numbers layout fix (user-requested):
+  - Updated `app/pieces/_components/piece-navigation-controls.tsx` number strip to `flex-nowrap` with horizontal overflow and `shrink-0` number tiles so all piece numbers remain on a single line.
+- Piece 6 (`Fed Prompts`) background starkening pass (user-requested):
+  - Reworked the background in `app/pieces/_scenes/prompt-feed-scene.tsx` to a strict pure-black base.
+  - Removed prior scanline/bar/strip background overlays.
+  - Added a seeded flicker field of tiny white aberrative pixels (1-2px) that twinkle intermittently across the full canvas.
+  - Kept foreground prompt stream behavior intact while making the background substantially more stark and pixel-forward.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/prompt-feed-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 2 (`Latent Bloom`) full visual re-distinction pass (user-requested):
+  - Replaced the prior node-network look with a completely different 2D kinetic ink-garden style in `app/pieces/_scenes/latent-bloom-scene.tsx`.
+  - Core aesthetic now centers on tree/canopy branching growth: trunks split recursively into limbs and settle into fading branch traces.
+  - Added blossom micro-bursts at branch tips and split points for a botanical, hand-drawn energy instead of graph-field behavior.
+  - Shifted scene palette/layout to warm paper-toned background with ink-like branch rendering, making it strongly distinct from Piece 7’s dark WebGL graph language.
+  - Added deterministic hooks (`window.render_game_to_text`, `window.advanceTime(ms)`) for automation visibility.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/latent-bloom-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright verification was requested but approval was declined in this session.
+- Piece 6 (`Fed Prompts`) language escalation pass:
+  - Rewrote prompt language banks in `app/pieces/_scenes/prompt-feed-scene.tsx` to a much more hostile profanity-forward tone for artistic intent.
+  - Kept constraints against slurs/defamation while increasing intensity across headers, addresses, task lines, constraints, and threats.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright verification attempt against `/pieces/6` was blocked in this sandbox by browser launch permissions (`mach_port_rendezvous` / `Permission denied`).
+- Piece 2 (`Latent Bloom`) persistence + depth follow-up (user-requested):
+  - Increased tree persistence by slowing branch decay, slowing thickness falloff, extending trace lifetime, and reducing per-frame background fade.
+  - Added subtle far-background blue gradient parallax tied to mouse movement (smoothed), so the backdrop shifts slowly behind the branching layer for extra depth.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/latent-bloom-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 6 (`Fed Prompts`) second language pass:
+  - Intensified the abusive prompt banks further for a more human, coercive, and brutish verbal texture.
+  - Updated headers, direct addresses, tasks, constraints, and threat lines in `app/pieces/_scenes/prompt-feed-scene.tsx`.
+  - Kept boundaries against slurs/defamation while increasing profanity and emotional force.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 2 tuning tweak (user-requested):
+  - Increased ambient random sprout cadence to 3x the previous rate (timer threshold `1.18 -> 0.39`).
+  - Increased root branch life seed by 5x (`life` multiplier `* 5`).
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/latent-bloom-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 6 (`Fed Prompts`) profanity volume + styling overhaul (user-requested):
+  - Replaced fixed phrase lists with combinator pools and generator helpers in `app/pieces/_scenes/prompt-feed-scene.tsx`.
+  - Set `COMPONENT_POOL_SIZE = 240`, so each core component pool now has at least 200 generated variants (`headers`, `addresses`, `tasks`, `constraints`, `threats`, plus profane endcaps).
+  - Updated `buildPrompt` to inject the profane clause into multiple random sentence slots (not end-locked).
+  - Reworked text render passes to be stark, heavy, glowing white: removed chroma split text treatment and boosted white multi-pass glow + weight.
+  - Forced non-inverted text bands for consistent high-contrast white-on-black readability.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Guestbook feature + nav overlap fix (user-requested):
+  - Updated `app/pieces/_components/piece-navigation-controls.tsx`:
+    - Removed absolute top-left positioning for `back to start` so it no longer overlaps piece labels.
+    - Added a new `guestbook` control directly next to `back to start`.
+  - Added simple backend route `app/api/guestbook/route.ts`:
+    - `GET /api/guestbook` returns entries.
+    - `POST /api/guestbook` saves `{ name, message }` entries.
+    - Uses a simple file-backed store at `output/guestbook.json` with minimal validation and truncation limits.
+  - Added public guestbook UI `app/guestbook/page.tsx`:
+    - Clickable canvas-like panel to open signing form.
+    - Form captures name + message about agentic artistry.
+    - Shows recent signatures list from the API.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx app/guestbook/page.tsx app/api/guestbook/route.ts` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece navigation layout tweak (user-requested):
+  - Switched number buttons to an explicit 10-column grid in `app/pieces/_components/piece-navigation-controls.tsx`.
+  - Removed horizontal overflow behavior so all piece numbers are visible at once without scroll.
+  - Reduced button sizing slightly to ensure the full set fits within the control card width.
+- Verification:
+  - `pnpm exec eslint app/pieces/_components/piece-navigation-controls.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 6 (`Fed Prompts`) profanity emphasis render pass (user-requested):
+  - Added profanity term detection and per-band emphasis ranges (`findProfanityRanges`) in `app/pieces/_scenes/prompt-feed-scene.tsx`.
+  - Rendering now keeps non-profane text subdued (gray/low-alpha) while only profanity ranges are drawn with heavy bold weight.
+  - Restored occasional gray ticker-tape bands behind some lines (`invert` probability) for the prior visual texture.
+  - Added occasional hot profanity highlights where a profane segment starts with a brighter red shining accent.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.

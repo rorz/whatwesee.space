@@ -357,7 +357,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_65%,rgba(255,140,34,0.12),transparent_58%)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm">
+      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">
         <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-orange-300">
           Exhibition Piece 1 / {PIECE_COUNT}
         </p>

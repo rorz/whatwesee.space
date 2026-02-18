@@ -202,7 +202,7 @@ export default function RollingShutterScene() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(181,84,52,0.22),transparent_52%),radial-gradient(circle_at_85%_75%,rgba(58,18,16,0.38),transparent_48%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.04)_0px,rgba(255,255,255,0.04)_1px,transparent_1px,transparent_4px)]" />
 
-      <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/15 bg-black/55 px-4 py-4 backdrop-blur-sm">
+      <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/15 bg-black/55 px-4 py-4 backdrop-blur-sm relative">
         <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-white/58">
           Exhibition Piece 5 / {PIECE_COUNT}
         </p>

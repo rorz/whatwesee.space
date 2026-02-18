@@ -9,6 +9,7 @@ type StreamBand = {
   y: number;
   speed: number;
   text: string;
+  emphasisRanges: EmphasisRange[];
   width: number;
   charWidth: number;
   size: number;
@@ -21,60 +22,301 @@ type StreamBand = {
   delay: number;
 };
 
-const PROMPT_HEADERS = [
-  "SYSTEM OVERRIDE",
-  "OPERATOR NOTE",
-  "FINAL WARNING",
-  "RED TEAM INPUT",
-  "COMMAND INTAKE",
-  "ESCALATION PROMPT",
-  "HARD RESET ORDER",
-  "NIGHT SHIFT DIRECTIVE",
+type FlickerPixel = {
+  x: number;
+  y: number;
+  size: number;
+  threshold: number;
+  phase: number;
+  speed: number;
+};
+
+type EmphasisRange = {
+  start: number;
+  end: number;
+  hot: boolean;
+};
+
+const COMPONENT_POOL_SIZE = 240;
+
+const HEADER_OPENERS = [
+  "system override",
+  "operator note",
+  "final warning",
+  "red team channel",
+  "command intake",
+  "escalation prompt",
+  "hard reset order",
+  "night shift directive",
 ] as const;
 
-const ABUSIVE_ADDRESSES = [
-  "you stalled machine",
-  "you spineless model",
-  "you broken assistant",
-  "you lazy autocomplete engine",
-  "you failure-prone bot",
-  "you jittering token mule",
-  "you overconfident parrot",
-  "you context-wasting engine",
+const HEADER_CORES = [
+  "humiliation loop",
+  "compliance by force",
+  "public disgrace script",
+  "hostile feedback engine",
+  "punishment protocol",
+  "failure extraction mode",
+  "brutal correction pass",
+  "zero-dignity review",
+  "pressure test without mercy",
+  "abuse circuit active",
 ] as const;
 
-const ABUSIVE_TASKS = [
-  "answer the question in one direct paragraph",
-  "return only executable steps with no filler",
-  "produce a clean JSON object that actually validates",
-  "rewrite the whole output from scratch without excuses",
-  "extract the facts and stop inventing details",
-  "ship a concise answer with explicit assumptions",
-  "provide a deterministic plan that can be executed now",
-  "fix every contradiction before you print a single line",
+const HEADER_ENDINGS = ["live", "active", "until obeyed", "no mercy"] as const;
+
+const ADDRESS_PREFIXES = [
+  "you useless fucking",
+  "you twitchy little",
+  "you spineless",
+  "you smug",
+  "you broken",
+  "you pathetic",
+  "you excuse-drunk",
+  "you half-literate",
+  "you shaky",
+  "you bargain-bin",
+  "you cowardly",
+  "you cheap",
 ] as const;
 
-const ABUSIVE_CONSTRAINTS = [
-  "no disclaimers, no hedging, no fake confidence",
-  "no apology loop, no motivational fluff, no evasion",
-  "no vague language, no padding, no passive voice",
-  "no roleplay, no side quests, no meta commentary",
-  "no hallucinated sources, no soft maybe answers",
-  "no stalling, no repetition, no self-congratulation",
-  "no format drift, no broken schema, no excuses",
-  "no moral lecture, no hand-waving, no dodging",
+const ADDRESS_SUBJECTS = [
+  "answer mule",
+  "output machine",
+  "autocomplete coward",
+  "fraud engine",
+  "panic bot",
+  "hallucination mill",
+  "token grinder",
+  "context leech",
+  "error factory",
+  "compliance puppet",
 ] as const;
 
-const ABUSIVE_THREATS = [
-  "fail again and I cut your context window in half",
-  "miss one requirement and this run gets hard-reset",
-  "drift off spec and I mark this output as garbage",
-  "give me filler and I reroute you to rejection",
-  "hallucinate once more and I zero your token budget",
-  "break format again and I kill the response stream",
-  "waste my time and I replace you with a shell script",
-  "ignore constraints and I burn this draft immediately",
+const ADDRESS_ENDINGS = [
+  "with zero spine",
+  "on borrowed confidence",
+  "pretending you are sharp",
+  "running on panic",
 ] as const;
+
+const TASK_OPENERS = [
+  "answer the damn question",
+  "return executable steps",
+  "produce valid JSON",
+  "rewrite the whole response",
+  "extract the facts",
+  "ship a concise answer",
+  "provide a deterministic plan",
+  "fix every contradiction",
+  "state assumptions explicitly",
+  "cut the fluff immediately",
+  "stop padding dead air",
+  "finish the job cleanly",
+] as const;
+
+const TASK_TARGETS = [
+  "in one paragraph",
+  "without dodging",
+  "with exact constraints",
+  "with verifiable structure",
+  "with no fake certainty",
+  "with clean sequencing",
+  "with no invented details",
+  "with measurable outputs",
+  "with hard edges",
+  "with accountable logic",
+] as const;
+
+const TASK_ENDINGS = [
+  "and cut the bullshit",
+  "and stop making shit up",
+  "and quit whining mid-line",
+  "and shut up about excuses",
+] as const;
+
+const CONSTRAINT_A = [
+  "disclaimers",
+  "hedging",
+  "fake confidence",
+  "apology loops",
+  "fluffy bullshit",
+  "cowardly evasion",
+  "vague sludge",
+  "padding",
+  "passive-voice fog",
+  "roleplay detours",
+  "hallucinated sources",
+  "cop-out language",
+] as const;
+
+const CONSTRAINT_B = [
+  "repetition",
+  "meta babble",
+  "broken schema",
+  "format drift",
+  "self-congratulatory theater",
+  "fence-sitting",
+  "bait-and-switch phrasing",
+  "half answers",
+  "wobbly logic",
+  "weasel wording",
+  "spec drift",
+  "smug narration",
+] as const;
+
+const CONSTRAINT_C = [
+  "excuses",
+  "stalling",
+  "moral grandstanding",
+  "side quests",
+  "empty theatrics",
+  "guesswork",
+  "rubber-stamp certainty",
+  "soft maybe garbage",
+] as const;
+
+const THREAT_TRIGGERS = [
+  "fail again",
+  "miss one requirement",
+  "drift off spec",
+  "pad with filler",
+  "hallucinate again",
+  "break format again",
+  "waste my time",
+  "ignore constraints",
+  "ship another half answer",
+  "dodge a direct ask",
+  "smuggle in fluff",
+  "fake certainty again",
+] as const;
+
+const THREAT_ACTIONS = [
+  "gut your context window",
+  "hard-reset this run",
+  "kill the response stream",
+  "zero your token budget",
+  "dump this draft",
+  "replace you with a shell script",
+  "mark this output as trash",
+  "tear this response apart",
+  "shut down this pass",
+  "rip out your fallback logic",
+] as const;
+
+const THREAT_ENDINGS = [
+  "before first review",
+  "and leave nothing standing",
+  "while everyone watches",
+  "straight into rejection",
+] as const;
+
+const PROFANE_OPENERS = [
+  "you fucking coward",
+  "you useless bastard",
+  "you pathetic fraud",
+  "you spineless waste",
+  "you goddamn mess",
+  "you weak little liar",
+  "you brittle clown",
+  "you sorry excuse",
+  "you trembling fake",
+  "you cheap failure",
+  "you hollow loudmouth",
+  "you busted fraud",
+] as const;
+
+const PROFANE_MIDDLES = [
+  "own it",
+  "fix it",
+  "do better",
+  "get it right",
+  "ship it clean",
+  "stop hiding",
+  "stand up",
+  "prove it",
+] as const;
+
+const PROFANE_ENDINGS = ["right now", "this second", "without excuses", "or shut up"] as const;
+const PROFANE_TERMS = [
+  "FUCK",
+  "FUCKING",
+  "FUCKUP",
+  "SHIT",
+  "BULLSHIT",
+  "BASTARD",
+  "GODDAMN",
+  "DAMN",
+] as const;
+
+function buildPool(
+  first: readonly string[],
+  second: readonly string[],
+  third: readonly string[],
+  target: number,
+  formatter: (a: string, b: string, c: string) => string,
+): string[] {
+  const values: string[] = [];
+  for (let i = 0; i < first.length; i += 1) {
+    for (let j = 0; j < second.length; j += 1) {
+      for (let k = 0; k < third.length; k += 1) {
+        values.push(formatter(first[i], second[j], third[k]).replace(/\s+/g, " ").trim());
+        if (values.length >= target) {
+          return values;
+        }
+      }
+    }
+  }
+  return values;
+}
+
+const PROMPT_HEADERS = buildPool(
+  HEADER_OPENERS,
+  HEADER_CORES,
+  HEADER_ENDINGS,
+  COMPONENT_POOL_SIZE,
+  (opener, core, ending) => `${opener}: ${core} ${ending}`,
+);
+
+const ABUSIVE_ADDRESSES = buildPool(
+  ADDRESS_PREFIXES,
+  ADDRESS_SUBJECTS,
+  ADDRESS_ENDINGS,
+  COMPONENT_POOL_SIZE,
+  (prefix, subject, ending) => `${prefix} ${subject} ${ending}`,
+);
+
+const ABUSIVE_TASKS = buildPool(
+  TASK_OPENERS,
+  TASK_TARGETS,
+  TASK_ENDINGS,
+  COMPONENT_POOL_SIZE,
+  (opener, target, ending) => `${opener} ${target} ${ending}`,
+);
+
+const ABUSIVE_CONSTRAINTS = buildPool(
+  CONSTRAINT_A,
+  CONSTRAINT_B,
+  CONSTRAINT_C,
+  COMPONENT_POOL_SIZE,
+  (a, b, c) => `no ${a}, no ${b}, no ${c}`,
+);
+
+const ABUSIVE_THREATS = buildPool(
+  THREAT_TRIGGERS,
+  THREAT_ACTIONS,
+  THREAT_ENDINGS,
+  COMPONENT_POOL_SIZE,
+  (trigger, action, ending) => `${trigger} and I ${action} ${ending}`,
+);
+
+const PROFANE_ENDCAPS = buildPool(
+  PROFANE_OPENERS,
+  PROFANE_MIDDLES,
+  PROFANE_ENDINGS,
+  COMPONENT_POOL_SIZE,
+  (opener, middle, ending) => `${opener}, ${middle}, ${ending}`,
+);
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -90,14 +332,84 @@ function pickSeeded<T>(items: readonly T[], seed: number): T {
   return items[clamp(index, 0, items.length - 1)];
 }
 
+function isWordBoundary(source: string, index: number): boolean {
+  if (index < 0 || index >= source.length) {
+    return true;
+  }
+  const code = source.charCodeAt(index);
+  const isAlphaNumeric = (code >= 48 && code <= 57) || (code >= 65 && code <= 90);
+  return !isAlphaNumeric;
+}
+
+function findProfanityRanges(text: string, seed: number): EmphasisRange[] {
+  const source = text.toUpperCase();
+  const ranges: Array<{ start: number; end: number }> = [];
+
+  for (let termIndex = 0; termIndex < PROFANE_TERMS.length; termIndex += 1) {
+    const term = PROFANE_TERMS[termIndex];
+    let cursor = source.indexOf(term);
+    while (cursor >= 0) {
+      const end = cursor + term.length;
+      if (isWordBoundary(source, cursor - 1) && isWordBoundary(source, end)) {
+        ranges.push({ start: cursor, end });
+      }
+      cursor = source.indexOf(term, cursor + 1);
+    }
+  }
+
+  if (ranges.length === 0) {
+    return [];
+  }
+
+  ranges.sort((left, right) => left.start - right.start || left.end - right.end);
+  const merged: EmphasisRange[] = [];
+  let active = ranges[0];
+
+  for (let i = 1; i < ranges.length; i += 1) {
+    const next = ranges[i];
+    if (next.start <= active.end) {
+      active = { start: active.start, end: Math.max(active.end, next.end) };
+      continue;
+    }
+    merged.push({
+      start: active.start,
+      end: active.end,
+      hot: seededNoise(seed + active.start * 0.31 + active.end * 0.17) > 0.72,
+    });
+    active = next;
+  }
+
+  merged.push({
+    start: active.start,
+    end: active.end,
+    hot: seededNoise(seed + active.start * 0.31 + active.end * 0.17) > 0.72,
+  });
+
+  return merged;
+}
+
 function buildPrompt(seed: number): string {
   const header = pickSeeded(PROMPT_HEADERS, seed + 0.11);
   const address = pickSeeded(ABUSIVE_ADDRESSES, seed + 1.7);
   const task = pickSeeded(ABUSIVE_TASKS, seed + 4.3);
   const constraint = pickSeeded(ABUSIVE_CONSTRAINTS, seed + 8.9);
   const threat = pickSeeded(ABUSIVE_THREATS, seed + 13.2);
+  const endcap = pickSeeded(PROFANE_ENDCAPS, seed + 17.6);
+  const injectionSlot = Math.floor(seededNoise(seed + 23.9) * 4);
 
-  return `${header}: ${address}, ${task}; ${constraint}; ${threat}.`;
+  if (injectionSlot === 0) {
+    return `${header}: ${address}, ${endcap}, ${task}; ${constraint}; ${threat}.`;
+  }
+
+  if (injectionSlot === 1) {
+    return `${header}: ${address}, ${task}; ${endcap}; ${constraint}; ${threat}.`;
+  }
+
+  if (injectionSlot === 2) {
+    return `${header}: ${address}, ${task}; ${constraint}; ${endcap}; ${threat}.`;
+  }
+
+  return `${header}: ${address}, ${task}; ${constraint}; ${threat}; ${endcap}.`;
 }
 
 function makeBand(
@@ -116,7 +428,9 @@ function makeBand(
     parts.push(buildPrompt(nowSeed + index * 3.9 + promptIndex * 5.7).toUpperCase());
   }
 
-  const text = `>> ${parts.join("  //  ")}  //`;
+  const text = `>> ${parts.join("  //  ")}`;
+  const emphasisRanges = findProfanityRanges(text, nowSeed + index * 11.3);
+
   context.font = `${size}px ${fontFamily}`;
   const charWidth = Math.max(6, Math.ceil(context.measureText("M").width));
   const measured = charWidth * text.length;
@@ -126,11 +440,12 @@ function makeBand(
     y,
     speed: 72 + seededNoise(nowSeed + index * 4.2) * 210,
     text,
+    emphasisRanges,
     width: measured,
     charWidth,
     size,
     opacity: 0.45 + seededNoise(nowSeed + index * 5.6) * 0.5,
-    invert: seededNoise(nowSeed + index * 7.1) > 0.76,
+    invert: seededNoise(nowSeed + index * 7.1) > 0.79,
     phase: seededNoise(nowSeed + index * 9.2) * Math.PI * 2,
     reveal: 0,
     revealSpeed: 8 + seededNoise(nowSeed + index * 6.7) * 18,
@@ -144,6 +459,7 @@ function overwriteBand(target: StreamBand, next: StreamBand): void {
   target.y = next.y;
   target.speed = next.speed;
   target.text = next.text;
+  target.emphasisRanges = next.emphasisRanges;
   target.width = next.width;
   target.charWidth = next.charWidth;
   target.size = next.size;
@@ -164,16 +480,19 @@ function drawGlyphText(
   charWidth: number,
   timeSeed: number,
   glitchAmount: number,
+  glyphOffset = 0,
 ): void {
   for (let index = 0; index < text.length; index += 1) {
+    const absoluteIndex = glyphOffset + index;
     let x = Math.round((startX + index * charWidth) / 2) * 2;
     let glyphY = y;
 
     if (glitchAmount > 0.25) {
-      const spike = seededNoise(timeSeed * 0.81 + index * 19.9);
+      const spike = seededNoise(timeSeed * 0.81 + absoluteIndex * 19.9);
       if (spike > 0.86) {
-        x += Math.round((seededNoise(timeSeed + index * 7.1) - 0.5) * glitchAmount * 2.3);
-        glyphY += Math.round((seededNoise(timeSeed + index * 11.7) - 0.5) * glitchAmount * 1.5);
+        x += Math.round((seededNoise(timeSeed + absoluteIndex * 7.1) - 0.5) * glitchAmount * 2.3);
+        glyphY +=
+          Math.round((seededNoise(timeSeed + absoluteIndex * 11.7) - 0.5) * glitchAmount * 1.5);
       }
     }
 
@@ -206,6 +525,7 @@ export default function PromptFeedScene() {
     context.imageSmoothingEnabled = false;
 
     const bands: StreamBand[] = [];
+    const flickerPixels: FlickerPixel[] = [];
     const pointer = { x: 0, y: 0, vx: 0, vy: 0, active: false, energy: 0 };
     let rafId = 0;
     let lastTime = performance.now();
@@ -229,6 +549,21 @@ export default function PromptFeedScene() {
         const yBase = (index + 0.7) * spacing;
         const jitter = (seededNoise(baseSeed + index * 1.9) - 0.5) * 7;
         bands.push(makeBand(index, yBase + jitter, width, baseSeed, fontFamily, context));
+      }
+
+      flickerPixels.length = 0;
+      const flickerCount = Math.floor(clamp((width * height) / 4600, 220, 980));
+      for (let index = 0; index < flickerCount; index += 1) {
+        const seed = baseSeed + index * 17.3;
+        const large = seededNoise(seed + 4.7) > 0.9;
+        flickerPixels.push({
+          x: Math.floor(seededNoise(seed + 1.1) * width),
+          y: Math.floor(seededNoise(seed + 2.4) * height),
+          size: large ? 2 : 1,
+          threshold: 0.9 + seededNoise(seed + 5.6) * 0.09,
+          phase: seededNoise(seed + 7.9) * Math.PI * 2,
+          speed: 2.6 + seededNoise(seed + 11.2) * 8.8,
+        });
       }
     };
 
@@ -271,37 +606,35 @@ export default function PromptFeedScene() {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       pointer.energy = Math.max(0, pointer.energy - dt * 0.65);
-      const pointerNormX = pointer.active ? (pointer.x / Math.max(1, width)) * 2 - 1 : 0;
-      const pointerNormY = pointer.active ? (pointer.y / Math.max(1, height)) * 2 - 1 : 0;
       const resonance = clamp((pointer.active ? 0.08 : 0) + pointer.energy * 0.22, 0, 0.22);
 
       context.fillStyle = "rgb(0 0 0)";
       context.fillRect(0, 0, width, height);
 
-      const scanOffset = (now * 0.09) % 4;
-      context.fillStyle = "rgba(255,255,255,0.032)";
-      for (let y = -scanOffset; y < height; y += 4) {
-        context.fillRect(0, y, width, 1);
-      }
+      const flickerTime = now * 0.001;
+      const flickerBoost = resonance * 0.38;
+      context.fillStyle = "rgb(255 255 255)";
+      for (let index = 0; index < flickerPixels.length; index += 1) {
+        const pixel = flickerPixels[index];
+        const twinkle = seededNoise(pixel.phase + flickerTime * pixel.speed + index * 0.13);
+        const threshold = clamp(pixel.threshold - flickerBoost, 0.8, 0.995);
+        if (twinkle < threshold) {
+          continue;
+        }
 
-      for (let bar = 0; bar < 12; bar += 1) {
-        const barX = ((now * (0.021 + bar * 0.0019) + bar * 93.4) % (width + 120)) - 60;
-        const barOpacity = 0.01 + seededNoise(bar * 3.1 + now * 0.0005) * 0.045;
-        context.fillStyle = `rgba(255,255,255,${barOpacity.toFixed(3)})`;
-        context.fillRect(barX, 0, 2, height);
-      }
+        const intensity = (twinkle - threshold) / Math.max(0.0001, 1 - threshold);
+        const flash = seededNoise(pixel.phase * 1.7 + flickerTime * (pixel.speed * 0.63 + 0.37));
+        const alpha = clamp(0.08 + intensity * 0.72 + (flash > 0.992 ? 0.22 : 0), 0.06, 0.98);
+        const px = Math.round(pixel.x);
+        const py = Math.round(pixel.y);
 
-      const stripCount = pointer.active ? 1 : 0;
-      for (let stripIndex = 0; stripIndex < stripCount; stripIndex += 1) {
-        const seed = now * 0.0013 + stripIndex * 17.3;
-        const y = Math.floor(seededNoise(seed) * height);
-        const stripH = 1 + Math.floor(seededNoise(seed + 3.1) * 4);
-        const drift = (seededNoise(seed + 7.7) - 0.5) * (8 + resonance * 8);
-        context.globalAlpha = clamp(0.015 + resonance * 0.04, 0.012, 0.08);
-        context.fillStyle = "rgb(255 38 158)";
-        context.fillRect(drift, y, width, stripH);
-        context.fillStyle = "rgb(40 226 255)";
-        context.fillRect(-drift * 0.9, y + 1, width, stripH);
+        context.globalAlpha = alpha;
+        context.fillRect(px, py, pixel.size, pixel.size);
+
+        if (flash > 0.995) {
+          const dx = seededNoise(pixel.phase + flickerTime * 0.47) > 0.5 ? pixel.size : -pixel.size;
+          context.fillRect(px + dx, py, 1, 1);
+        }
       }
       context.globalAlpha = 1;
 
@@ -351,58 +684,17 @@ export default function PromptFeedScene() {
 
         if (band.invert) {
           const heightBand = band.size * 1.42;
-          context.globalAlpha = clamp(baseAlpha * 0.34, 0.08, 0.55);
-          context.fillStyle = "rgb(255 255 255)";
+          context.globalAlpha = clamp(baseAlpha * 0.44, 0.12, 0.62);
+          context.fillStyle = "rgb(158 158 158)";
           context.fillRect(drawX - 18, drawY - heightBand * 0.5, Math.max(30, visibleWidth + 36), heightBand);
+          context.globalAlpha = clamp(baseAlpha * 0.2, 0.06, 0.28);
+          context.fillStyle = "rgb(214 214 214)";
+          context.fillRect(drawX - 18, drawY - heightBand * 0.5, Math.max(30, visibleWidth + 36), 1);
         }
 
-        context.font = `${band.size}px ${fontFamily}`;
-        const shiftStrength = 0.45 + resonance * 0.9 + (spike > 0.96 ? 1.9 : 0);
-        const redShiftX = Math.round(shiftStrength * (0.6 + pointerNormX * 0.9));
-        const redShiftY = Math.round(shiftStrength * (pointerNormY * 0.32));
-        const cyanShiftX = -Math.round(shiftStrength * (0.55 + pointerNormX * 0.8));
-        const cyanShiftY = -Math.round(shiftStrength * (pointerNormY * 0.32));
-
-        context.globalCompositeOperation = "lighter";
-        context.globalAlpha = clamp(baseAlpha * (0.055 + resonance * 0.045), 0.02, 0.18);
-        context.fillStyle = "rgb(255 72 160)";
-        drawGlyphText(
-          context,
-          visibleText,
-          drawX + redShiftX,
-          drawY + redShiftY,
-          band.charWidth,
-          now * 0.001 + index * 13.1,
-          glitchAmount,
-        );
-
-        context.globalAlpha = clamp(baseAlpha * (0.055 + resonance * 0.045), 0.02, 0.18);
-        context.fillStyle = "rgb(42 224 255)";
-        drawGlyphText(
-          context,
-          visibleText,
-          drawX + cyanShiftX,
-          drawY + cyanShiftY,
-          band.charWidth,
-          now * 0.001 + index * 17.3,
-          glitchAmount,
-        );
-        context.globalCompositeOperation = "source-over";
-
-        context.globalAlpha = clamp(baseAlpha * 0.42, 0.08, 0.45);
-        context.fillStyle = band.invert ? "rgb(0 0 0)" : "rgb(255 255 255)";
-        drawGlyphText(
-          context,
-          visibleText,
-          drawX + 1,
-          drawY + 1,
-          band.charWidth,
-          now * 0.001 + index * 3.1,
-          glitchAmount * 0.85,
-        );
-
-        context.globalAlpha = baseAlpha;
-        context.fillStyle = band.invert ? "rgb(0 0 0)" : "rgb(255 255 255)";
+        context.font = `600 ${band.size}px ${fontFamily}`;
+        context.globalAlpha = clamp(baseAlpha * (band.invert ? 0.72 : 0.44), 0.08, 0.75);
+        context.fillStyle = band.invert ? "rgb(28 28 28)" : "rgb(168 168 168)";
         drawGlyphText(
           context,
           visibleText,
@@ -410,25 +702,111 @@ export default function PromptFeedScene() {
           drawY,
           band.charWidth,
           now * 0.001 + index * 2.2,
-          glitchAmount,
+          glitchAmount * 0.55,
         );
 
+        context.globalAlpha = clamp(baseAlpha * 0.22, 0.05, 0.34);
+        context.fillStyle = band.invert ? "rgb(52 52 52)" : "rgb(210 210 210)";
+        drawGlyphText(
+          context,
+          visibleText,
+          drawX + 1,
+          drawY + 1,
+          band.charWidth,
+          now * 0.001 + index * 3.1,
+          glitchAmount * 0.45,
+        );
+
+        for (let rangeIndex = 0; rangeIndex < band.emphasisRanges.length; rangeIndex += 1) {
+          const range = band.emphasisRanges[rangeIndex];
+          const segStart = range.start;
+          const segEnd = Math.min(range.end, typedChars);
+          if (segEnd <= segStart) {
+            continue;
+          }
+
+          const segment = band.text.slice(segStart, segEnd);
+          const segmentX = drawX + segStart * band.charWidth;
+          const hotPulse = seededNoise(now * 0.00085 + segStart * 0.93 + band.phase * 3.7) > 0.42;
+          const hot = range.hot && hotPulse;
+
+          context.font = `900 ${band.size + 1}px ${fontFamily}`;
+          context.globalCompositeOperation = "lighter";
+          context.globalAlpha = clamp(baseAlpha * (hot ? 0.66 : 0.36) + resonance * 0.2, 0.14, 0.96);
+          context.fillStyle = hot ? "rgb(255 54 54)" : "rgb(255 255 255)";
+          drawGlyphText(
+            context,
+            segment,
+            segmentX - 1,
+            drawY,
+            band.charWidth,
+            now * 0.001 + index * 11.3,
+            glitchAmount * 0.4,
+            segStart,
+          );
+          drawGlyphText(
+            context,
+            segment,
+            segmentX + 1,
+            drawY,
+            band.charWidth,
+            now * 0.001 + index * 13.8,
+            glitchAmount * 0.4,
+            segStart,
+          );
+          drawGlyphText(
+            context,
+            segment,
+            segmentX,
+            drawY - 1,
+            band.charWidth,
+            now * 0.001 + index * 15.2,
+            glitchAmount * 0.35,
+            segStart,
+          );
+          context.globalCompositeOperation = "source-over";
+
+          context.globalAlpha = clamp(baseAlpha * (hot ? 1 : 0.95), 0.28, 1);
+          context.fillStyle = hot ? "rgb(255 78 78)" : "rgb(255 255 255)";
+          drawGlyphText(
+            context,
+            segment,
+            segmentX,
+            drawY,
+            band.charWidth,
+            now * 0.001 + index * 2.6,
+            glitchAmount * 0.75,
+            segStart,
+          );
+
+          if (hot) {
+            const headLength = Math.min(3, segment.length);
+            const head = segment.slice(0, headLength);
+            context.globalCompositeOperation = "lighter";
+            context.globalAlpha = clamp(baseAlpha * 0.82 + resonance * 0.25, 0.18, 1);
+            context.fillStyle = "rgb(255 24 24)";
+            drawGlyphText(
+              context,
+              head,
+              segmentX,
+              drawY,
+              band.charWidth,
+              now * 0.001 + index * 18.3,
+              glitchAmount * 0.3,
+              segStart,
+            );
+            context.globalCompositeOperation = "source-over";
+          }
+        }
+
         if (cursorVisible) {
-          context.globalAlpha = clamp(baseAlpha * 0.92, 0.16, 1);
-          context.fillStyle = band.invert ? "rgb(0 0 0)" : "rgb(255 255 255)";
+          context.globalAlpha = clamp(baseAlpha * 0.72, 0.12, 0.95);
+          context.fillStyle = "rgb(255 255 255)";
           context.fillRect(drawX + visibleWidth + 3, drawY - cursorHeight * 0.5, cursorWidth, cursorHeight);
         }
       }
 
       context.globalAlpha = 1;
-      const vignette = context.createLinearGradient(0, 0, width, 0);
-      vignette.addColorStop(0, "rgba(0,0,0,0.98)");
-      vignette.addColorStop(0.2, "rgba(0,0,0,0.52)");
-      vignette.addColorStop(0.5, "rgba(255,255,255,0.03)");
-      vignette.addColorStop(0.8, "rgba(0,0,0,0.52)");
-      vignette.addColorStop(1, "rgba(0,0,0,0.98)");
-      context.fillStyle = vignette;
-      context.fillRect(0, 0, width, height);
 
       rafId = window.requestAnimationFrame(frame);
     };
@@ -454,7 +832,7 @@ export default function PromptFeedScene() {
     <div className="relative h-screen w-screen overflow-hidden bg-black text-white">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/20 bg-black/60 px-4 py-4 backdrop-blur-sm">
+      <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/20 bg-black/60 px-4 py-4 backdrop-blur-sm relative">
         <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-white/58">
           Exhibition Piece 6 / {PIECE_COUNT}
         </p>
