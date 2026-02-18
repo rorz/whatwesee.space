@@ -113,8 +113,8 @@ a[href] {
 
 .wws-scene-wireframe .wws-bg-tile {
   background: transparent !important;
-  opacity: 1 !important;
-  border-color: rgb(255 255 255 / 24%) !important;
+  opacity: 0 !important;
+  border-color: transparent !important;
   animation: none !important;
 }
 
@@ -124,26 +124,36 @@ a[href] {
 
 .wws-scene-wireframe .wws-swarm-aura {
   background: transparent !important;
-  border-color: rgb(255 255 255 / 30%) !important;
-  opacity: 0.32 !important;
+  border-color: transparent !important;
+  opacity: 0 !important;
 }
 
 .wws-scene-wireframe .wws-letter-tile {
   animation: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: #fff !important;
 }
 
 .wws-scene-wireframe .wws-letter-tile--core {
-  background: #fff !important;
-  color: #000 !important;
-  border-color: #000 !important;
+  background: transparent !important;
+  color: #fff !important;
+  border-color: transparent !important;
 }
 
 .wws-scene-wireframe .wws-letter-tile--swarm {
-  background: #a5a5a5 !important;
-  color: #000 !important;
-  border-color: #000 !important;
+  opacity: 0 !important;
+}
+
+.wws-title-hitzone {
+  z-index: 20;
+  pointer-events: auto;
+  cursor: pointer;
+  outline: none;
+  background: transparent;
+  border: none;
 }
 
 @keyframes wws-bg-shimmer {

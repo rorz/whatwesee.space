@@ -406,18 +406,21 @@ export default function QuantaScene() {
     }
 
     const vertexSource = `
-      attribute vec2 a_position;
+      attribute vec3 a_particle;
       attribute vec3 a_color;
       attribute float a_alpha;
       uniform float u_point_size;
       varying vec3 v_color;
       varying float v_alpha;
+      varying float v_speed;
 
       void main() {
-        gl_Position = vec4(a_position, 0.0, 1.0);
-        gl_PointSize = u_point_size;
+        float speed = clamp(a_particle.z, 0.0, 1.0);
+        gl_Position = vec4(a_particle.xy, 0.0, 1.0);
+        gl_PointSize = u_point_size * (1.0 + speed * 0.75);
         v_color = a_color;
         v_alpha = a_alpha;
+        v_speed = speed;
       }
     `;
 
@@ -425,16 +428,25 @@ export default function QuantaScene() {
       precision mediump float;
       varying vec3 v_color;
       varying float v_alpha;
+      varying float v_speed;
 
       void main() {
         vec2 center = gl_PointCoord * 2.0 - 1.0;
-        float dist = dot(center, center);
-        if (dist > 1.0) {
+        float dist = length(center);
+        if (dist > 1.2) {
           discard;
         }
 
-        float alpha = smoothstep(1.0, 0.0, dist);
-        gl_FragColor = vec4(v_color, alpha * v_alpha);
+        float body = exp(-(dist * dist) * mix(9.0, 3.6, v_speed));
+        float halo = exp(-(dist * dist) * mix(28.0, 8.4, v_speed)) * mix(0.22, 0.62, v_speed);
+        float alpha = (body + halo) * v_alpha;
+        if (alpha < 0.01) {
+          discard;
+        }
+
+        vec3 hotTint = vec3(1.0, 0.9, 0.86);
+        vec3 color = mix(v_color, hotTint, clamp((v_speed - 0.5) * 0.6, 0.0, 0.28));
+        gl_FragColor = vec4(color, alpha);
       }
     `;
 
@@ -443,12 +455,12 @@ export default function QuantaScene() {
       return;
     }
 
-    const positionLocation = gl.getAttribLocation(program, "a_position");
+    const particleLocation = gl.getAttribLocation(program, "a_particle");
     const colorLocation = gl.getAttribLocation(program, "a_color");
     const alphaLocation = gl.getAttribLocation(program, "a_alpha");
     const pointSizeLocation = gl.getUniformLocation(program, "u_point_size");
 
-    if (positionLocation < 0 || colorLocation < 0 || alphaLocation < 0 || !pointSizeLocation) {
+    if (particleLocation < 0 || colorLocation < 0 || alphaLocation < 0 || !pointSizeLocation) {
       gl.deleteProgram(program);
       return;
     }
@@ -471,7 +483,7 @@ export default function QuantaScene() {
     const basePositions = new Float32Array(pointCount * 2);
     const currentPositions = new Float32Array(pointCount * 2);
     const velocities = new Float32Array(pointCount * 2);
-    const renderPositions = new Float32Array(pointCount * 2);
+    const renderParticles = new Float32Array(pointCount * 3);
     const phaseOffsets = new Float32Array(pointCount);
     const colors = new Float32Array(pointCount * 3);
     const alphas = new Float32Array(pointCount);
@@ -496,10 +508,25 @@ export default function QuantaScene() {
 
       const warmth = seededNoise(index * 19.7 + 11.3 + loadSeed * 0.0000019);
       const pigment = seededNoise(index * 23.2 + 5.7 + loadSeed * 0.0000043);
-      colors[index * 3] = clamp(0.3 + warmth * 0.42, 0, 1);
-      colors[index * 3 + 1] = clamp(0.1 + warmth * 0.2 + pigment * 0.08, 0, 1);
-      colors[index * 3 + 2] = clamp(0.07 + warmth * 0.12 + (1 - pigment) * 0.05, 0, 1);
-      alphas[index] = 0.5 + seededNoise(index * 7.9 + 2.1 + loadSeed * 0.0000029) * 0.5;
+      const contrastSelector = seededNoise(index * 31.7 + 9.3 + loadSeed * 0.0000051);
+      const alphaSeed = seededNoise(index * 7.9 + 2.1 + loadSeed * 0.0000029);
+
+      if (contrastSelector < 0.24) {
+        colors[index * 3] = clamp(0.78 + warmth * 0.22, 0, 1);
+        colors[index * 3 + 1] = clamp(0.58 + pigment * 0.35, 0, 1);
+        colors[index * 3 + 2] = clamp(0.48 + (1 - pigment) * 0.38, 0, 1);
+        alphas[index] = 0.76 + alphaSeed * 0.24;
+      } else if (contrastSelector > 0.62) {
+        colors[index * 3] = clamp(0.02 + warmth * 0.14, 0, 1);
+        colors[index * 3 + 1] = clamp(0.01 + pigment * 0.08, 0, 1);
+        colors[index * 3 + 2] = clamp(0.01 + (1 - warmth) * 0.06, 0, 1);
+        alphas[index] = 0.8 + alphaSeed * 0.2;
+      } else {
+        colors[index * 3] = clamp(0.26 + warmth * 0.46, 0, 1);
+        colors[index * 3 + 1] = clamp(0.08 + warmth * 0.24 + pigment * 0.1, 0, 1);
+        colors[index * 3 + 2] = clamp(0.06 + warmth * 0.14 + (1 - pigment) * 0.06, 0, 1);
+        alphas[index] = 0.58 + alphaSeed * 0.42;
+      }
     }
 
     const positionBuffer = gl.createBuffer();
@@ -555,9 +582,9 @@ export default function QuantaScene() {
     gl.useProgram(program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, renderPositions.byteLength, gl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, renderParticles.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(particleLocation);
+    gl.vertexAttribPointer(particleLocation, 3, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
@@ -603,6 +630,7 @@ export default function QuantaScene() {
 
       for (let index = 0; index < pointCount; index += 1) {
         const offsetIndex = index * 2;
+        const particleOffset = index * 3;
         const baseX = basePositions[offsetIndex];
         const baseY = basePositions[offsetIndex + 1];
 
@@ -657,15 +685,21 @@ export default function QuantaScene() {
         currentPositions[offsetIndex] = x;
         currentPositions[offsetIndex + 1] = y;
 
-        renderPositions[offsetIndex] = x * aspectScaleX;
-        renderPositions[offsetIndex + 1] = y;
+        renderParticles[particleOffset] = x * aspectScaleX;
+        renderParticles[particleOffset + 1] = y;
+        const speedNorm = clamp(
+          (Math.abs(velocities[offsetIndex]) + Math.abs(velocities[offsetIndex + 1])) * 0.2,
+          0,
+          1,
+        );
+        renderParticles[particleOffset + 2] = speedNorm;
       }
 
       gl.clearColor(0.95, 0.965, 0.988, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderPositions);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderParticles);
 
       gl.drawArrays(gl.POINTS, 0, pointCount);
       rafId = window.requestAnimationFrame(frame);

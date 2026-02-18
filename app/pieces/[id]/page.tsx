@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import PiecePlaceholder from "../_components/piece-placeholder";
 import { getPieceTitle, wrapPiece } from "../_lib/piece-constants";
 import { SERVER_TOKEN_POOL } from "../_lib/token-pool";
+import CabaretProtocolScene from "../_scenes/cabaret-protocol-scene";
 import EvalsScene from "../_scenes/evals-scene";
 import HypnogagiaScene from "../_scenes/hypnogagia-scene";
 import LatentBloomScene from "../_scenes/latent-bloom-scene";
@@ -28,6 +29,7 @@ const SCENE_BY_ID: Partial<Record<number, () => ReactElement>> = {
   6: () => <PromptFeedScene />,
   7: () => <HypnogagiaScene />,
   8: () => <PromptCageScene />,
+  9: () => <CabaretProtocolScene />,
 };
 
 export default async function PiecePage({ params }: PiecePageProps) {

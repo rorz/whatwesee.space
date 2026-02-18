@@ -9,7 +9,7 @@ export const PIECE_TITLES = [
   "Fed Prompts",
   "Hypnogagia",
   "Prompt Cage",
-  "Memory Lattice",
+  "Cabaret Protocol",
   "Final Resolve",
 ] as const;
 

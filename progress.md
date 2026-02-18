@@ -490,3 +490,282 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 7 (`Hypnogagia`) click-effect removal (user feedback):
+  - Removed click-triggered node blast/disruption path so clicks no longer throw nodes out of formation.
+  - Removed click-only pointer motion bump; pointerdown now just updates pointer state without extra impulse.
+  - Result: clicking no longer materially perturbs the scene; reversion behavior is governed by movement/idle deswirl only.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 4 (`Quanta`) fuzzy-points + contrast pass (user-requested):
+  - Updated point shader pipeline to carry per-point speed into the fragment stage (`a_particle.z -> v_speed`).
+  - Added speed-aware fuzzy rendering in fragment shader: moving points now get softer bodies + larger glow halos.
+  - Added slight warm tint lift on faster points to accent motion fuzz.
+  - Increased likelihood of stark high-contrast points by rebalancing color generation into three buckets:
+    - bright/high-contrast highlights,
+    - deep near-black contrast points,
+    - mid-tone points.
+  - Kept core Quanta motion system and structural behavior unchanged.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 8 style/personality overhaul (user-requested):
+  - Replaced prior dark `Prompt Cage` treatment with a high-saturation theatrical scene in `app/pieces/_scenes/prompt-cage-scene.tsx`.
+  - New scene title is `Cabaret Protocol` with updated piece title mapping in `app/pieces/_lib/piece-constants.ts`.
+  - Added a novel visual system: rotating color rays, staged floor rings, animated cast of expressive blob performers, and flying word bursts.
+  - Pointer interaction now behaves like a conductor:
+    - move cursor to steer spotlight + performer attention,
+    - hold click to spike scene energy and trigger larger text eruptions.
+  - Preserved machine-readable hooks (`window.render_game_to_text`, `window.advanceTime`) with updated state payload for Piece 8.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Attempted required `web_game_playwright_client` run; default sandbox Chromium launch is blocked by platform permissions in this environment.
+  - Executed fallback Chrome-based runtime verification script (`node /tmp/wws_verify.mjs`) against `/pieces/8`:
+    - screenshot: `/tmp/wws-piece8-cabaret/shot-0.png`
+    - text state: `/tmp/wws-piece8-cabaret/state-0.json`
+    - console/page errors: none (`errors-0.json` not created)
+- TODO:
+  - Optional polish: add responsive scaling tweaks for very small mobile widths (< 380px) to reduce overlay crowding.
+- Piece 8 + 9 reallocation and reskin (user-requested):
+  - Moved the existing `Cabaret Protocol` scene into its own module at `app/pieces/_scenes/cabaret-protocol-scene.tsx` and mapped it to Piece 9.
+  - Restored Piece 8 to `Prompt Cage` and applied a heavy `HAM overload` digital-cage reskin in `app/pieces/_scenes/prompt-cage-scene.tsx`.
+  - Prompt Cage reskin changes:
+    - Matrix-like glyph rain layer using mixed ASCII + Japanese glyph streams.
+    - Neon cyber palette (green/teal) across cage, bars, ghost trail, and core glow.
+    - Large superimposed poem overlay with breathing/pulsing crossfade style over the full scene.
+    - Extended `render_game_to_text` payload with `glyphField` telemetry.
+  - Updated piece mapping and labels:
+    - `app/pieces/[id]/page.tsx`: Piece 9 now renders `CabaretProtocolScene`.
+    - `app/pieces/_lib/piece-constants.ts`: Piece 8 title set to `Prompt Cage`; Piece 9 title set to `Cabaret Protocol`.
+    - `app/pieces/_components/piece-placeholder.tsx`: availability copy updated to include piece 9.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Runtime verification via Chrome-based script (`node /tmp/wws_verify.mjs`) against both scenes:
+    - Piece 8 screenshot: `/tmp/wws-piece8-ham/shot-0.png`
+    - Piece 8 state: `/tmp/wws-piece8-ham/state-0.json`
+    - Piece 9 screenshot: `/tmp/wws-piece9-cabaret/shot-0.png`
+    - Piece 9 state: `/tmp/wws-piece9-cabaret/state-0.json`
+    - Console/page errors: none for either piece.
+- Piece 8 poem-content correction (user-requested):
+  - Restored `PLAQUE_LINES` in `app/pieces/_scenes/prompt-cage-scene.tsx` to the exact original Prompt Cage poem text.
+  - Kept the HAM overload visual reskin and Piece 9 Cabaret mapping unchanged.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Runtime screenshot recapture attempt failed in-session due intermittent headless Chrome launch abort (`SIGABRT`) in sandbox; source-level diff confirms poem text restoration.
+- Piece 8 visual direction pivot (user-requested):
+  - Removed overt matrix/cyber-glyph treatment from `app/pieces/_scenes/prompt-cage-scene.tsx`.
+  - Rebuilt Piece 8 as a DOOM-like labyrinth scene using a software raycasting corridor renderer.
+  - Preserved the original poem lines verbatim and moved poem delivery into a right-side live character chat feed (`Signal Feed`) with streaming/typewriter progression.
+  - Kept `window.render_game_to_text` and `window.advanceTime` support with updated state payload (player pose, labyrinth proximity, chat progress).
+  - Added movement controls (`WASD`, arrow turn, shift sprint, mouse-look) and in-canvas minimap/reticle for navigation readability.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Browser screenshot validation attempted but headless Chrome launch intermittently aborts in sandbox (`SIGABRT`), so no new capture artifact was produced in this pass.
+- Piece 3 (`Evals`) visual direction rewrite to user request:
+  - Replaced flat verdict-card aesthetic with 3D bubblegum packet geometry (depth shell, crimped sides, gloss, icon/label decals).
+  - Implemented stencil-style packet shading via offscreen mask + composited animated texture pass (`destination-in` mask, `screen` blend back to main canvas).
+  - Locked scene base to pure black backdrop and centered a fog-void sink that gradually absorbs packets.
+  - Added slower disappearance curve into fog with life/fog/void-distance blended visibility.
+  - Added deterministic testing hooks in Piece 3 (`window.render_game_to_text`, `window.advanceTime`) to align with Playwright loop reliability.
+- Verification (Piece 3 bubblegum rewrite):
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright scene capture attempts were blocked in-session by browser launch sandbox restrictions (`mach_port_rendezvous` / `SIGABRT` around Chromium/Chrome headless launch).
+  - Escalated rerun request for unrestricted Playwright execution was rejected, so no new screenshot artifact could be generated in this pass.
+- Piece 8 de-admin pass + DOOM-labyrinth style overhaul (user-requested):
+  - Replaced Piece 8 scene implementation in `app/pieces/_scenes/prompt-cage-scene.tsx` with a stylized software-raycast labyrinth presentation.
+  - Added a thick pixel filter pipeline by rendering the world to a low-resolution offscreen canvas and upscaling with nearest-neighbor (`imageSmoothingEnabled = false`).
+  - Converted movement model to autonomous actor navigation through the cage labyrinth (self-driven steering + collision handling + obstacle-aware turning).
+  - Added camera pan behavior driven by pointer position; pan offset also biases actor steering slightly.
+  - Reworked right-side interface into a gray-backed chat window with:
+    - large square-font poem stream,
+    - grug avatar block above the feed,
+    - rolling history and live typewriter line.
+  - Kept original poem text verbatim.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Runtime screenshot verification attempted via local Chrome Playwright script (`/tmp/wws_verify_piece8_doom.mjs`), but launch aborts in this sandbox (`SIGABRT`), so no fresh screenshot artifact was produced in-session.
+- Piece 8 autopilot reliability fix (user-requested):
+  - Added grid path-following for the auto character using BFS route planning (`findGridPath`) over open maze cells.
+  - Added patrol goal cycle so movement stays on a vague ongoing route instead of purely reactive wall-avoidance.
+  - Added periodic replanning (`PATH_REPLAN_MS`) and waypoint progression (`WAYPOINT_REACH_DISTANCE`).
+  - Added stuck detection + recovery (`STUCK_CHECK_MS`, recovery spin, forced replans, goal advance) to prevent corner stalls.
+  - Extended state payload with navigation telemetry (`targetCell`, `pathRemaining`) for easier text-mode verification.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 (`Evals`) hard reset after user feedback:
+  - Replaced prior 2D faux-card implementation with a WebGL scene in `app/pieces/_scenes/evals-scene.tsx`.
+  - Implemented a contiguous 3D bubblegum packet model (front/back/sides in one connected mesh).
+  - Added normalized UV mapping across the model and a generated bubblegum-style texture map sampled in shader.
+  - Added true Z-axis transport into the void (`x,y,z` simulation), including downward depth motion for “fall and fade” behavior.
+  - Added broad blended fog-void field in shader and per-fragment fog darkening for depth/radial absorption.
+  - Added recycle hit plane on depth (`recyclePlaneZ`) so packets respawn instead of accumulating/spinning indefinitely.
+  - Kept deterministic automation hooks: `window.render_game_to_text` and `window.advanceTime`.
+- Texture reference research (CC0 sources reviewed for style direction):
+  - ambientCG textures are CC0 and reusable for texture workflows.
+  - Poly Haven textures API/reference is CC0 and reusable.
+  - Wikimedia mirror pages for ambientCG foil maps were consulted, but direct download attempts hit rate-limit / network constraints in this sandbox.
+- Verification for this pass:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Runtime screenshot/state capture remains blocked in-session by headless browser launch restrictions (`SIGABRT` / permission issue), so final visual tuning must be confirmed in an unrestricted local browser run.
+- Piece 3 post-feedback stabilization pass ("seizure" reduction):
+  - Reduced packet count and overall motion amplitude substantially.
+  - Removed animated UV texture drift and lowered specular/fresnel intensity to avoid flicker.
+  - Softened tint palette toward pastel values for both wrong/right packets.
+  - Smoothed/flattened void fog field (less ring/noise contrast).
+  - Slowed swirl, spin, pointer influence, and click impulse behaviors.
+  - Kept Z-fall + recycle-plane behavior intact while making descent calmer and more legible.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 additional slowdown pass (user-requested):
+  - Reduced active packet count again (`22`) to lower visual churn.
+  - Added global motion scaling (`motionSpeed`) and separate slower rotation scaling (`rotationSpeed`).
+  - Lowered spawn travel/orbit/depth velocities and angular velocities.
+  - Weakened pointer/click interaction forces.
+  - Increased lifespan while reducing per-frame translation/rotation speed for slower drift.
+  - Tightened frame delta clamp to reduce sudden motion jumps.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 neon + depth rewrite pass (user-requested):
+  - Increased neon intensity in packet shading (stronger saturated base + stronger specular/fresnel response) while keeping glossy surface cues.
+  - Forced background fog field close to pitch-black (removed visible gray haze while preserving sink behavior).
+  - Extended depth field dramatically (`far=180`, `voidCenter.z=-36`, `recyclePlaneZ=-88`) so packets travel far back before recycle.
+  - Reworked depth-fog curve to fade progressively across long Z travel instead of near-camera blip disappearance.
+  - Restored visible eval writing on packets with a projected label overlay pass (headline + batch id + right/wrong icon per packet).
+  - Slightly increased motion scale from ultra-slow to graceful swirl while preserving controlled dynamics.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 additional slowdown tweak (user-requested):
+  - Reduced `motionSpeed` (`0.48 -> 0.27`) and `rotationSpeed` (`0.36 -> 0.22`).
+  - Lowered spawn travel/orbit/depth velocities and reduced swirl/pull forces.
+  - Reduced pointer and click impulse strength further.
+  - Increased velocity damping and tightened frame delta clamp for smoother drift.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 cohesion + motion pass (user-requested):
+  - Removed detached screen-space label overlay and switched to per-packet self-contained textures (label + batch + icon baked into each packet texture at spawn).
+  - Each rendered packet is now a single cohesive object (mesh + its own texture), avoiding split/ghosted "separate layer" feel.
+  - Reduced packet mesh thickness (`0.11`) so forms read as one glossy pill rather than stacked slabs.
+  - Motion retuned to soft drooping descent:
+    - Dramatically reduced orbit/swirl terms.
+    - Added persistent gentle downward droop force in `y`.
+    - Reduced spawn lateral variation and biased entry from top for falling behavior.
+    - Increased depth range (`recyclePlaneZ = -140`) for long graceful fade into black.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 neon-lighting correction pass (user-requested "normals on neon fire"):
+  - Replaced pastel tint presets with high-saturation neon wrong/right palettes.
+  - Upgraded packet fragment lighting: stronger bump-influenced normals, dual-light diffuse, strong tight+wide specular, amplified rim glow, and saturation boost.
+  - Increased baked packet-texture contrast/gloss (stronger gradient alpha, brighter highlights, stronger edge strokes, brighter label text).
+  - Kept self-contained packet rendering model (no detached overlay labels) and soft-drooping motion/deep depth fade from prior pass.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 feed-path correction (user-requested):
+  - Reworked spawn to top-only in-frame lanes (removed wide side entries).
+  - Added screen-space bottom hit-plane recycle (`screenY >= viewportHeight + 40`) for continuous feed behavior.
+  - Added in-frame X clamping in world-projected bounds to prevent far out-of-frame drift.
+  - Further reduced curl/swirl and added stronger downward droop force for soft dropping motion.
+  - Kept deep Z-fade + recycle depth behavior intact.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 (`Evals`) visual/motion reset for bubblegum-neon direction:
+  - Rebuilt `app/pieces/_scenes/evals-scene.tsx` around cohesive single-packet cards (no detached backing slabs) with wrapped-film styling, neon edge emission, and in-card eval text (`label` + `batch`).
+  - Shifted palette to stronger electric neon values for both wrong/right cards and increased additive glow pass intensity.
+  - Kept backdrop pitch-black and added broad post-card black fog overlays centered on the drain so cards fade deeply into void rather than hard-blipping.
+  - Reworked movement to softer drooping descent with restrained swirl near drain, tighter in-frame lane containment, and an explicit bottom hit-plane recycle (`hitPlaneY`) for continual feed.
+  - Preserved deterministic hooks: `window.render_game_to_text` and `window.advanceTime`.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright run attempted with `$WEB_GAME_CLIENT` against `/pieces/3` but browser launch still fails in this sandbox (`MachPortRendezvousServer ... Permission denied`).
+- Homepage start-screen hover simplification + responsiveness pass (user-requested):
+  - Updated wireframe hover mode to a true bare treatment in `app/globals.css`:
+    - removed visible background tile shading/borders,
+    - removed swarm aura visibility,
+    - kept only white title text on black.
+  - Removed per-letter hover/focus listeners from `app/page.tsx` to reduce event churn.
+  - Added a single expanded title interaction hitzone (`TitleHoverZone`) that tracks the moving core letters and provides consolidated pointer listeners (`enter/move/down/up/leave/cancel`) for smoother activation.
+  - Added guarded wireframe state toggles (`enableWireframe` / `disableWireframe`) to avoid redundant state updates while moving across the title region.
+- Verification:
+  - `pnpm exec eslint app/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Runtime screenshot verification attempts with both Playwright clients were blocked in this sandbox (browser launch failure / `mach_port_rendezvous` permission + `SIGABRT`), so visual confirmation must be checked in a local unrestricted browser session.
+- Follow-up adjustment:
+  - Removed focus/tab listeners from the invisible title hitzone to avoid adding a hidden tab stop; interaction now uses pointer listeners only.
+- Piece 3 startup placement fix:
+  - Resolved top-left clustering bug in `app/pieces/_scenes/evals-scene.tsx` by calling `resize()` before initial card spawn, so first-frame spawn positions use real viewport dimensions.
+  - Removed duplicate later `resize()` call in setup since initialization now happens before first spawn.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 simplification pass (user request: "just neon eval sliders in a swirl into the void"):
+  - Reframed packet proportions and rendering to read as neon slider pills: elongated rounded form, central slider track, luminous knob state, and retained eval text (`label`, `batch`).
+  - Increased emission contrast and cleaned the look toward a simpler neon-on-black treatment.
+  - Simplified motion profile to continuous soft downward spiral toward the drain with controlled swirl and bottom-hit-plane recycling.
+  - Kept pitch-black fog void and drain emphasis so cards disappear into darkness.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` currently fails due unrelated pre-existing error in `app/pieces/_scenes/cabaret-protocol-scene.tsx` (`Property 'mouth' does not exist on type 'CabaretPerformer'`).
+- Piece 3 full rewrite (loop-break reset):
+  - Replaced prior force-based card motion with deterministic spiral-path progression (`progress`-driven pose) so eval items now reliably descend and swirl into a central void without chaotic off-frame behavior.
+  - Rebuilt card design as explicit neon slider pills (single cohesive shape): wrapped shell, central slider track, luminous knob state, and preserved eval text (`label` + `batch`).
+  - Kept a pitch-black backdrop with broad black fog overlays and subtle drain rings for "swirl into the void" behavior.
+  - Retained bottom-hit-plane and progress-threshold recycling for continuous feed.
+  - Preserved deterministic hooks: `window.render_game_to_text` and `window.advanceTime`.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright run attempted against `/pieces/3`; browser launch remains blocked in this sandbox (`MachPortRendezvousServer ... Permission denied`).
+
+## 2026-02-18
+- Piece 9 (`Cabaret Protocol`) emotional-agent pass (user-requested):
+  - Added a named cast for agents (`Ari`, `Bex`, `Cyra`, `Dimo`, `Echo`, `Fenn`, `Gia`, `Hex`, `Ivo`, `Juno`, `Kade`) and rendered each name directly on-stage for personability.
+  - Replaced mouth-only behavior with an explicit emotion model:
+    - click-hold drives all agents into frowning expressions,
+    - release drives agents into happy/ecstatic expressions with sparkle accents.
+  - Added room-level emotion transitions:
+    - backdrop darkens while click is held (`roomEmotion: "pressed"`),
+    - release triggers a bright bloom/light rebound (`roomEmotion: "ecstatic"`), then settles to calm.
+  - Extended `render_game_to_text` state to include per-agent `name`, numeric `mood`, and categorical `emotion`, plus room-level emotion mode.
+  - Updated piece copy/instructions to explicitly communicate the new emotional controls (dark/frown on hold, light/ecstatic on release).
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - `$WEB_GAME_CLIENT` run against `/pieces/9` attempted, but browser launch fails in this sandbox (`MachPortRendezvousServer ... Permission denied` / `SIGABRT`), so screenshot-based visual confirmation remains blocked in-session.
+
+- Piece 9 mantra/word polarity update (user-requested):
+  - Replaced single mantra bank with dual banks:
+    - positive mantras when not clicked/released,
+    - negative mantras while click is held.
+  - Replaced single burst-word bank with dual positive/negative word pools.
+  - Word emission now follows interaction polarity:
+    - hold/click emissions are negative,
+    - ambient + release emissions are positive.
+  - On-screen mantra panel now dynamically mirrors click state polarity in real time.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 3 hard rewrite (second full reset):
+  - Replaced prior implementation with a fresh slider-only renderer in `app/pieces/_scenes/evals-scene.tsx`.
+  - New motion system is deterministic `t`-driven spiral/drop into the drain (not force-chaos), with continuous recycle.
+  - New visuals are explicit neon slider pills: shell, track, value fill, glowing knob, and eval text.
+  - Kept pitch-black fog void and drain ring treatment.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.

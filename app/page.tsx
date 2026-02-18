@@ -51,6 +51,13 @@ type TransitionCell = {
   rotate: number;
 };
 
+type TitleHoverZone = {
+  colStart: number;
+  colEnd: number;
+  rowStart: number;
+  rowEnd: number;
+};
+
 type DocumentWithViewTransition = Document & {
   startViewTransition?: (updateCallback: () => void | Promise<void>) => void;
 };
@@ -314,6 +321,51 @@ export default function Home() {
     [cols, swarmMap],
   );
 
+  const titleHoverZone = useMemo<TitleHoverZone | null>(() => {
+    const coreTiles = letterTiles.filter((tile) => tile.core);
+    if (coreTiles.length === 0) {
+      return null;
+    }
+
+    let minCol = cols - 1;
+    let maxCol = 0;
+    let minRow = rows - 1;
+    let maxRow = 0;
+
+    coreTiles.forEach((tile) => {
+      minCol = Math.min(minCol, tile.col);
+      maxCol = Math.max(maxCol, tile.col);
+      minRow = Math.min(minRow, tile.row);
+      maxRow = Math.max(maxRow, tile.row);
+    });
+
+    const colPadding = cols < 26 ? 5 : cols < 42 ? 4 : 3;
+    const rowPadding = rows < 18 ? 3 : 2;
+
+    const zoneStartCol = Math.max(0, minCol - colPadding);
+    const zoneEndCol = Math.min(cols - 1, maxCol + colPadding);
+    const zoneStartRow = Math.max(0, minRow - rowPadding);
+    const zoneEndRow = Math.min(rows - 1, maxRow + rowPadding);
+
+    return {
+      colStart: zoneStartCol + 1,
+      colEnd: zoneEndCol + 2,
+      rowStart: zoneStartRow + 1,
+      rowEnd: zoneEndRow + 2,
+    };
+  }, [cols, letterTiles, rows]);
+
+  const titleHoverZoneStyle = useMemo<CSSProperties>(
+    () =>
+      titleHoverZone
+        ? {
+            gridColumn: `${titleHoverZone.colStart} / ${titleHoverZone.colEnd}`,
+            gridRow: `${titleHoverZone.rowStart} / ${titleHoverZone.rowEnd}`,
+          }
+        : {},
+    [titleHoverZone],
+  );
+
   const coreLetterSize = `clamp(0.9rem, ${Math.max(1.1, 23 / cols) * 2.15}vw, 1.7rem)`;
   const swarmLetterSize = `clamp(0.65rem, ${Math.max(0.9, 23 / cols) * 1.5}vw, 1.15rem)`;
   const transitionCells = useMemo<TransitionCell[]>(
@@ -406,6 +458,14 @@ export default function Home() {
     [clearActiveEyes],
   );
 
+  const enableWireframe = useCallback(() => {
+    setIsWireframe((previous) => (previous ? previous : true));
+  }, []);
+
+  const disableWireframe = useCallback(() => {
+    setIsWireframe((previous) => (previous ? false : previous));
+  }, []);
+
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       pointerRef.current = { x: event.clientX, y: event.clientY };
@@ -437,6 +497,11 @@ export default function Home() {
     },
     [cols, rows, openEyesNear],
   );
+
+  const handlePointerLeave = useCallback(() => {
+    clearActiveEyes();
+    disableWireframe();
+  }, [clearActiveEyes, disableWireframe]);
 
   const handleEnterExhibition = useCallback(() => {
     if (isTransitioning) {
@@ -482,7 +547,7 @@ export default function Home() {
         className="relative grid h-full w-full gap-0 bg-black p-0 font-pixel-square"
         style={gridTemplateStyle}
         onPointerMove={handlePointerMove}
-        onPointerLeave={clearActiveEyes}
+        onPointerLeave={handlePointerLeave}
       >
         <BackgroundLayer tiles={backgroundTiles} registerEyeRef={registerEyeRef} />
 
@@ -516,14 +581,24 @@ export default function Home() {
                   "--wws-drift-y": `${tile.driftY.toFixed(2)}px`,
                 } as CSSProperties
               }
-              onMouseEnter={() => setIsWireframe(true)}
-              onMouseLeave={() => setIsWireframe(false)}
-              onFocus={() => setIsWireframe(true)}
-              onBlur={() => setIsWireframe(false)}
             >
               {tile.char}
             </span>
           ))}
+
+          {titleHoverZone ? (
+            <span
+              className="wws-title-hitzone"
+              style={titleHoverZoneStyle}
+              onPointerEnter={enableWireframe}
+              onPointerMove={enableWireframe}
+              onPointerDown={enableWireframe}
+              onPointerUp={enableWireframe}
+              onPointerLeave={disableWireframe}
+              onPointerCancel={disableWireframe}
+              aria-hidden
+            />
+          ) : null}
         </div>
       </main>
 
