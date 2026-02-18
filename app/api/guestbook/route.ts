@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { Filter } from "bad-words";
 import { NextResponse } from "next/server";
+import { Pool } from "pg";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,21 @@ const MAX_MESSAGE_LENGTH = 50;
 const MAX_ENTRIES = 500;
 const ALPHANUMERIC_AND_SPACES_ONLY = /^[a-z0-9 ]+$/i;
 const profanityFilter = new Filter();
+const DATABASE_URL = process.env.DATABASE_URL ?? "";
+
+const globalDbState = globalThis as typeof globalThis & {
+  guestbookPool?: Pool;
+  guestbookSchemaReady?: Promise<void>;
+};
+
+const guestbookPool =
+  DATABASE_URL.length > 0
+    ? (globalDbState.guestbookPool ??=
+        new Pool({
+          connectionString: DATABASE_URL,
+          max: 3,
+        }))
+    : null;
 
 function isAlphanumericWithSpaces(value: string): boolean {
   return ALPHANUMERIC_AND_SPACES_ONLY.test(value);
@@ -46,7 +62,82 @@ function normalizeEntry(value: unknown): GuestbookEntry | null {
   return { id, name, message, createdAt };
 }
 
+function toIsoTimestamp(value: unknown): string {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+
+  return new Date().toISOString();
+}
+
+async function ensureGuestbookSchema(): Promise<void> {
+  if (!guestbookPool) {
+    return;
+  }
+
+  if (!globalDbState.guestbookSchemaReady) {
+    globalDbState.guestbookSchemaReady = guestbookPool
+      .query(
+        `
+          CREATE TABLE IF NOT EXISTS guestbook_entries (
+            id TEXT PRIMARY KEY,
+            name VARCHAR(64) NOT NULL,
+            message VARCHAR(50) NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          );
+          CREATE INDEX IF NOT EXISTS guestbook_entries_created_at_idx
+            ON guestbook_entries (created_at DESC);
+        `,
+      )
+      .then(() => undefined);
+  }
+
+  await globalDbState.guestbookSchemaReady;
+}
+
+type GuestbookRow = {
+  id: string;
+  name: string;
+  message: string;
+  created_at: string | Date;
+};
+
+async function readEntriesFromDatabase(): Promise<GuestbookEntry[]> {
+  if (!guestbookPool) {
+    return [];
+  }
+
+  await ensureGuestbookSchema();
+  const result = await guestbookPool.query<GuestbookRow>(
+    `
+      SELECT id, name, message, created_at
+      FROM guestbook_entries
+      ORDER BY created_at DESC
+      LIMIT $1
+    `,
+    [MAX_ENTRIES],
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    message: row.message,
+    createdAt: toIsoTimestamp(row.created_at),
+  }));
+}
+
 async function readEntries(): Promise<GuestbookEntry[]> {
+  if (guestbookPool) {
+    return readEntriesFromDatabase();
+  }
+
   try {
     const raw = await readFile(DATA_FILE, "utf8");
     const parsed: unknown = JSON.parse(raw);
@@ -65,6 +156,40 @@ async function readEntries(): Promise<GuestbookEntry[]> {
     return entries;
   } catch {
     return [];
+  }
+}
+
+async function trimDatabaseEntries(): Promise<void> {
+  if (!guestbookPool) {
+    return;
+  }
+
+  await guestbookPool.query(
+    `
+      DELETE FROM guestbook_entries
+      WHERE id IN (
+        SELECT id
+        FROM guestbook_entries
+        ORDER BY created_at DESC
+        OFFSET $1
+      )
+    `,
+    [MAX_ENTRIES],
+  );
+}
+
+async function insertEntryIntoDatabase(entry: GuestbookEntry): Promise<void> {
+  if (guestbookPool) {
+    await ensureGuestbookSchema();
+    await guestbookPool.query(
+      `
+        INSERT INTO guestbook_entries (id, name, message, created_at)
+        VALUES ($1, $2, $3, $4::timestamptz)
+      `,
+      [entry.id, entry.name, entry.message, entry.createdAt],
+    );
+    await trimDatabaseEntries();
+    return;
   }
 }
 
@@ -119,13 +244,17 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    const entries = await readEntries();
-    entries.unshift(entry);
-    if (entries.length > MAX_ENTRIES) {
-      entries.length = MAX_ENTRIES;
-    }
+    if (guestbookPool) {
+      await insertEntryIntoDatabase(entry);
+    } else {
+      const entries = await readEntries();
+      entries.unshift(entry);
+      if (entries.length > MAX_ENTRIES) {
+        entries.length = MAX_ENTRIES;
+      }
 
-    await writeEntries(entries);
+      await writeEntries(entries);
+    }
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch {

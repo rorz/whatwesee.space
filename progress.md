@@ -1111,3 +1111,73 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm exec eslint app/api/guestbook/route.ts app/guestbook/page.tsx` passes.
   - `pnpm exec tsc --noEmit` passes.
+
+## 2026-02-18
+- Homepage copy/layout refinement (user-requested):
+  - Reduced `Admission Free` size and increased top margin to push it slightly lower under the CTA.
+  - Replaced bottom-left heading with `An insight into the Agentic Condition`.
+  - Added a new Rory profile placeholder block (photo placeholder + linked X handle `@rorzio` -> `https://x.com/rorzio`).
+  - Simplified copyright line to `© Rory McMeekin.`
+- Verification:
+  - `pnpm exec eslint app/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright homepage runtime check via `$WEB_GAME_CLIENT` was attempted; browser launch was blocked by sandbox permissions and escalated retry was rejected in-session.
+
+- Homepage Rory note styling update (user-requested):
+  - Renamed section label to `Rory Human`.
+  - Restyled note text block to bold monospace with black background and stark white text (`font-mono`, `font-extrabold`, `bg-black`, `text-white`).
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright client run passes on start page with screenshot captured at `/tmp/wws-rory-note/shot-0.png` and visually inspected.
+- Guestbook persistence migration to Neon/Postgres (user provided `DATABASE_URL`):
+  - Added `pg` dependency and wired `/app/api/guestbook/route.ts` to use Postgres when `DATABASE_URL` is present.
+  - Added lazy one-time schema init on first request:
+    - table: `guestbook_entries` (`id`, `name`, `message`, `created_at`),
+    - index: `guestbook_entries_created_at_idx` on `created_at DESC`.
+  - `GET /api/guestbook` now reads entries from DB (latest first, bounded by `MAX_ENTRIES`) when DB is configured.
+  - `POST /api/guestbook` now inserts directly into DB and trims older records past the entry cap in DB mode.
+  - File-based JSON storage remains as a fallback only when `DATABASE_URL` is missing.
+- Verification:
+  - `pnpm exec eslint app/api/guestbook/route.ts app/guestbook/page.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+
+- Homepage creator block text tweak (user-requested):
+  - Changed profile name label to `Rory McMeekin`.
+  - Replaced the old section label with subtitle `about the creator`.
+  - Kept profile placeholder text removed (none rendered).
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright start-page run passes against existing dev server on `http://127.0.0.1:3047`; screenshot `/tmp/wws-creator-copy/shot-0.png` visually confirms `RORY MCMEEKIN` and `ABOUT THE CREATOR`.
+
+- Homepage Codex pill refinement (user-requested):
+  - Moved the `Made exclusively with OpenAI Codex` badge to a standalone bottom-center overlay.
+  - Upgraded styling with a metallic white gradient, stronger border/ring, and deeper shadow for a cooler look.
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright start-page run passes (`http://127.0.0.1:3047`), screenshot `/tmp/wws-pill-bottom/shot-0.png` visually confirms bottom placement and updated pill styling.
+
+- Homepage creator subtitle removal (user-requested):
+  - Removed the subtitle line above the creator note block (no `Rory Human` / `about the creator` heading now).
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-remove-subtitle/shot-0.png` visually confirms subtitle removed.
+
+- Homepage pill reposition + style tuning (user-requested):
+  - Moved the Codex pill into the bottom-left content stack, directly below the intro description and above the Rory section.
+  - Subdued visual style (softer shadow/surface) while keeping bold uppercase typography.
+  - Removed standalone bottom-center pill overlay.
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-pill-subdued-left/shot-0.png` visually confirms requested position and tone.
+
+- Homepage copy hierarchy + Rory note sizing (user-requested):
+  - Increased and bolded the main description text (`text-sm/sm:text-base`, `font-semibold`).
+  - Added explicit serious note: `Serious note: this art exhibition is entirely AI generated.` in bold.
+  - Reduced Rory note block text size (`text-[11px]`, `sm:text-xs`).
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-description-bold/shot-0.png` visually confirms larger bold description, explicit AI-generated note, and smaller Rory note text.
+
+- Codex pill tone refinement (user-requested):
+  - Restyled the badge to be sharper/cleaner and significantly more faded (light border, translucent fill, reduced icon contrast, tighter tracking).
+  - Kept bold uppercase emphasis intact.

@@ -9,11 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "bad-words": "^4.0.0",
     "geist": "^1.7.0",
     "next": "16.1.6",
+    "pg": "^8.18.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "vercel": "^50.19.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

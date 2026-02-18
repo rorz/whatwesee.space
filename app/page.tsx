@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { PIECE_COUNT } from "./pieces/_lib/piece-constants";
@@ -640,30 +641,68 @@ export default function Home() {
         >
           {isTransitioning ? `loading piece ${targetPiece}` : "enter exhibition"}
         </button>
-        <p className="mt-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-white/82 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs">
+        <p className="mt-3 font-sans text-[10px] font-semibold uppercase tracking-[0.14em] text-white/82 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-[11px]">
           Admission Free
         </p>
       </div>
 
       <div className="pointer-events-none absolute bottom-4 left-4 z-20 max-w-xl text-white sm:bottom-6 sm:left-6">
         <p className="font-sans text-lg font-semibold tracking-[0.02em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xl">
-          Welcome to WHAT WE SEE
+          An insight into the Agentic Condition
         </p>
-        <p className="mt-2 font-sans text-xs leading-relaxed text-white/86 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-sm">
+        <p className="mt-2 font-sans text-sm font-semibold leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
           This exhibition moves through nine rooms about how machines see, decide, and perform.
         </p>
-        <p className="mt-2 font-sans text-xs leading-relaxed text-white/86 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-sm">
+        <p className="mt-2 font-sans text-sm font-semibold leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
           Start with pressure and control, end with spectacle and emotion. Stay with each room long
           enough to feel the system reveal itself.
         </p>
+        <p className="mt-2 font-sans text-sm font-extrabold leading-relaxed text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
+          Serious note: this art exhibition is entirely AI generated.
+        </p>
+        <div className="mt-3">
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-white/18 bg-white/10 px-3 py-1 font-sans text-[9px] font-bold uppercase tracking-[0.11em] text-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] sm:text-[10px]">
+            <span className="inline-flex h-3.5 w-3.5 items-center justify-center text-white/52" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="4.7" r="2.4" />
+                <circle cx="17.7" cy="8" r="2.4" />
+                <circle cx="17.7" cy="16" r="2.4" />
+                <circle cx="12" cy="19.3" r="2.4" />
+                <circle cx="6.3" cy="16" r="2.4" />
+                <circle cx="6.3" cy="8" r="2.4" />
+              </svg>
+            </span>
+            Made exclusively with OpenAI Codex
+          </p>
+        </div>
+        <div className="mt-3 flex items-start gap-3 border-l border-white/25 pl-3">
+          <Image
+            src="/rory-profile.png"
+            alt="Profile picture of Rory"
+            width={56}
+            height={56}
+            className="h-14 w-14 shrink-0 border border-white/40 object-cover"
+            priority
+          />
+          <div className="min-w-0">
+            <p className="font-sans text-[10px] uppercase tracking-[0.13em] text-white/70">Rory McMeekin</p>
+            <a
+              href="https://x.com/rorzio"
+              target="_blank"
+              rel="noreferrer"
+              className="pointer-events-auto mt-1 inline-block font-sans text-xs text-orange-300 underline decoration-orange-300/70 underline-offset-2 transition-colors hover:text-orange-200 sm:text-sm"
+            >
+              @rorzio on X
+            </a>
+          </div>
+        </div>
         <div className="mt-3 border-l border-white/25 pl-3">
-          <p className="font-sans text-[10px] uppercase tracking-[0.13em] text-white/70">About Rory</p>
-          <p className="mt-1 whitespace-pre-line font-sans text-xs leading-relaxed text-white/82 sm:text-sm">
+          <p className="mt-1 whitespace-pre-line border border-white/35 bg-black px-3 py-2 font-mono text-[11px] font-extrabold leading-relaxed text-white sm:text-xs">
             {roryNote}
           </p>
         </div>
         <p className="mt-3 font-sans text-[11px] leading-relaxed text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-xs">
-          © Rory McMeekin. All works in this exhibition are attributable to Rory McMeekin.
+          © Rory McMeekin 2026
         </p>
       </div>
 
