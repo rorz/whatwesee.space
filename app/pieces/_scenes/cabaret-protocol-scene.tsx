@@ -961,15 +961,6 @@ export default function CabaretProtocolScene() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute right-4 top-4 z-20 rounded-md border-2 border-[#2f1742] bg-[#fff9ec]/90 px-3 py-2 shadow-[6px_6px_0px_#2f1742]">
-        <p className="font-sans text-[10px] uppercase tracking-[0.14em] text-[#7e2b86]">
-          Conduct the room
-        </p>
-        <p className="font-sans text-xs text-[#2f1742]/88">
-          Move to steer. Hold click: frown + dark. Release: ecstatic + light.
-        </p>
-      </div>
-
       <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 w-[min(960px,96vw)] -translate-x-1/2 border-2 border-[#2f1742] bg-[#fff6df]/92 px-4 py-3 shadow-[0_9px_0px_#2f1742]">
         <p className="font-sans text-[10px] uppercase tracking-[0.16em] text-[#8a2f8f]">
           Current Mantra

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import PiecePlaceholder from "../_components/piece-placeholder";
+import { getRollingShutterSsrFrames } from "../_lib/open-images-pool";
 import { getPieceTitle, wrapPiece } from "../_lib/piece-constants";
 import { SERVER_TOKEN_POOL } from "../_lib/token-pool";
 import CabaretProtocolScene from "../_scenes/cabaret-protocol-scene";
@@ -25,7 +26,6 @@ const SCENE_BY_ID: Partial<Record<number, () => ReactElement>> = {
   2: () => <LatentBloomScene />,
   3: () => <EvalsScene />,
   4: () => <QuantaScene />,
-  5: () => <RollingShutterScene />,
   6: () => <PromptFeedScene />,
   7: () => <HypnogagiaScene />,
   8: () => <PromptCageScene />,
@@ -37,6 +37,11 @@ export default async function PiecePage({ params }: PiecePageProps) {
   const rawId = Array.isArray(resolvedParams.id) ? resolvedParams.id[0] : resolvedParams.id;
   const parsedId = Number(rawId);
   const pieceId = Number.isFinite(parsedId) ? wrapPiece(Math.floor(parsedId)) : 1;
+
+  if (pieceId === 5) {
+    const initialFrames = await getRollingShutterSsrFrames(420);
+    return <RollingShutterScene initialFrames={initialFrames} />;
+  }
 
   const renderScene = SCENE_BY_ID[pieceId];
   if (renderScene) {

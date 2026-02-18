@@ -769,3 +769,200 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 3 full clean-slate WebGL remake:
+  - Replaced entire `app/pieces/_scenes/evals-scene.tsx` with a new WebGL pipeline (new shaders, new buffers, new simulation state).
+  - Card rendering now uses textured WebGL quads generated from per-card neon slider canvases (track + fill + knob + eval text) instead of 2D canvas scene rendering.
+  - Added dedicated fog/void shader pass over a pure-black clear for broad black-fog sink behavior and subtle drain rings.
+  - Motion is deterministic path progression (`t`-driven spiral/drop) with recycle on hit-plane/progress thresholds for continuous feed.
+  - Preserved `window.render_game_to_text` and `window.advanceTime` hooks.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright run attempted against `/pieces/3`; browser launch still blocked in sandbox (`MachPortRendezvousServer ... Permission denied`).
+- Verification/diagnostic after user reported "looks the same":
+  - Confirmed `/pieces/3` maps only to `app/pieces/_scenes/evals-scene.tsx` via `app/pieces/[id]/page.tsx` (no static `app/pieces/3/page.tsx` override exists).
+  - Confirmed current Piece 3 source includes WebGL shader pipeline symbols (`CARD_VERTEX_SHADER`, `canvas.getContext("webgl")`).
+  - Cleared Next build cache by removing `/Users/rorz/repos/what-we-see/.next` to eliminate stale output artifacts.
+- Piece 8 (`Prompt Cage`) flat UI pass (user-requested):
+  - Removed all explicit box-shadow and text-shadow styling from the Piece 8 overlay UI in `app/pieces/_scenes/prompt-cage-scene.tsx`.
+  - Kept styling fully flat and normalized the panel/message borders to black (`#111214`) so the interface reads as border-only.
+  - Updated Piece 8 navigation wrapper to enforce black link borders without shadow treatments.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece count reduction + Piece 9 UI cleanup (user-requested):
+  - Removed Piece 10 from global constants by changing `PIECE_COUNT` to `9` and deleting the tenth title (`Final Resolve`) in `app/pieces/_lib/piece-constants.ts`.
+  - Updated piece navigation grid to derive column count from `PIECE_COUNT` via inline `gridTemplateColumns`, ensuring no stray tenth slot remains in `app/pieces/_components/piece-navigation-controls.tsx`.
+  - Removed the top-right controls helper panel (`Conduct the room`) from Piece 9 in `app/pieces/_scenes/cabaret-protocol-scene.tsx`.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` currently fails due an existing unrelated typed-array error in `app/pieces/_scenes/evals-scene.tsx` (`Float32Array<ArrayBufferLike>` vs `Float32Array<ArrayBuffer>`).
+  - Attempted Playwright visual run for `/pieces/9`, but sandbox browser launch was blocked and escalated retry was rejected, so screenshot verification could not be completed in-session.
+- Piece 3 true greenfield remake (user-requested reset from plain-English target):
+  - Replaced `app/pieces/_scenes/evals-scene.tsx` end-to-end with a new architecture:
+    - New 3D WebGL packet pipeline using explicit cuboid geometry (positions/uvs/normals + indexed draw).
+    - New packet vertex/fragment shaders with lighting, specular, neon gain, and per-fragment fog-to-black.
+    - New void fullscreen shader pass for broad black fog drain overlay + subtle ring traces.
+    - New deterministic spiral/drop motion in 3D world coordinates (`x,y,z` + `rx,ry,rz`) with recycle on thresholds.
+    - New texture generator per card (`createPacketTexture`) for glossy neon slider art + eval text mapping.
+  - Maintained hooks: `window.render_game_to_text` and `window.advanceTime`.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright runtime capture attempted; blocked by sandbox Chromium permission error (`MachPortRendezvousServer ... Permission denied`).
+- Piece 3 visibility emergency pass (user report: "can't see shit"):
+  - Pulled camera closer and moved drain less far in z so packets stay visible longer.
+  - Increased packet dimensions/thickness and neon gain for stronger silhouette.
+  - Reduced both shader-level fog and fullscreen void fog opacity significantly.
+  - Reduced void overlay radius and softened depth fade so packets no longer get crushed into black too early.
+  - Slowed movement slightly and adjusted recycle thresholds to avoid immediate vanishing.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 SSR scatter rewrite (Open Images ID pool):
+  - Added server-only ID pool loader at `/app/pieces/_lib/open-images-pool.ts` that fetches Open Images ID CSVs (`validation-ids.csv`, `test-ids.csv`), parses + dedupes IDs, and returns a random SSR subset.
+  - Added shared frame type at `/app/pieces/_lib/rolling-shutter-types.ts`.
+  - Updated `/app/pieces/[id]/page.tsx` to special-case piece `5` and pass `100` SSR-sampled frames into `RollingShutterScene`.
+  - Replaced client-side Unsplash fetch loop in `/app/pieces/_scenes/rolling-shutter-scene.tsx` with SSR-provided frame rotation only (0.2s cadence), retaining a local fallback visual set when SSR metadata cannot be fetched.
+  - Piece 5 now follows: SSR scatter of IDs -> client receives ready URLs -> rapid local flip, with no browser-time API fetch dependency.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright verification attempted but blocked by sandbox browser-launch permissions (`MachPortRendezvousServer ... Permission denied`).
+  - Escalated retry to run a local dev-server + runtime check was rejected, so screenshot-level runtime validation could not be completed in-session.
+- Piece 5 Open Images resilience tweak:
+  - Added an emergency 3-ID fallback seed (from official Open Images downloader examples) so Piece 5 can still render external Open Images frames when ID-list fetches are unavailable.
+- Piece 3 blank/dead fix:
+  - Root cause: renderer init guard required `u_fog_near/u_fog_far` uniforms that were optimized out by GLSL (unused), so setup returned early before setting animation/hooks.
+  - Removed those uniform lookups/guard checks and matching uniform uploads.
+  - Verified runtime state now updates (`render_game_to_text` reports activeCards and sample cards).
+  - Verified visual output via automated screenshot (`/tmp/wws-piece3-live.png`) shows neon packets rendering and descending into drain.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 scatter-size fix after user report ("only ~3 images"):
+  - Replaced Open Images source endpoints with the actual V7 download-page CSV links:
+    - `2018_04/validation/validation-images-with-rotation.csv`
+    - `2018_04/test/test-images-with-rotation.csv`
+  - Increased SSR ID fetch timeout from `5s` to `45s` so large CSV pulls do not abort prematurely.
+  - Removed the temporary 3-ID emergency fallback path that could collapse the frame set to 3 unique images.
+  - Increased Piece 5 SSR sample size from `100` to `420` frames (`app/pieces/[id]/page.tsx`).
+  - Increased procedural fallback bank from `24` to `360` frames for degraded-network scenarios.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 load-time/cache fix + progressive streaming (user report: large CSV cache warnings + slow first load):
+  - Reworked Open Images ID loader in `/app/pieces/_lib/open-images-pool.ts` to avoid Next data cache writes for giant CSV files:
+    - switched fetch mode to `cache: "no-store"` (no >2MB cache write attempts),
+    - replaced full-file text parsing with streaming line parsing from `response.body`.
+  - Added reservoir sampling over streamed lines (`SAMPLE_SIZE_PER_SOURCE = 12000`) to retain a random subset without storing full CSV contents in memory.
+  - Changed pool behavior to non-blocking warmup:
+    - first render no longer waits for CSV download/parsing,
+    - pool warms in background (`idle -> warming -> ready/error`) and accumulates IDs incrementally per source.
+  - Added new API route `/app/api/open-images/random/route.ts` that returns random frame batches from the in-memory server pool plus status/pool size metadata.
+  - Updated Piece 5 client scene `/app/pieces/_scenes/rolling-shutter-scene.tsx` to progressively stream in random batches from `/api/open-images/random` after first paint:
+    - keeps immediate local fallback visuals,
+    - merges deduped live frames when available,
+    - tops up buffer continuously (target ~900, cap 1400),
+    - surfaces feed status (`warming` / `live` / unavailable) and pool size in UI.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- User-requested rollback:
+  - Restored `app/pieces/_scenes/evals-scene.tsx` to committed `HEAD` version (2D implementation) by writing `git show HEAD:...` output back to file.
+  - Confirmed file now uses `canvas.getContext("2d")` path.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Live capture after rollback confirms 2D scene is active and rendering (`/tmp/wws-piece3-live.png`).
+- Piece 5 visual simplification pass (user request: full-bright image, no detail clutter, weird dissolving name cloud):
+  - Added `name` field to `RollingShutterFrame` in `/app/pieces/_lib/rolling-shutter-types.ts`.
+  - Added generated id-based surreal names in `/app/pieces/_lib/open-images-pool.ts` (`buildFrameName`) so each frame carries a stable weird label.
+  - Rebuilt `/app/pieces/_scenes/rolling-shutter-scene.tsx` UI around a single bold central image frame:
+    - removed scanline/blur/dim overlays,
+    - removed side panels, status bars, attribution/detail chrome, and extra copy.
+  - Added name-cloud overlay behavior:
+    - spawns floating names around the central frame,
+    - each name persists for ~5 seconds,
+    - names dissolve in/out and drift upward with subtle glow/rotation.
+  - Kept streaming architecture intact: frames still stream in via `/api/open-images/random` and merge into a large rotating buffer.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 image-visibility hotfix (user report: black central frame/no images):
+  - Extended `RollingShutterFrame` with `split` + `rawId` for multi-host URL fallback attempts.
+  - Added automatic per-frame URL fallback in `rolling-shutter-scene.tsx`:
+    - primary S3 URL,
+    - `storage.googleapis.com/openimages/2018_04/{split}/{id}.jpg`,
+    - `storage.googleapis.com/open-images-dataset/{split}/{id}.jpg`.
+  - Added `onError` handling on the central `<img>`:
+    - tries next candidate URL for that frame,
+    - if all candidates fail, drops only that dead frame from rotation so the scene does not stay black.
+  - Added fallback metadata fields (`split`, `rawId`) for local warm-cache frames.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 top-left controls restore (user request):
+  - Reintroduced shared `PieceNavigationControls` in a compact top-left overlay within `rolling-shutter-scene.tsx`.
+  - Kept the simplified bright central frame + dissolving name-cloud visuals unchanged.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Re-restore based on historical commit lineage (user: previous rollback still not original):
+  - Identified historical versions for `evals-scene.tsx`: `f243ac3`, `0addf93`, `1466f2c`, `8b93afa`.
+  - Restored file to `1466f2c` (last pre-`8b93afa` version in original 2D pastel-pop lineage).
+  - Verified 2D signature markers present (`WRONG_HEADLINES`, `hslaColor`, `getContext("2d")`).
+  - Live capture now reflects the older singularity + verdict-card scene (`/tmp/wws-piece3-live.png`).
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/evals-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 black-frame regression fix (user report: quick flash then pure black):
+  - Replaced direct-per-tick `img src` swapping with a resilient display path in `rolling-shutter-scene.tsx`:
+    - keeps the last successfully loaded image visible at all times,
+    - preloads candidate URLs in the background before displaying a frame,
+    - prefetches upcoming frames,
+    - drops only permanently dead live frames after trying all URL candidates.
+  - Added image probing helper (`tryLoadImage`) with timeout and `no-referrer` policy for better host compatibility.
+  - Removed black-gap behavior caused by switching to unloaded URLs every 200ms.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 5 shader-pass + genuine text update (user request):
+  - Replaced synthetic name generation with genuine frame-path text in `/app/pieces/_lib/open-images-pool.ts` (`name` now uses real Open Images filename path: `split/id.jpg`).
+  - Added a per-image full-page WebGL shader overlay pass in `/app/pieces/_scenes/rolling-shutter-scene.tsx`:
+    - fullscreen shader canvas with animated procedural color/signal pattern,
+    - shader uniforms (`seedA`, `seedB`, `mode`) update per active image so each image gets a distinct pass signature,
+    - overlay uses screen blend with low alpha to preserve full-bright source imagery.
+  - Updated fallback frame labels to genuine fallback filenames (`fallback/fallback-XXX.svg`).
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+
+## 2026-02-18
+- Piece 1 (`Token Ceiling`) performance stabilization for high `y-min` placement:
+  - Added adaptive token budgeting tied to ceiling position, so pushing the barrier toward the top reduces concurrent active token pressure.
+  - Added adaptive spawn-rate damping based on both ceiling position and current active-token overflow.
+  - Added early retirement for off-screen falling tokens when above budget to avoid unnecessary draw/update work.
+  - Added adaptive ceiling-debris budgeting and burst-density scaling to cap particle overhead under high travel settings.
+  - Minor micro-optimization: removed repeated per-cannon fill style assignment in the render loop.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright validation attempt was blocked by sandbox browser-launch restrictions (permission denied / mach port rendezvous), and escalation was not approved in-session.
+
+### TODO
+- Re-run Piece 1 interactive validation with the Playwright harness outside sandbox restrictions and compare top-ceiling smoothness against baseline.
+- Piece 5 placard + loading-sequence polish (user request):
+  - Restored top-left placard to match standard piece layout in `rolling-shutter-scene.tsx`:
+    - piece label,
+    - title (`Rolling Shutter`),
+    - description,
+    - shared `PieceNavigationControls`.
+  - Replaced blunt loading copy with a mystique loading sequence:
+    - removed `OPEN IMAGES WARMING` text from fallback artwork,
+    - added cinematic center overlay while live images are not yet confirmed loaded (`VEIL LIFT` + rotating atmospheric lines),
+    - loading line cycles through poetic status phrases.
+  - Loading overlay now clears only after a real non-fallback image is successfully loaded.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.

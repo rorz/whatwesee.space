@@ -1481,7 +1481,7 @@ export default function PromptCageScene() {
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full cursor-crosshair" />
 
       <div
-        className="pointer-events-auto absolute left-4 top-4 z-20 w-[min(460px,92vw)] border-2 border-[#111214] bg-[#d8dbe2]/96 px-5 py-4 shadow-[6px_6px_0px_#111214]"
+        className="pointer-events-auto absolute left-4 top-4 z-20 w-[min(460px,92vw)] border-2 border-[#111214] bg-[#d8dbe2]/96 px-5 py-4"
         style={{
           backgroundImage:
             "repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0 1px, rgba(22,24,28,0.08) 1px 3px), repeating-linear-gradient(90deg, rgba(18,20,24,0.06) 0 1px, transparent 1px 6px)",
@@ -1495,13 +1495,13 @@ export default function PromptCageScene() {
           The runner follows a fixed path through a system-prompt labyrinth while your mouse adds a
           subtle camera parallax.
         </p>
-        <div className="mt-3 [&_a]:font-pixel-square [&_a]:rounded-none [&_a]:shadow-[2px_2px_0_rgba(17,18,20,0.45)] [&_a]:tracking-[0.06em]">
+        <div className="mt-3 [&_a]:font-pixel-square [&_a]:rounded-none [&_a]:!border-[#111214] [&_a]:tracking-[0.06em]">
           <PieceNavigationControls pieceId={8} />
         </div>
       </div>
 
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-30 w-[min(500px,46vw)] min-w-[270px] border-l border-[#1f2022] bg-[#6d6f74]/95"
+        className="pointer-events-none absolute inset-y-0 right-0 z-30 w-[min(500px,46vw)] min-w-[270px] border-l border-[#111214] bg-[#6d6f74]/95"
         style={{
           backgroundImage:
             "repeating-linear-gradient(0deg, rgba(242,242,242,0.045) 0 1px, rgba(12,12,12,0.075) 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 7px), linear-gradient(180deg, rgba(230,230,230,0.08) 0%, rgba(28,28,28,0.2) 100%)",
@@ -1509,7 +1509,7 @@ export default function PromptCageScene() {
       >
         <div className="flex h-full flex-col px-4 py-4 md:px-5">
           <div
-            className="rounded-none border-2 border-[#121315] bg-[#d8dae0] p-2 shadow-[4px_4px_0_rgba(18,18,18,0.62),inset_0_1px_0_rgba(255,255,255,0.5)]"
+            className="rounded-none border-2 border-[#111214] bg-[#d8dae0] p-2"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(0deg, rgba(255,255,255,0.23) 0 1px, rgba(42,44,48,0.08) 1px 3px), repeating-linear-gradient(90deg, rgba(22,24,26,0.07) 0 1px, transparent 1px 6px)",
@@ -1517,7 +1517,7 @@ export default function PromptCageScene() {
           >
             <div className="grid grid-cols-[92px,1fr] gap-2">
               <div
-                className="rounded-none border-2 border-[#111214] bg-[#f8f9fc] p-1 shadow-[2px_2px_0_rgba(15,15,15,0.48)]"
+                className="rounded-none border-2 border-[#111214] bg-[#f8f9fc] p-1"
                 style={{
                   backgroundImage:
                     "repeating-linear-gradient(45deg, rgba(12,12,12,0.08) 0 1px, rgba(255,255,255,0) 1px 4px)",
@@ -1576,24 +1576,24 @@ export default function PromptCageScene() {
             {chatState.history.map((lineIndex, historyIndex) => (
               <div
                 key={`${lineIndex}-${historyIndex}`}
-                className="rounded-none border-2 border-[#2a2b2e] px-3 py-2 shadow-[3px_3px_0_rgba(17,17,17,0.58)]"
+                className="rounded-none border-2 border-[#111214] px-3 py-2"
                 style={{
                   backgroundColor: "#ffffff",
                 }}
               >
-                <p className="font-pixel-square text-[1.04rem] leading-[1.01] tracking-[0.04em] text-[#1a1b1d] [text-shadow:1px_1px_0_rgba(234,234,234,0.2),-1px_0_0_rgba(40,40,40,0.25)] md:text-[1.22rem]">
+                <p className="font-pixel-square text-[1.04rem] leading-[1.01] tracking-[0.04em] text-[#1a1b1d] md:text-[1.22rem]">
                   {POEM_LINES[lineIndex]}
                 </p>
               </div>
             ))}
 
             <div
-              className="rounded-none border-2 border-[#222326] px-3 py-3 shadow-[4px_4px_0_rgba(15,15,15,0.62)]"
+              className="rounded-none border-2 border-[#111214] px-3 py-3"
               style={{
                 backgroundColor: "#ffffff",
               }}
             >
-              <p className="font-pixel-square text-[1.22rem] leading-[1.01] tracking-[0.055em] text-[#121315] [text-shadow:1px_1px_0_rgba(248,248,248,0.22),-1px_0_0_rgba(35,35,35,0.28)] md:text-[1.82rem]">
+              <p className="font-pixel-square text-[1.22rem] leading-[1.01] tracking-[0.055em] text-[#121315] md:text-[1.82rem]">
                 {activeText}
                 <span className="ml-1 inline-block animate-pulse text-[#111214]">■</span>
               </p>

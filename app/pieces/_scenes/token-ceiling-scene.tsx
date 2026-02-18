@@ -123,13 +123,22 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
     const ceilingRatio = 0.1;
     const ceilingMinY = 28;
     const spawnRate = 235;
+    const minSpawnRateScaleAtTop = 0.6;
+    const baseActiveTokenBudget = 420;
+    const topActiveTokenBudget = 250;
+    const baseActiveCeilingBitBudget = 620;
+    const topActiveCeilingBitBudget = 340;
     const cannonCount = 7;
     const tokens = Array.from({ length: maxTokens }, emptyToken);
     const ceilingBits = Array.from({ length: maxCeilingBits }, emptyCeilingBit);
 
+    let activeTokenCount = 0;
+    let activeCeilingBitCount = 0;
     let spawnAccumulator = 0;
     let spawnIndex = 0;
     let ceilingBitIndex = 0;
+    let currentCeilingPressure = 0;
+    let currentCeilingBitBudget = baseActiveCeilingBitBudget;
     let pointerCeilingY: number | null = null;
     let rafId = 0;
     let lastTime = performance.now();
@@ -171,6 +180,9 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       const lane = spawnIndex % cannonCount;
       const originX = cannonX[lane] + (Math.random() - 0.5) * laneWidth * 0.36;
 
+      if (!token.active) {
+        activeTokenCount += 1;
+      }
       token.active = true;
       token.x = originX;
       token.y = viewportHeight + 14 + Math.random() * 40;
@@ -204,13 +216,32 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       hue: number,
       impactVelocity: number,
     ) => {
+      if (activeCeilingBitCount >= currentCeilingBitBudget) {
+        return;
+      }
+
       const velocityScale = clamp(Math.abs(impactVelocity) / 1100, 0.6, 1.6);
-      const burstCount = 5 + Math.floor(Math.random() * 7);
+      const baseBurstCount = 5 + Math.floor(Math.random() * 7);
+      const burstCountScale = 1 - currentCeilingPressure * 0.45;
+      const availableBits = currentCeilingBitBudget - activeCeilingBitCount;
+      if (availableBits <= 0) {
+        return;
+      }
+      const burstCount = Math.max(
+        1,
+        Math.min(
+          availableBits,
+          Math.round(baseBurstCount * burstCountScale),
+        ),
+      );
 
       for (let bitIndex = 0; bitIndex < burstCount; bitIndex += 1) {
         const bit = ceilingBits[ceilingBitIndex % maxCeilingBits];
         ceilingBitIndex += 1;
 
+        if (!bit.active) {
+          activeCeilingBitCount += 1;
+        }
         bit.active = true;
         bit.x = x + (Math.random() - 0.5) * 9;
         bit.y = y - 1 - Math.random() * 4;
@@ -269,8 +300,35 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
           : clamp(pointerCeilingY, ceilingMinY, ceilingMaxY);
       const ceilingGradientYKey = Math.round((ceilingY + 8) * 2) / 2;
 
-      spawnAccumulator += dt * spawnRate;
-      while (spawnAccumulator >= 1) {
+      const ceilingPressure = clamp(
+        (defaultCeilingY - ceilingY) / Math.max(1, defaultCeilingY - ceilingMinY),
+        0,
+        1,
+      );
+      currentCeilingPressure = ceilingPressure;
+      const activeTokenBudget = Math.round(
+        baseActiveTokenBudget +
+          (topActiveTokenBudget - baseActiveTokenBudget) * ceilingPressure,
+      );
+      currentCeilingBitBudget = Math.round(
+        baseActiveCeilingBitBudget +
+          (topActiveCeilingBitBudget - baseActiveCeilingBitBudget) * ceilingPressure,
+      );
+
+      const spawnScaleForCeiling = 1 - ceilingPressure * (1 - minSpawnRateScaleAtTop);
+      const tokenOverflow = clamp(
+        (activeTokenCount - activeTokenBudget) / Math.max(1, activeTokenBudget),
+        0,
+        1,
+      );
+      const spawnScaleForLoad = 1 - tokenOverflow * 0.88;
+      const effectiveSpawnRate = spawnRate * spawnScaleForCeiling * spawnScaleForLoad;
+
+      spawnAccumulator = Math.min(spawnAccumulator + dt * effectiveSpawnRate, 3.4);
+      while (spawnAccumulator >= 1 && activeTokenCount < maxTokens) {
+        if (activeTokenCount >= activeTokenBudget) {
+          break;
+        }
         spawnAccumulator -= 1;
         spawnToken();
       }
@@ -305,8 +363,8 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       context.textBaseline = "top";
       context.fillText("y-min barrier", 14, Math.max(8, ceilingY - 18));
 
+      context.fillStyle = "rgba(255, 122, 25, 0.4)";
       for (let cannon = 0; cannon < cannonCount; cannon += 1) {
-        context.fillStyle = "rgba(255, 122, 25, 0.4)";
         context.fillRect(cannonX[cannon] - 8, height - 18, 16, 18);
       }
 
@@ -345,6 +403,17 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
 
         if (token.y - halfHeight > floorY) {
           token.active = false;
+          activeTokenCount = Math.max(0, activeTokenCount - 1);
+          continue;
+        }
+
+        if (
+          activeTokenCount > activeTokenBudget &&
+          token.vy > 0 &&
+          token.y - halfHeight > height + 24
+        ) {
+          token.active = false;
+          activeTokenCount = Math.max(0, activeTokenCount - 1);
           continue;
         }
 
@@ -379,6 +448,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
           bit.x > width + 24
         ) {
           bit.active = false;
+          activeCeilingBitCount = Math.max(0, activeCeilingBitCount - 1);
           continue;
         }
 

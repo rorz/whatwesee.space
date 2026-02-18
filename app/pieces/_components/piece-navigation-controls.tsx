@@ -23,7 +23,10 @@ export default function PieceNavigationControls({ pieceId }: PieceNavigationCont
         </Link>
       </div>
 
-      <div className="grid w-full grid-cols-10 gap-1.5">
+      <div
+        className="grid w-full gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${PIECE_COUNT}, minmax(0, 1fr))` }}
+      >
         {Array.from({ length: PIECE_COUNT }, (_, index) => {
           const id = index + 1;
           const active = id === pieceId;

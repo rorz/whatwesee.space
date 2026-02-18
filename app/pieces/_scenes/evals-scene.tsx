@@ -4,136 +4,90 @@ import { useEffect, useRef } from "react";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 import { PIECE_COUNT } from "../_lib/piece-constants";
 
-type RgbColor = readonly [number, number, number];
-
-type EvalSlider = {
+type EvalCard = {
   active: boolean;
   x: number;
   y: number;
-  depth: number;
-  fog: number;
-  angle: number;
-  t: number;
-  speed: number;
-  spawnX: number;
-  spawnY: number;
-  orbitRadius: number;
-  orbitTurns: number;
-  orbitStart: number;
-  wobble: number;
+  vx: number;
+  vy: number;
   width: number;
   height: number;
-  glow: number;
+  angle: number;
+  spin: number;
+  life: number;
+  maxLife: number;
   isRight: boolean;
-  label: string;
-  batch: number;
-  value: number;
-  tintA: RgbColor;
-  tintB: RgbColor;
-  edge: RgbColor;
-  glowColor: RgbColor;
+  jitterSeed: number;
+  hover: number;
+  headline: string;
+  detail: string;
+  tag: string;
+  accentHue: number;
+  bgHue: number;
+  saturation: number;
+  lightness: number;
 };
 
-type EvalsStateSummary = {
-  piece: number;
-  title: string;
-  coordinateSystem: string;
-  activeCards: number;
-  drain: {
-    x: number;
-    y: number;
-    radius: number;
-    fog: number;
-  };
-  pointer: {
-    active: boolean;
-    x: number | null;
-    y: number | null;
-  };
-  sampleCards: Array<{
-    x: number;
-    y: number;
-    depth: number;
-    label: string;
-    fog: number;
-  }>;
-};
-
-declare global {
-  interface Window {
-    render_game_to_text?: () => string;
-    advanceTime?: (ms: number) => Promise<void>;
-  }
-}
-
-const WHITE: RgbColor = [255, 255, 255];
-
-const WRONG_LABELS = [
+const WRONG_HEADLINES = [
   "THIS IS WRONG",
   "FAILED EVAL",
-  "MISMATCH",
   "REJECTED",
+  "SPEC MISMATCH",
+  "BAD OUTPUT",
+  "REGRESSION",
   "CONTRADICTION",
-  "DRIFT",
 ] as const;
 
-const RIGHT_LABELS = ["THIS IS RIGHT", "APPROVED", "PASSED EVAL", "ALIGNED"] as const;
-
-const WRONG_COLORS = [
-  {
-    tintA: [255, 44, 204] as RgbColor,
-    tintB: [84, 232, 255] as RgbColor,
-    edge: [255, 214, 248] as RgbColor,
-    glowColor: [255, 90, 214] as RgbColor,
-  },
-  {
-    tintA: [255, 30, 138] as RgbColor,
-    tintB: [74, 176, 255] as RgbColor,
-    edge: [255, 194, 234] as RgbColor,
-    glowColor: [255, 96, 200] as RgbColor,
-  },
-  {
-    tintA: [255, 78, 236] as RgbColor,
-    tintB: [42, 236, 255] as RgbColor,
-    edge: [255, 220, 255] as RgbColor,
-    glowColor: [255, 122, 238] as RgbColor,
-  },
+const RIGHT_HEADLINES = [
+  "THIS IS RIGHT",
+  "PASSED EVAL",
+  "ACCEPTED",
+  "CORRECT",
+  "ALIGNED",
+  "APPROVED",
 ] as const;
 
-const RIGHT_COLORS = [
-  {
-    tintA: [66, 255, 188] as RgbColor,
-    tintB: [90, 234, 255] as RgbColor,
-    edge: [206, 255, 238] as RgbColor,
-    glowColor: [86, 255, 216] as RgbColor,
-  },
-  {
-    tintA: [48, 255, 158] as RgbColor,
-    tintB: [108, 218, 255] as RgbColor,
-    edge: [188, 255, 226] as RgbColor,
-    glowColor: [72, 255, 196] as RgbColor,
-  },
+const WRONG_DETAILS = [
+  "Constraint coverage incomplete.",
+  "Ground truth not matched.",
+  "Hallucination risk elevated.",
+  "Output format violated.",
+  "Tool chain diverged.",
+  "Confidence below threshold.",
+  "Reasoning path collapsed.",
 ] as const;
+
+const RIGHT_DETAILS = [
+  "Constraint checks all green.",
+  "Reference match confirmed.",
+  "Format and logic validated.",
+  "Decision path is coherent.",
+  "Signal aligns with intent.",
+  "Execution trace is stable.",
+] as const;
+
+const WRONG_TAGS = ["retry", "patch", "re-evaluate", "low confidence", "inconsistent"] as const;
+const RIGHT_TAGS = ["ship", "locked", "stable", "high confidence", "golden"] as const;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
+function hslaColor(hue: number, saturation: number, lightness: number, alpha: number): string {
+  const h = ((hue % 360) + 360) % 360;
+  const s = clamp(saturation, 0, 100);
+  const l = clamp(lightness, 0, 100);
+  const a = clamp(alpha, 0, 1);
+  return `hsla(${h.toFixed(3)}, ${s.toFixed(3)}%, ${l.toFixed(3)}%, ${a.toFixed(3)})`;
 }
 
-function smoothstep(edge0: number, edge1: number, value: number): number {
-  const t = clamp((value - edge0) / Math.max(0.000001, edge1 - edge0), 0, 1);
-  return t * t * (3 - 2 * t);
+function seededNoise(seed: number): number {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
 }
 
 function pick<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)];
-}
-
-function rgba(color: RgbColor, alpha: number): string {
-  return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${clamp(alpha, 0, 1).toFixed(3)})`;
 }
 
 function pathRoundedRect(
@@ -158,33 +112,44 @@ function pathRoundedRect(
   context.closePath();
 }
 
-function emptySlider(): EvalSlider {
+function isPointerInsideCard(card: EvalCard, pointerX: number, pointerY: number): boolean {
+  const dx = pointerX - card.x;
+  const dy = pointerY - card.y;
+  const cos = Math.cos(-card.angle);
+  const sin = Math.sin(-card.angle);
+  const localX = dx * cos - dy * sin;
+  const localY = dx * sin + dy * cos;
+  const scale = 1 + card.hover * 0.12;
+
+  return (
+    Math.abs(localX) <= (card.width * 0.5) * scale &&
+    Math.abs(localY) <= (card.height * 0.5) * scale
+  );
+}
+
+function emptyEvalCard(): EvalCard {
   return {
     active: false,
     x: 0,
     y: 0,
-    depth: 0,
-    fog: 0,
-    angle: 0,
-    t: 0,
-    speed: 0,
-    spawnX: 0,
-    spawnY: 0,
-    orbitRadius: 0,
-    orbitTurns: 0,
-    orbitStart: 0,
-    wobble: 0,
+    vx: 0,
+    vy: 0,
     width: 0,
     height: 0,
-    glow: 0,
+    angle: 0,
+    spin: 0,
+    life: 0,
+    maxLife: 0,
     isRight: false,
-    label: "",
-    batch: 0,
-    value: 0,
-    tintA: WHITE,
-    tintB: WHITE,
-    edge: WHITE,
-    glowColor: WHITE,
+    jitterSeed: 0,
+    hover: 0,
+    headline: "",
+    detail: "",
+    tag: "",
+    accentHue: 0,
+    bgHue: 0,
+    saturation: 0,
+    lightness: 0,
   };
 }
 
@@ -202,394 +167,400 @@ export default function EvalsScene() {
       return;
     }
 
-    const maxCards = 18;
-    const cards = Array.from({ length: maxCards }, emptySlider);
-    const pointer = { active: false, x: 0, y: 0 };
+    const maxCards = 210;
+    const cards = Array.from({ length: maxCards }, emptyEvalCard);
 
-    const drain = {
-      x: 0,
-      y: 0,
-      radius: 120,
-      fog: 0,
-    };
+    const baseSpawnRate = 6.2;
+    const wrongChance = 0.88;
 
-    let dpr = 1;
-    let width = 1;
-    let height = 1;
     let spawnAccumulator = 0;
-    let cardCursor = 0;
-    let lastTime = performance.now();
+    let cardIndex = 0;
     let rafId = 0;
+    let lastTime = performance.now();
 
-    let latestState: EvalsStateSummary = {
-      piece: 3,
-      title: "Evals",
-      coordinateSystem:
-        "origin at top-left; x increases right; y increases downward; depth 0 near viewer to 1.6 far/void",
-      activeCards: 0,
-      drain: { x: 0, y: 0, radius: 0, fog: 0 },
-      pointer: { active: false, x: null, y: null },
-      sampleCards: [],
-    };
+    const pointer = { x: 0, y: 0, active: false };
 
     const resize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = window.innerWidth;
-      height = window.innerHeight;
-
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = window.innerWidth;
+      const height = window.innerHeight;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      drain.x = width * 0.5;
-      drain.y = height * 0.86;
-      drain.radius = Math.min(width, height) * 0.2;
     };
 
-    const applyPose = (card: EvalSlider) => {
-      const p = clamp(card.t, 0, 1.12);
-      const eased = smoothstep(0, 1, clamp(p, 0, 1));
+    const spawnCard = (width: number, height: number) => {
+      const card = cards[cardIndex % maxCards];
+      cardIndex += 1;
 
-      const cx = lerp(card.spawnX, drain.x, eased);
-      const cy = lerp(card.spawnY, drain.y + height * 0.2, eased);
+      const isRight = Math.random() > wrongChance;
+      const headline = isRight ? pick(RIGHT_HEADLINES) : pick(WRONG_HEADLINES);
+      const detail = isRight ? pick(RIGHT_DETAILS) : pick(WRONG_DETAILS);
+      const tag = isRight ? pick(RIGHT_TAGS) : pick(WRONG_TAGS);
 
-      const orbit = card.orbitRadius * Math.pow(1 - eased, 1.08);
-      const spinAngle = card.orbitStart + eased * Math.PI * 2 * card.orbitTurns;
+      const textWeight = Math.max(headline.length, detail.length);
+      const cardHeight = 48 + Math.random() * 34 + (Math.random() > 0.78 ? 12 : 0);
+      const cardWidth = clamp(150 + textWeight * 6.2 + Math.random() * 120, 150, 370);
 
-      const ox = Math.cos(spinAngle) * orbit;
-      const oy = Math.sin(spinAngle) * orbit * 0.33;
-      const drop = Math.pow(eased, 1.55) * height * 0.21;
+      const side = Math.floor(Math.random() * 4);
+      let x = width * 0.5;
+      let y = height * 0.5;
 
-      card.x = cx + ox;
-      card.y = cy + oy + drop;
-      card.angle = Math.sin(spinAngle * 0.58 + card.wobble) * 0.16 * (1 - eased);
-      card.depth = p * 1.56;
+      if (side === 0) {
+        x = -cardWidth;
+        y = Math.random() * height;
+      } else if (side === 1) {
+        x = width + cardWidth;
+        y = Math.random() * height;
+      } else if (side === 2) {
+        x = Math.random() * width;
+        y = -cardHeight;
+      } else {
+        x = Math.random() * width;
+        y = height + cardHeight;
+      }
 
-      const dist = Math.hypot(card.x - drain.x, card.y - drain.y);
-      const depthFog = smoothstep(0.55, 1.5, card.depth);
-      const voidFog = 1 - smoothstep(drain.radius * 0.5, drain.radius * 4.5, dist);
-      const bottomFog = smoothstep(height * 0.58, height + 140, card.y);
-      card.fog = clamp(depthFog * 0.58 + voidFog * 0.78 + bottomFog * 0.36, 0, 1);
-    };
+      const centerX = width * 0.5;
+      const centerY = height * 0.53;
+      const dx = centerX - x;
+      const dy = centerY - y;
+      const dist = Math.hypot(dx, dy) || 1;
 
-    const spawnCard = (card: EvalSlider, progress = 0) => {
-      card.width = 240 + Math.random() * 140;
-      card.height = 58 + Math.random() * 30;
-      card.glow = 1 + Math.random() * 0.4;
+      const towardSpeed = 45 + Math.random() * 110;
+      const tangentStrength = (Math.random() < 0.5 ? -1 : 1) * (18 + Math.random() * 44);
+      const nx = dx / dist;
+      const ny = dy / dist;
 
-      card.spawnX = width * (0.1 + Math.random() * 0.8);
-      card.spawnY = -card.height - Math.random() * 240;
+      let accentHue = 0;
+      let bgHue = 0;
+      let saturation = 0;
+      let lightness = 0;
 
-      card.t = clamp(progress, 0, 0.95);
-      card.speed = 0.074 + Math.random() * 0.052;
-
-      card.orbitRadius = 24 + Math.random() * 100;
-      card.orbitTurns = 1.3 + Math.random() * 1.4;
-      card.orbitStart = Math.random() * Math.PI * 2;
-      card.wobble = Math.random() * Math.PI * 2;
-
-      card.isRight = Math.random() > 0.86;
-      card.label = card.isRight ? pick(RIGHT_LABELS) : pick(WRONG_LABELS);
-      card.batch = 100 + Math.floor(Math.random() * 900);
-      card.value = card.isRight ? 0.78 + Math.random() * 0.16 : 0.16 + Math.random() * 0.16;
-
-      const palette = card.isRight ? pick(RIGHT_COLORS) : pick(WRONG_COLORS);
-      card.tintA = palette.tintA;
-      card.tintB = palette.tintB;
-      card.edge = palette.edge;
-      card.glowColor = palette.glowColor;
+      if (isRight) {
+        accentHue = 128 + Math.random() * 34;
+        bgHue = 148 + Math.random() * 28;
+        saturation = 70 + Math.random() * 16;
+        lightness = 56 + Math.random() * 14;
+      } else {
+        const wrongBase = pick([334, 342, 350, 358, 8] as const);
+        accentHue = wrongBase + Math.random() * 12;
+        bgHue = (accentHue + 10 + Math.random() * 16) % 360;
+        saturation = 74 + Math.random() * 16;
+        lightness = 58 + Math.random() * 14;
+      }
 
       card.active = true;
-      applyPose(card);
+      card.x = x;
+      card.y = y;
+      card.vx = nx * towardSpeed + -ny * tangentStrength;
+      card.vy = ny * towardSpeed + nx * tangentStrength;
+      card.width = cardWidth;
+      card.height = cardHeight;
+      card.angle = (Math.random() - 0.5) * 0.58;
+      card.spin = (Math.random() - 0.5) * 0.95;
+      card.maxLife = 5.6 + Math.random() * 5;
+      card.life = card.maxLife;
+      card.isRight = isRight;
+      card.jitterSeed = Math.random() * 1000;
+      card.hover = 0;
+      card.headline = headline;
+      card.detail = detail;
+      card.tag = `${tag} • ${100 + Math.floor(Math.random() * 900)}`;
+      card.accentHue = accentHue;
+      card.bgHue = bgHue;
+      card.saturation = saturation;
+      card.lightness = lightness;
     };
 
-    const drawBackdrop = () => {
-      context.fillStyle = "#000000";
+    const drawBackground = (width: number, height: number, now: number) => {
+      const centerX = width * 0.5;
+      const centerY = height * 0.53;
+      const maxDist = Math.hypot(centerX, centerY);
+
+      context.fillStyle = "rgb(2 2 4)";
       context.fillRect(0, 0, width, height);
-    };
 
-    const drawFog = () => {
-      const radial = context.createRadialGradient(
-        drain.x,
-        drain.y,
-        drain.radius * 0.1,
-        drain.x,
-        drain.y,
-        drain.radius * 6.8,
+      const staticSamples = Math.floor(460 + (width * height) / 3400);
+      const time = now * 0.001;
+
+      for (let i = 0; i < staticSamples; i += 1) {
+        const noiseA = seededNoise(i * 17.13 + time * 31.1);
+        const noiseB = seededNoise(i * 37.51 - time * 41.3);
+        const x = noiseA * width;
+        const y = noiseB * height;
+
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const distNorm = Math.min(1, Math.hypot(dx, dy) / maxDist);
+        const grain = seededNoise(i * 11.7 + time * 71.9);
+        const intensity = (0.1 + grain * 0.9) * (1 - distNorm * 0.62);
+
+        if (intensity < 0.14) {
+          continue;
+        }
+
+        const shade = Math.floor(155 + intensity * 95);
+        const alpha = 0.06 + intensity * 0.32;
+        const size = 1 + Math.floor(seededNoise(i * 7.33 + time * 53.7) * 3.2);
+
+        context.fillStyle = `rgba(${shade}, ${shade}, ${Math.min(255, shade + 12)}, ${alpha.toFixed(3)})`;
+        context.fillRect(Math.round(x), Math.round(y), size, size);
+      }
+
+      for (let y = 0; y < height; y += 4) {
+        const pulse = (Math.sin(y * 0.07 + time * 5.4) + 1) * 0.5;
+        const alpha = 0.02 + pulse * 0.022;
+        context.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        context.fillRect(0, y, width, 1);
+      }
+
+      for (let i = 0; i < 260; i += 1) {
+        const orbit = i / 260;
+        const angle = orbit * Math.PI * 2 + time * (0.45 + seededNoise(i * 9.19));
+        const radius =
+          70 +
+          Math.sin(time * 2.7 + i * 0.33) * 16 +
+          seededNoise(i * 13.91 + time * 4.1) * 22;
+
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        const alpha = 0.06 + seededNoise(i * 21.71 + time * 9.3) * 0.46;
+        const side = 1 + Math.floor(seededNoise(i * 4.11 + time * 15.1) * 3.2);
+
+        context.fillStyle = `rgba(220, 228, 255, ${alpha.toFixed(3)})`;
+        context.fillRect(Math.round(x), Math.round(y), side, side);
+      }
+
+      const hole = context.createRadialGradient(centerX, centerY, 4, centerX, centerY, 190);
+      hole.addColorStop(0, "rgba(0,0,0,1)");
+      hole.addColorStop(0.32, "rgba(0,0,0,0.96)");
+      hole.addColorStop(0.62, "rgba(0,0,0,0.78)");
+      hole.addColorStop(1, "rgba(0,0,0,0)");
+      context.fillStyle = hole;
+      context.fillRect(centerX - 220, centerY - 220, 440, 440);
+
+      const vignette = context.createRadialGradient(
+        centerX,
+        centerY,
+        120,
+        centerX,
+        centerY,
+        maxDist,
       );
-      radial.addColorStop(0, "rgba(0,0,0,0.998)");
-      radial.addColorStop(0.38, "rgba(0,0,0,0.95)");
-      radial.addColorStop(0.76, "rgba(0,0,0,0.54)");
-      radial.addColorStop(1, "rgba(0,0,0,0)");
-      context.fillStyle = radial;
-      context.fillRect(0, 0, width, height);
-
-      const linear = context.createLinearGradient(0, height * 0.34, 0, height);
-      linear.addColorStop(0, "rgba(0,0,0,0)");
-      linear.addColorStop(0.6, "rgba(0,0,0,0.38)");
-      linear.addColorStop(1, "rgba(0,0,0,0.9)");
-      context.fillStyle = linear;
+      vignette.addColorStop(0, "rgba(0,0,0,0)");
+      vignette.addColorStop(1, "rgba(0,0,0,0.7)");
+      context.fillStyle = vignette;
       context.fillRect(0, 0, width, height);
     };
 
-    const drawDrain = () => {
+    const drawCard = (card: EvalCard, now: number, visibility: number) => {
+      const lifeRatio = clamp(card.life / card.maxLife, 0, 1);
+      const jitter =
+        Math.sin(now * 0.01 + card.jitterSeed) * 0.8 +
+        Math.cos(now * 0.008 + card.jitterSeed * 1.7) * 0.7;
+      const hoverScale = 1 + card.hover * 0.12;
+
+      const left = -card.width / 2;
+      const top = -card.height / 2;
+      const radius = Math.max(10, card.height * 0.24);
+
       context.save();
-      context.globalCompositeOperation = "lighter";
-      for (let i = 0; i < 3; i += 1) {
-        const t = i / 2;
-        context.beginPath();
-        context.ellipse(
-          drain.x,
-          drain.y,
-          drain.radius * (0.55 + t * 0.78),
-          drain.radius * (0.14 + t * 0.28),
-          0,
-          0,
-          Math.PI * 2,
-        );
-        context.strokeStyle = `rgba(92, 238, 255, ${(0.2 - t * 0.07).toFixed(3)})`;
-        context.lineWidth = 1.2;
-        context.stroke();
-      }
-      context.restore();
-
-      const core = context.createRadialGradient(
-        drain.x,
-        drain.y,
-        0,
-        drain.x,
-        drain.y,
-        drain.radius * 1.35,
-      );
-      core.addColorStop(0, "rgba(0,0,0,1)");
-      core.addColorStop(0.58, "rgba(0,0,0,0.97)");
-      core.addColorStop(1, "rgba(0,0,0,0)");
-      context.fillStyle = core;
-      context.fillRect(
-        drain.x - drain.radius * 1.6,
-        drain.y - drain.radius * 1.2,
-        drain.radius * 3.2,
-        drain.radius * 2.4,
-      );
-    };
-
-    const drawCard = (card: EvalSlider) => {
-      const perspective = lerp(1.08, 0.16, smoothstep(0, 1.56, card.depth));
-      const drawW = card.width * perspective;
-      const drawH = card.height * perspective;
-      const radius = drawH * 0.5;
-
-      if (drawW < 12 || drawH < 8) {
-        return;
-      }
-
-      const alpha = clamp((1 - card.fog) * (1 - smoothstep(1.22, 1.57, card.depth) * 0.68), 0, 1);
-      if (alpha < 0.02) {
-        return;
-      }
-
-      const knobX = lerp(-drawW * 0.31, drawW * 0.31, card.value);
-
-      context.save();
-      context.translate(card.x, card.y);
+      context.translate(card.x + jitter, card.y - jitter * 0.5);
       context.rotate(card.angle);
+      context.scale(hoverScale, hoverScale);
+      context.globalAlpha = clamp(visibility, 0, 1);
 
-      context.save();
-      context.globalCompositeOperation = "lighter";
-      context.shadowBlur = 16 + card.glow * 30;
-      context.shadowColor = rgba(card.glowColor, alpha * 0.92);
-      context.strokeStyle = rgba(card.glowColor, alpha * 0.5);
-      context.lineWidth = Math.max(2, drawH * 0.12);
-      pathRoundedRect(context, -drawW * 0.5, -drawH * 0.5, drawW, drawH, radius);
-      context.stroke();
-      context.restore();
+      const bgGradient = context.createLinearGradient(left, top, left + card.width, top + card.height);
+      if (card.isRight) {
+        bgGradient.addColorStop(
+          0,
+          hslaColor(card.bgHue, Math.min(100, card.saturation * 0.88), Math.min(92, card.lightness + 22), 0.97),
+        );
+        bgGradient.addColorStop(
+          0.45,
+          hslaColor(card.accentHue, Math.min(100, card.saturation + 4), Math.min(94, card.lightness + 10), 0.98),
+        );
+        bgGradient.addColorStop(
+          1,
+          hslaColor(
+            (card.accentHue + 48) % 360,
+            Math.min(100, card.saturation * 0.86),
+            Math.min(90, card.lightness + 18),
+            0.97,
+          ),
+        );
+      } else {
+        bgGradient.addColorStop(
+          0,
+          hslaColor(card.bgHue, Math.min(100, card.saturation * 0.92), Math.min(94, card.lightness + 18), 0.97),
+        );
+        bgGradient.addColorStop(
+          0.5,
+          hslaColor(card.accentHue, Math.min(100, card.saturation + 6), Math.min(95, card.lightness + 10), 0.98),
+        );
+        bgGradient.addColorStop(
+          1,
+          hslaColor(
+            (card.accentHue + 24) % 360,
+            Math.min(100, card.saturation * 0.9),
+            Math.min(92, card.lightness + 16),
+            0.97,
+          ),
+        );
+      }
 
-      const fill = context.createLinearGradient(-drawW * 0.5, -drawH * 0.45, drawW * 0.5, drawH * 0.45);
-      fill.addColorStop(0, rgba(card.tintA, alpha * 0.92));
-      fill.addColorStop(0.55, rgba([248, 250, 255], alpha * 0.72));
-      fill.addColorStop(1, rgba(card.tintB, alpha * 0.95));
-      pathRoundedRect(context, -drawW * 0.5, -drawH * 0.5, drawW, drawH, radius);
-      context.fillStyle = fill;
+      context.shadowBlur = 12 + card.hover * 24;
+      context.shadowColor = card.isRight
+        ? hslaColor(card.accentHue, 95, 58, 0.25 + card.hover * 0.45)
+        : hslaColor(card.accentHue, 100, 60, 0.28 + card.hover * 0.5);
+      pathRoundedRect(context, left, top, card.width, card.height, radius);
+      context.fillStyle = bgGradient;
       context.fill();
 
+      context.shadowBlur = 0;
+      context.lineWidth = 1.3 + card.hover * 1.4;
+      context.strokeStyle = card.isRight
+        ? `rgba(252, 255, 254, ${(0.76 + lifeRatio * 0.2).toFixed(3)})`
+        : `rgba(255, 245, 248, ${(0.76 + lifeRatio * 0.22).toFixed(3)})`;
+      pathRoundedRect(context, left, top, card.width, card.height, radius);
+      context.stroke();
+
       context.save();
-      pathRoundedRect(context, -drawW * 0.5, -drawH * 0.5, drawW, drawH, radius);
+      pathRoundedRect(context, left, top, card.width, card.height, radius);
       context.clip();
 
-      for (let stripe = 0; stripe < 4; stripe += 1) {
-        const sx = -drawW * 0.66 + stripe * drawW * 0.34;
-        context.beginPath();
-        context.lineWidth = Math.max(1, drawW * 0.016);
-        context.strokeStyle = `rgba(255,255,255,${(alpha * (0.07 + stripe * 0.013)).toFixed(3)})`;
-        context.moveTo(sx, -drawH * 0.72);
-        context.lineTo(sx + drawW * 0.34, drawH * 0.72);
-        context.stroke();
+      const glossTop = context.createLinearGradient(0, top + 2, 0, top + card.height * 0.72);
+      glossTop.addColorStop(0, `rgba(255,255,255,${(0.36 + card.hover * 0.2).toFixed(3)})`);
+      glossTop.addColorStop(0.45, `rgba(255,255,255,${(0.16 + card.hover * 0.12).toFixed(3)})`);
+      glossTop.addColorStop(1, "rgba(255,255,255,0)");
+      context.fillStyle = glossTop;
+      context.fillRect(left + 2, top + 2, card.width - 4, card.height * 0.72);
+
+      const glossBottom = context.createLinearGradient(
+        0,
+        top + card.height * 0.52,
+        0,
+        top + card.height - 2,
+      );
+      glossBottom.addColorStop(0, "rgba(255,255,255,0)");
+      glossBottom.addColorStop(1, `rgba(255,255,255,${(0.12 + card.hover * 0.1).toFixed(3)})`);
+      context.fillStyle = glossBottom;
+      context.fillRect(left + 2, top + card.height * 0.52, card.width - 4, card.height * 0.48);
+
+      const stripeCount = 3;
+      for (let stripe = 0; stripe < stripeCount; stripe += 1) {
+        const stripeWidth = Math.max(16, card.width * 0.16);
+        const stripeTravel = card.width + stripeWidth * 2;
+        const stripeOffset =
+          ((now * (0.018 + stripe * 0.004) + card.jitterSeed * (0.6 + stripe * 0.11)) % stripeTravel) -
+          stripeWidth;
+        const stripeX = left + stripeOffset;
+
+        context.save();
+        context.translate(stripeX, top - card.height * 0.15);
+        context.rotate(-0.22);
+        const stripeGradient = context.createLinearGradient(0, 0, stripeWidth, 0);
+        stripeGradient.addColorStop(0, "rgba(255,255,255,0)");
+        stripeGradient.addColorStop(
+          0.5,
+          card.isRight
+            ? `rgba(225,255,236,${(0.16 + card.hover * 0.1).toFixed(3)})`
+            : `rgba(255,225,236,${(0.16 + card.hover * 0.1).toFixed(3)})`,
+        );
+        stripeGradient.addColorStop(1, "rgba(255,255,255,0)");
+        context.fillStyle = stripeGradient;
+        context.fillRect(0, 0, stripeWidth, card.height * 1.45);
+        context.restore();
       }
 
-      const trackX = -drawW * 0.37;
-      const trackY = -drawH * 0.14;
-      const trackW = drawW * 0.74;
-      const trackH = drawH * 0.28;
+      context.fillStyle = `rgba(255,255,255,${(0.22 + card.hover * 0.08).toFixed(3)})`;
+      context.fillRect(left + 2, top + 2, 2, card.height - 4);
+      context.fillStyle = `rgba(255,255,255,${(0.12 + card.hover * 0.06).toFixed(3)})`;
+      context.fillRect(left + 6, top + 3, 1, card.height - 6);
 
-      pathRoundedRect(context, trackX, trackY, trackW, trackH, trackH * 0.5);
-      context.fillStyle = `rgba(14,16,28,${(alpha * 0.5).toFixed(3)})`;
-      context.fill();
-      pathRoundedRect(context, trackX, trackY, trackW, trackH, trackH * 0.5);
-      context.strokeStyle = rgba(WHITE, alpha * 0.24);
-      context.lineWidth = Math.max(1, drawH * 0.025);
-      context.stroke();
-
-      pathRoundedRect(context, trackX, trackY, trackW * card.value, trackH, trackH * 0.5);
-      context.fillStyle = rgba(card.glowColor, alpha * 0.33);
-      context.fill();
-
-      context.save();
-      context.globalCompositeOperation = "lighter";
-      context.shadowBlur = drawH * 0.38;
-      context.shadowColor = rgba(card.glowColor, alpha * 0.88);
-      context.beginPath();
-      context.arc(knobX, 0, drawH * 0.24, 0, Math.PI * 2);
-      context.fillStyle = rgba(WHITE, alpha * 0.93);
-      context.fill();
-      context.beginPath();
-      context.arc(knobX - drawH * 0.06, -drawH * 0.05, drawH * 0.09, 0, Math.PI * 2);
-      context.fillStyle = rgba(WHITE, alpha * 0.78);
-      context.fill();
-      context.restore();
+      const sparkleCount = 4;
+      for (let sparkle = 0; sparkle < sparkleCount; sparkle += 1) {
+        const noiseX = seededNoise(card.jitterSeed * 0.71 + sparkle * 11.3);
+        const noiseY = seededNoise(card.jitterSeed * 1.17 + sparkle * 19.9);
+        const px = left + 12 + noiseX * (card.width - 24);
+        const py = top + 8 + noiseY * (card.height * 0.35);
+        const dot = 1 + Math.floor(seededNoise(card.jitterSeed + sparkle * 5.7) * 2);
+        context.fillStyle = `rgba(255,255,255,${(0.2 + card.hover * 0.14).toFixed(3)})`;
+        context.fillRect(px, py, dot, dot);
+      }
 
       context.restore();
 
-      const gloss = context.createLinearGradient(0, -drawH * 0.56, 0, drawH * 0.16);
-      gloss.addColorStop(0, `rgba(255,255,255,${(alpha * 0.54).toFixed(3)})`);
-      gloss.addColorStop(0.52, `rgba(255,255,255,${(alpha * 0.14).toFixed(3)})`);
-      gloss.addColorStop(1, "rgba(255,255,255,0)");
-      pathRoundedRect(context, -drawW * 0.5, -drawH * 0.5, drawW, drawH, radius);
-      context.fillStyle = gloss;
-      context.fill();
-
-      pathRoundedRect(context, -drawW * 0.5, -drawH * 0.5, drawW, drawH, radius);
-      context.strokeStyle = rgba(card.edge, alpha * 0.96);
-      context.lineWidth = Math.max(1.1, drawH * 0.052);
-      context.stroke();
-
-      context.textBaseline = "middle";
+      const glyphLane = clamp(card.width * 0.24, 58, 104);
+      const iconX = left + glyphLane * 0.5;
+      const icon = card.isRight ? "✓" : "✕";
+      context.fillStyle = card.isRight ? "rgba(16, 214, 115, 0.98)" : "rgba(236, 28, 74, 0.98)";
+      context.shadowBlur = 10 + card.hover * 10;
+      context.shadowColor = card.isRight
+        ? "rgba(34, 255, 150, 0.48)"
+        : "rgba(255, 48, 86, 0.52)";
+      context.font = `900 ${Math.max(52, card.height * (card.isRight ? 1.24 : 1.42))}px var(--font-geist-sans), "Arial Black", sans-serif`;
       context.textAlign = "center";
-      context.font = `700 ${Math.max(8, Math.floor(drawH * 0.28))}px var(--font-geist-sans), sans-serif`;
-      context.fillStyle = rgba(WHITE, alpha * 0.97);
-      context.shadowBlur = drawH * 0.17;
-      context.shadowColor = rgba(card.glowColor, alpha * 0.76);
-      context.fillText(card.label, 0, -drawH * 0.22);
+      context.textBaseline = "middle";
+      context.fillText(icon, iconX, 0);
+      context.shadowBlur = 0;
 
-      context.font = `600 ${Math.max(7, Math.floor(drawH * 0.18))}px var(--font-geist-sans), sans-serif`;
-      context.fillStyle = rgba([236, 248, 255], alpha * 0.86);
-      context.fillText(`batch #${card.batch}`, 0, drawH * 0.24);
+      const textLeft = left + glyphLane + 10;
+
+      context.fillStyle = "rgba(255,255,255,0.97)";
+      context.font = `900 ${Math.max(16, card.height * 0.38)}px var(--font-geist-sans), "Arial Black", sans-serif`;
+      context.textAlign = "left";
+      context.textBaseline = "middle";
+      context.fillText(card.headline, textLeft, -card.height * 0.16);
+      context.fillText(card.headline, textLeft + 0.7, -card.height * 0.16);
+
+      context.fillStyle = card.isRight ? "rgba(231, 255, 238, 0.92)" : "rgba(255, 230, 234, 0.92)";
+      context.font = `900 ${Math.max(12, card.height * 0.26)}px var(--font-geist-sans), "Arial Black", sans-serif`;
+      context.fillText(card.detail.toUpperCase(), textLeft, card.height * 0.18);
+      context.fillText(card.detail.toUpperCase(), textLeft + 0.6, card.height * 0.18);
+
+      context.font = `900 ${Math.max(7.5, card.height * 0.16)}px var(--font-geist-sans), sans-serif`;
+      const tagText = card.tag.toUpperCase();
+      const tagWidth = context.measureText(tagText).width + 10;
+      const tagHeight = Math.max(12, card.height * 0.24);
+      const tagLeft = left + card.width - tagWidth - 10;
+      const tagTop = top + 8;
+
+      pathRoundedRect(context, tagLeft, tagTop, tagWidth, tagHeight, tagHeight * 0.45);
+      context.fillStyle = card.isRight ? "rgba(242, 255, 248, 0.48)" : "rgba(255, 236, 242, 0.48)";
+      context.fill();
+      context.fillStyle = card.isRight ? "rgba(18, 92, 48, 0.96)" : "rgba(132, 26, 54, 0.96)";
+      context.textAlign = "center";
+      context.fillText(tagText, tagLeft + tagWidth * 0.5, tagTop + tagHeight * 0.5 + 0.5);
+
+      if (card.hover > 0.02) {
+        context.save();
+        pathRoundedRect(context, left, top, card.width, card.height, radius);
+        context.clip();
+
+        const shimmerWidth = Math.max(28, card.width * 0.24);
+        const travel = card.width + shimmerWidth * 2;
+        const shimmerOffset = ((now * 0.32 + card.jitterSeed * 9.2) % travel) - shimmerWidth;
+
+        context.translate(left + shimmerOffset, top - card.height * 0.4);
+        context.rotate(-0.24);
+
+        const shimmerGradient = context.createLinearGradient(0, 0, shimmerWidth, 0);
+        shimmerGradient.addColorStop(0, "rgba(255,255,255,0)");
+        shimmerGradient.addColorStop(
+          0.5,
+          `rgba(255,255,255,${(0.14 + card.hover * 0.34).toFixed(3)})`,
+        );
+        shimmerGradient.addColorStop(1, "rgba(255,255,255,0)");
+
+        context.fillStyle = shimmerGradient;
+        context.fillRect(0, 0, shimmerWidth, card.height * 2.3);
+        context.restore();
+      }
 
       context.restore();
-    };
-
-    const updateSimulation = (dt: number) => {
-      const hitPlaneY = height + 90;
-
-      let activeCount = 0;
-      let fogSum = 0;
-      const samples: Array<{ x: number; y: number; depth: number; label: string; fog: number }> = [];
-
-      spawnAccumulator += dt * 1.05;
-      while (spawnAccumulator >= 1) {
-        spawnAccumulator -= 1;
-        const card = cards[cardCursor % maxCards];
-        cardCursor += 1;
-        spawnCard(card, 0);
-      }
-
-      for (let i = 0; i < maxCards; i += 1) {
-        const card = cards[i];
-        if (!card.active) {
-          continue;
-        }
-
-        card.t += card.speed * dt;
-        card.wobble += dt * (0.7 + card.speed * 8);
-
-        if (pointer.active) {
-          const dist = Math.hypot(card.x - pointer.x, card.y - pointer.y);
-          if (dist < 200) {
-            card.orbitStart += (1 - dist / 200) * 0.01 * dt;
-          }
-        }
-
-        applyPose(card);
-
-        if (card.y > hitPlaneY || card.t >= 1.08 || card.fog > 0.998) {
-          spawnCard(card, 0);
-          continue;
-        }
-
-        activeCount += 1;
-        fogSum += card.fog;
-
-        if (samples.length < 6) {
-          samples.push({
-            x: Number(card.x.toFixed(1)),
-            y: Number(card.y.toFixed(1)),
-            depth: Number(card.depth.toFixed(3)),
-            label: card.label,
-            fog: Number(card.fog.toFixed(3)),
-          });
-        }
-      }
-
-      const fogDensity = activeCount > 0 ? fogSum / activeCount : 0;
-      drain.fog = clamp(fogDensity, 0, 1);
-
-      latestState = {
-        piece: 3,
-        title: "Evals",
-        coordinateSystem:
-          "origin at top-left; x increases right; y increases downward; depth 0 near viewer to 1.6 far/void",
-        activeCards: activeCount,
-        drain: {
-          x: Math.round(drain.x),
-          y: Math.round(drain.y),
-          radius: Number(drain.radius.toFixed(1)),
-          fog: Number(fogDensity.toFixed(3)),
-        },
-        pointer: {
-          active: pointer.active,
-          x: pointer.active ? Math.round(pointer.x) : null,
-          y: pointer.active ? Math.round(pointer.y) : null,
-        },
-        sampleCards: samples,
-      };
-    };
-
-    const render = () => {
-      drawBackdrop();
-
-      const drawOrder = cards
-        .filter((card) => card.active)
-        .sort((a, b) => (a.depth === b.depth ? a.y - b.y : a.depth - b.depth));
-
-      for (let i = 0; i < drawOrder.length; i += 1) {
-        drawCard(drawOrder[i]);
-      }
-
-      drawFog();
-      drawDrain();
-    };
-
-    const renderText = () => JSON.stringify(latestState);
-
-    const advanceHook = async (ms: number) => {
-      const clamped = clamp(ms, 0, 3000);
-      const steps = Math.max(1, Math.round(clamped / (1000 / 60)));
-      const dt = clamped / 1000 / steps;
-      for (let i = 0; i < steps; i += 1) {
-        updateSimulation(dt);
-      }
-      render();
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -603,54 +574,176 @@ export default function EvalsScene() {
       pointer.active = false;
     };
 
+    const onPointerDown = (event: PointerEvent) => {
+      const bounds = canvas.getBoundingClientRect();
+      pointer.x = event.clientX - bounds.left;
+      pointer.y = event.clientY - bounds.top;
+      pointer.active = true;
+
+      for (let index = 0; index < maxCards; index += 1) {
+        const card = cards[index];
+        if (!card.active) {
+          continue;
+        }
+
+        const dx = card.x - pointer.x;
+        const dy = card.y - pointer.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist > 260) {
+          continue;
+        }
+
+        const force = (1 - dist / 260) * 340;
+        card.vx += (dx / dist) * force;
+        card.vy += (dy / dist) * force;
+        card.spin += (Math.random() - 0.5) * 1.2;
+        card.hover = Math.max(card.hover, 0.5);
+      }
+    };
+
+    resize();
+
     const frame = (now: number) => {
       const dt = Math.min(0.033, (now - lastTime) / 1000);
       lastTime = now;
 
-      updateSimulation(dt);
-      render();
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const centerX = width * 0.5;
+      const centerY = height * 0.53;
+
+      let hoveredIndex = -1;
+      if (pointer.active) {
+        for (let index = maxCards - 1; index >= 0; index -= 1) {
+          const card = cards[index];
+          if (!card.active) {
+            continue;
+          }
+          if (isPointerInsideCard(card, pointer.x, pointer.y)) {
+            hoveredIndex = index;
+            break;
+          }
+        }
+      }
+
+      spawnAccumulator += dt * baseSpawnRate;
+      while (spawnAccumulator >= 1) {
+        spawnAccumulator -= 1;
+        spawnCard(width, height);
+      }
+
+      drawBackground(width, height, now);
+
+      const drawQueue: Array<{ index: number; visibility: number }> = [];
+
+      for (let index = 0; index < maxCards; index += 1) {
+        const card = cards[index];
+        if (!card.active) {
+          continue;
+        }
+
+        if (index === hoveredIndex) {
+          card.hover = clamp(card.hover + dt * 6.5, 0, 1);
+        } else {
+          card.hover = clamp(card.hover - dt * 3.2, 0, 1);
+        }
+
+        const dx = centerX - card.x;
+        const dy = centerY - card.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const pull = 28 + 260 / (1 + dist * 0.03);
+        const swirl = card.isRight ? 12 : 27;
+
+        card.vx += (dx / dist) * pull * dt + (-dy / dist) * swirl * dt;
+        card.vy += (dy / dist) * pull * dt + (dx / dist) * swirl * dt;
+
+        if (pointer.active) {
+          const pdx = card.x - pointer.x;
+          const pdy = card.y - pointer.y;
+          const pointerDist = Math.hypot(pdx, pdy) || 1;
+          if (pointerDist < 240) {
+            const influence = (1 - pointerDist / 240) * (card.isRight ? 18 : 28);
+            card.vx += (-pdy / pointerDist) * influence * dt * 5.4;
+            card.vy += (pdx / pointerDist) * influence * dt * 5.4;
+          }
+        }
+
+        card.vx *= 0.9925 - card.hover * 0.001;
+        card.vy *= 0.9925 - card.hover * 0.001;
+
+        card.x += card.vx * dt;
+        card.y += card.vy * dt;
+        card.angle += card.spin * dt;
+        card.life -= dt * 0.92;
+
+        if (dist < 170) {
+          card.life -= dt * (1.1 + (170 - dist) / 70);
+        }
+
+        const edgeMargin = Math.min(
+          card.x + 260,
+          width + 260 - card.x,
+          card.y + 210,
+          height + 210 - card.y,
+        );
+        if (edgeMargin < 110) {
+          card.life -= dt * clamp((110 - edgeMargin) / 48, 0, 4.6);
+        }
+
+        const lifeFade = clamp(card.life / (card.maxLife * 0.52), 0, 1);
+        const voidFade = clamp((dist - 16) / 140, 0, 1);
+        const edgeFade = clamp(edgeMargin / 110, 0, 1);
+        const visibility = lifeFade * Math.min(voidFade, edgeFade);
+
+        if (
+          card.life <= -0.42 ||
+          dist < 8 ||
+          edgeMargin < -190 ||
+          visibility <= 0.006
+        ) {
+          card.active = false;
+          continue;
+        }
+
+        drawQueue.push({ index, visibility });
+      }
+
+      for (let queueIndex = 0; queueIndex < drawQueue.length; queueIndex += 1) {
+        const item = drawQueue[queueIndex];
+        drawCard(cards[item.index], now, item.visibility);
+      }
+
       rafId = window.requestAnimationFrame(frame);
     };
-
-    resize();
-    for (let i = 0; i < cards.length; i += 1) {
-      spawnCard(cards[i], Math.random() * 0.84);
-    }
-
-    window.render_game_to_text = renderText;
-    window.advanceTime = advanceHook;
 
     rafId = window.requestAnimationFrame(frame);
     window.addEventListener("resize", resize);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerleave", onPointerLeave);
+    canvas.addEventListener("pointerdown", onPointerDown);
 
     return () => {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerleave", onPointerLeave);
-
-      if (window.render_game_to_text === renderText) {
-        delete window.render_game_to_text;
-      }
-      if (window.advanceTime === advanceHook) {
-        delete window.advanceTime;
-      }
+      canvas.removeEventListener("pointerdown", onPointerDown);
     };
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black text-white">
+    <div className="relative h-screen w-screen overflow-hidden bg-[#010103] text-white">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full cursor-pointer" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(255,255,255,0.05),transparent_62%)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/72 px-4 py-4 backdrop-blur-sm">
-        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-white/85">
+      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">
+        <p className="font-sans text-[11px] uppercase tracking-[0.11em] text-slate-200">
           Exhibition Piece 3 / {PIECE_COUNT}
         </p>
         <h1 className="font-pixel-square text-3xl leading-none text-white sm:text-4xl">Evals</h1>
         <p className="font-sans text-xs leading-relaxed text-white/84 sm:text-sm">
-          Neon eval sliders spiral down into a black fog drain and recycle continuously.
+          Inside the singularity, static screams while verdict cards keep arriving: almost all
+          wrong, only rarely right.
         </p>
         <PieceNavigationControls pieceId={3} />
       </div>

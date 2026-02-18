@@ -1,4 +1,4 @@
-export const PIECE_COUNT = 10;
+export const PIECE_COUNT = 9;
 
 export const PIECE_TITLES = [
   "Token Ceiling",
@@ -10,7 +10,6 @@ export const PIECE_TITLES = [
   "Hypnogagia",
   "Prompt Cage",
   "Cabaret Protocol",
-  "Final Resolve",
 ] as const;
 
 export function wrapPiece(id: number): number {
