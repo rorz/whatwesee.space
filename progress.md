@@ -1181,3 +1181,22 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Codex pill tone refinement (user-requested):
   - Restyled the badge to be sharper/cleaner and significantly more faded (light border, translucent fill, reduced icon contrast, tighter tracking).
   - Kept bold uppercase emphasis intact.
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-pill-faded-clean/shot-0.png` visually confirms sharper, cleaner, more faded pill styling.
+
+- AI-generation note wording/placement tweak (user-requested):
+  - Removed the `Serious note:` prefix.
+  - Moved `This art exhibition is entirely AI generated.` to the top of the left content stack.
+  - Styled the line in purple (`text-purple-300`) while keeping bold weight.
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-purple-top-note/shot-0.png` visually confirms top placement, purple styling, and removal of `Serious note` wording.
+
+- Intro hierarchy refinement (user-requested):
+  - Moved `This art exhibition is entirely AI generated.` directly below the title line.
+  - Removed bold weight from intro/body paragraph copy.
+  - Kept sizing readable (`text-sm`, `sm:text-base`) for clear hierarchy without bold paragraphs.
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-title-under-note/shot-0.png` visually confirms note sits below title and paragraphs are regular weight.

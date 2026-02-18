@@ -650,15 +650,15 @@ export default function Home() {
         <p className="font-sans text-lg font-semibold tracking-[0.02em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xl">
           An insight into the Agentic Condition
         </p>
-        <p className="mt-2 font-sans text-sm font-semibold leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
+        <p className="mt-1 font-sans text-sm leading-relaxed text-purple-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
+          This art exhibition is entirely AI generated.
+        </p>
+        <p className="mt-2 font-sans text-sm leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
           This exhibition moves through nine rooms about how machines see, decide, and perform.
         </p>
-        <p className="mt-2 font-sans text-sm font-semibold leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
+        <p className="mt-2 font-sans text-sm leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
           Start with pressure and control, end with spectacle and emotion. Stay with each room long
           enough to feel the system reveal itself.
-        </p>
-        <p className="mt-2 font-sans text-sm font-extrabold leading-relaxed text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
-          Serious note: this art exhibition is entirely AI generated.
         </p>
         <div className="mt-3">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-white/18 bg-white/10 px-3 py-1 font-sans text-[9px] font-bold uppercase tracking-[0.11em] text-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] sm:text-[10px]">
