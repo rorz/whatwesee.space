@@ -243,20 +243,20 @@ export default function GuestbookPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f7f6f2] text-[#0b0d0f]">
+    <main className="relative min-h-[100svh] h-[100dvh] overflow-hidden bg-[#f7f6f2] text-[#0b0d0f]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden />
 
-      <div className="relative z-10 min-h-screen">
+      <div className="relative z-10 min-h-[100svh] h-[100dvh]">
         <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
           <Link
             href="/"
-            className="inline-flex border border-black/70 bg-yellow-300 px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-black transition-colors hover:bg-yellow-200"
+            className="inline-flex min-h-10 items-center justify-center border border-black/70 bg-yellow-300 px-3 py-2 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-black transition-colors hover:bg-yellow-200 sm:min-h-0 sm:py-1.5 sm:text-[11px]"
           >
             start
           </Link>
           <Link
             href="/pieces/1"
-            className="inline-flex border border-black/35 bg-[#f7f6f2]/92 px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-black/72 transition-colors hover:bg-[#f7f6f2]"
+            className="inline-flex min-h-10 items-center justify-center border border-black/35 bg-[#f7f6f2]/92 px-3 py-2 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-black/72 transition-colors hover:bg-[#f7f6f2] sm:min-h-0 sm:py-1.5 sm:text-[11px]"
           >
             pieces
           </Link>
@@ -329,14 +329,14 @@ export default function GuestbookPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="border border-black/35 px-2 py-1 text-black/85 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-9 border border-black/35 px-3 py-1 text-black/85 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? "..." : "post"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="border border-black/20 px-2 py-1 text-black/60"
+                className="min-h-9 border border-black/20 px-3 py-1 text-black/60"
               >
                 close
               </button>

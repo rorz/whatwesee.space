@@ -1274,6 +1274,18 @@ export default function HypnogagiaScene() {
       pointer.idleTime = Math.max(pointer.idleTime, 0.14);
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") {
+        pointer.active = false;
+        pointer.idleTime = Math.max(pointer.idleTime, 0.14);
+      }
+    };
+
+    const onPointerCancel = () => {
+      pointer.active = false;
+      pointer.idleTime = Math.max(pointer.idleTime, 0.14);
+    };
+
     let rafId = 0;
     let lastNow = performance.now();
 
@@ -1287,6 +1299,8 @@ export default function HypnogagiaScene() {
 
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
     canvas.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("resize", resize);
 
@@ -1297,6 +1311,8 @@ export default function HypnogagiaScene() {
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("pointerleave", onPointerLeave);
 
       if (window.render_game_to_text === renderText) {
@@ -1322,8 +1338,8 @@ export default function HypnogagiaScene() {
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#02030a] text-white">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#02030a] text-white">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(38,71,142,0.2),transparent_56%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,transparent_1px,transparent_5px)]" />

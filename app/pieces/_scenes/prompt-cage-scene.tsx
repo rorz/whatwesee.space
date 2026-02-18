@@ -1411,8 +1411,16 @@ export default function PromptCageScene() {
       pointer.down = true;
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (event: PointerEvent) => {
       pointer.down = false;
+      if (event.pointerType !== "mouse") {
+        pointer.active = false;
+      }
+    };
+
+    const onPointerCancel = () => {
+      pointer.down = false;
+      pointer.active = false;
     };
 
     const onPointerLeave = () => {
@@ -1443,6 +1451,7 @@ export default function PromptCageScene() {
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
     canvas.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("resize", resize);
     window.addEventListener("blur", onWindowBlur);
@@ -1456,6 +1465,7 @@ export default function PromptCageScene() {
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       if (window.render_game_to_text === renderText) {
         delete window.render_game_to_text;
@@ -1476,8 +1486,8 @@ export default function PromptCageScene() {
   const streamFilledSegments = Math.round(poemStreamProgress * streamSegmentCount);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#0e0807] text-[#f4d8ca]">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full cursor-crosshair" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#0e0807] text-[#f4d8ca]">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-crosshair" />
 
       <div
         className="pointer-events-auto absolute left-4 top-4 z-20 w-[min(460px,92vw)] border-2 border-[#111214] bg-[#d8dbe2]/96 px-5 py-4"
@@ -1498,7 +1508,7 @@ export default function PromptCageScene() {
       </div>
 
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-30 w-[min(500px,46vw)] min-w-[270px] border-l border-[#111214] bg-[#6d6f74]/95"
+        className="pointer-events-none absolute inset-y-0 right-0 z-30 hidden w-[min(500px,46vw)] min-w-[270px] border-l border-[#111214] bg-[#6d6f74]/95 md:block"
         style={{
           backgroundImage:
             "repeating-linear-gradient(0deg, rgba(242,242,242,0.045) 0 1px, rgba(12,12,12,0.075) 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 7px), linear-gradient(180deg, rgba(230,230,230,0.08) 0%, rgba(28,28,28,0.2) 100%)",

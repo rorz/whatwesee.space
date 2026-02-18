@@ -600,6 +600,16 @@ export default function EvalsScene() {
       }
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") {
+        pointer.active = false;
+      }
+    };
+
+    const onPointerCancel = () => {
+      pointer.active = false;
+    };
+
     resize();
 
     const frame = (now: number) => {
@@ -720,6 +730,8 @@ export default function EvalsScene() {
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerleave", onPointerLeave);
     canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
 
     return () => {
       window.cancelAnimationFrame(rafId);
@@ -727,12 +739,14 @@ export default function EvalsScene() {
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
     };
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#010103] text-white">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full cursor-pointer" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#010103] text-white">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-pointer" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(255,255,255,0.05),transparent_62%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">

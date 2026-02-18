@@ -718,8 +718,8 @@ export default function QuantaScene() {
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#f9fbff] text-black">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#f9fbff] text-black">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_42%_18%,rgba(255,255,255,0.46),rgba(246,251,255,0.14)_42%,transparent_68%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.3)_0%,rgba(226,236,255,0.1)_52%,rgba(255,255,255,0.28)_100%)]" />
 

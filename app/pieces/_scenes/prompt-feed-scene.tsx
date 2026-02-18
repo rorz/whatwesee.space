@@ -594,8 +594,20 @@ export default function PromptFeedScene() {
       pointer.active = false;
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") {
+        pointer.active = false;
+      }
+    };
+
+    const onPointerCancel = () => {
+      pointer.active = false;
+    };
+
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
     canvas.addEventListener("pointerleave", onPointerLeave);
 
     const frame = (now: number) => {
@@ -821,6 +833,8 @@ export default function PromptFeedScene() {
     return () => {
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("resize", onResize);
       window.cancelAnimationFrame(rafId);
@@ -828,8 +842,8 @@ export default function PromptFeedScene() {
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black text-white">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-black text-white">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
 
       <div className="absolute left-4 top-4 z-20 flex max-w-md flex-col gap-3 border border-white/20 bg-black/60 px-4 py-4 backdrop-blur-sm relative">
         <PieceNavigationControls pieceId={7} className="mt-0" hideArtistCard hidePieceGrid />

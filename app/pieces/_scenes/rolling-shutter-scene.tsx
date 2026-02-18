@@ -613,7 +613,7 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
   const visibleFrameSrc = loadedSrcByFrameId[currentFrame.id] ?? lastVisibleSrc;
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#020202]">
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#020202]">
       <div className="absolute left-4 top-4 z-30 flex max-w-md flex-col gap-3 border border-white/15 bg-black/55 px-4 py-4 backdrop-blur-sm">
         <PieceNavigationControls pieceId={5} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-orange-200 sm:text-4xl">
@@ -658,7 +658,7 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
 
       <canvas
         ref={shaderCanvasRef}
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 touch-none"
         style={{ zIndex: 15, mixBlendMode: "screen", opacity: 0.86 }}
       />
 

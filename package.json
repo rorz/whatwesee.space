@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
+    "@types/pg": "^8.16.0",
     "bad-words": "^4.0.0",
     "geist": "^1.7.0",
     "next": "16.1.6",

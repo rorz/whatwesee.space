@@ -64,13 +64,13 @@ export default function PieceNavigationControls({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/"
-            className="pointer-events-auto inline-flex border border-black/70 bg-yellow-300 px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-black transition-colors hover:bg-yellow-200"
+            className="pointer-events-auto inline-flex min-h-10 items-center justify-center border border-black/70 bg-yellow-300 px-3 py-2 font-sans text-xs font-semibold uppercase tracking-[0.1em] text-black transition-colors hover:bg-yellow-200 sm:min-h-0 sm:py-1.5 sm:text-[11px]"
           >
             start
           </Link>
           <Link
             href="/guestbook"
-            className="pointer-events-auto inline-flex border border-black/55 bg-sky-200 px-2 py-1 font-sans text-[9px] font-semibold uppercase tracking-[0.09em] text-black backdrop-blur-sm transition-colors hover:bg-sky-100"
+            className="pointer-events-auto inline-flex min-h-10 items-center justify-center border border-black/55 bg-sky-200 px-2.5 py-2 font-sans text-[10px] font-semibold uppercase tracking-[0.09em] text-black backdrop-blur-sm transition-colors hover:bg-sky-100 sm:min-h-0 sm:px-2 sm:py-1 sm:text-[9px]"
           >
             guestbook
           </Link>
@@ -78,10 +78,7 @@ export default function PieceNavigationControls({
       ) : null}
 
       {!hidePieceGrid ? (
-        <div
-          className="grid w-full gap-1.5"
-          style={{ gridTemplateColumns: `repeat(${PIECE_COUNT}, minmax(0, 1fr))` }}
-        >
+        <div className="grid w-full grid-cols-5 gap-1.5 sm:grid-cols-10">
           {Array.from({ length: PIECE_COUNT }, (_, index) => {
             const id = index + 1;
             const active = id === pieceId;
@@ -90,7 +87,7 @@ export default function PieceNavigationControls({
               <Link
                 key={`piece-link-${id}`}
                 href={`/pieces/${id}`}
-                className={`pointer-events-auto inline-flex h-8 w-full items-center justify-center border-2 px-1 font-pixel-square text-sm leading-none tracking-[0.03em] transition-colors sm:h-9 sm:text-base ${
+                className={`pointer-events-auto inline-flex h-10 w-full items-center justify-center border-2 px-1 font-pixel-square text-base leading-none tracking-[0.03em] transition-colors sm:h-9 ${
                   active
                     ? "border-orange-200 bg-orange-400 text-black"
                     : "border-white/40 bg-black/45 text-white hover:border-orange-100/80 hover:text-orange-100"

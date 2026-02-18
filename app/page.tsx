@@ -570,11 +570,11 @@ export default function Home() {
 
   return (
     <div
-      className={`relative h-screen w-screen overflow-hidden bg-black ${isWireframe ? "wws-scene-wireframe" : ""}`}
+      className={`relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-black ${isWireframe ? "wws-scene-wireframe" : ""}`}
     >
       <main
         ref={gridRef}
-        className="relative grid h-full w-full gap-0 bg-black p-0 font-pixel-square"
+        className="relative grid h-full w-full touch-none gap-0 bg-black p-0 font-pixel-square"
         style={gridTemplateStyle}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
@@ -632,12 +632,12 @@ export default function Home() {
         </div>
       </main>
 
-      <div className="absolute left-1/2 top-[64%] z-20 flex -translate-x-1/2 flex-col items-center">
+      <div className="absolute left-1/2 top-[50%] z-20 flex -translate-x-1/2 flex-col items-center sm:top-[64%]">
         <button
           type="button"
           onClick={handleEnterExhibition}
           disabled={isTransitioning}
-          className={`pointer-events-auto border-2 border-black bg-orange-500 px-7 py-3 font-sans text-sm font-semibold uppercase tracking-[0.1em] text-black shadow-[0_6px_0_#7c2d12] transition-transform duration-150 sm:text-base ${isTransitioning ? "cursor-wait opacity-80" : "cursor-pointer hover:-translate-y-px active:translate-y-[2px]"}`}
+          className={`pointer-events-auto min-h-11 border-2 border-black bg-orange-500 px-7 py-3 font-sans text-sm font-semibold uppercase tracking-[0.1em] text-black shadow-[0_6px_0_#7c2d12] transition-transform duration-150 sm:min-h-0 sm:text-base ${isTransitioning ? "cursor-wait opacity-80" : "cursor-pointer hover:-translate-y-px active:translate-y-[2px]"}`}
         >
           {isTransitioning ? `loading piece ${targetPiece}` : "enter exhibition"}
         </button>
@@ -646,11 +646,11 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="pointer-events-none absolute bottom-4 left-4 z-20 max-w-xl text-white sm:bottom-6 sm:left-6">
-        <p className="font-sans text-lg font-semibold tracking-[0.02em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xl">
+      <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-20 max-w-xl text-white sm:bottom-6 sm:left-6 sm:right-auto">
+        <p className="hidden font-sans text-lg font-semibold tracking-[0.02em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:block sm:text-xl">
           An insight into the Agentic Condition
         </p>
-        <p className="mt-1 font-sans text-sm leading-relaxed text-purple-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
+        <p className="hidden font-sans text-sm leading-relaxed text-purple-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:mt-1 sm:block sm:text-base">
           This art exhibition is entirely AI generated.
         </p>
         <p className="mt-2 font-sans text-sm leading-relaxed text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-base">
@@ -675,31 +675,30 @@ export default function Home() {
             Made exclusively with OpenAI Codex
           </p>
         </div>
-        <div className="mt-3 flex items-start gap-3 border-l border-white/25 pl-3">
+        <div className="mt-3 hidden border-l border-white/25 pl-3 sm:block">
+          <p className="font-mono text-[10px] tracking-[0.22em] text-white/46">----</p>
+          <p className="mt-1 font-sans text-xs font-semibold uppercase tracking-[0.11em] text-white/86 sm:text-sm">
+            About the creator:
+          </p>
+          <p className="mt-2 whitespace-pre-line border border-white/35 bg-black px-3 py-2 font-mono text-[11px] font-extrabold leading-relaxed text-white sm:text-xs">
+            {roryNote}
+          </p>
           <Image
             src="/rory-profile.png"
             alt="Profile picture of Rory"
             width={56}
             height={56}
-            className="h-14 w-14 shrink-0 border border-white/40 object-cover"
+            className="mt-3 h-14 w-14 shrink-0 border border-white/40 object-cover"
             priority
           />
-          <div className="min-w-0">
-            <p className="font-sans text-[10px] uppercase tracking-[0.13em] text-white/70">Rory McMeekin</p>
-            <a
-              href="https://x.com/rorzio"
-              target="_blank"
-              rel="noreferrer"
-              className="pointer-events-auto mt-1 inline-block font-sans text-xs text-orange-300 underline decoration-orange-300/70 underline-offset-2 transition-colors hover:text-orange-200 sm:text-sm"
-            >
-              @rorzio on X
-            </a>
-          </div>
-        </div>
-        <div className="mt-3 border-l border-white/25 pl-3">
-          <p className="mt-1 whitespace-pre-line border border-white/35 bg-black px-3 py-2 font-mono text-[11px] font-extrabold leading-relaxed text-white sm:text-xs">
-            {roryNote}
-          </p>
+          <a
+            href="https://x.com/rorzio"
+            target="_blank"
+            rel="noreferrer"
+            className="pointer-events-auto mt-2 inline-block font-sans text-xs text-orange-300 underline decoration-orange-300/70 underline-offset-2 transition-colors hover:text-orange-200 sm:text-sm"
+          >
+            @rorzio on X
+          </a>
         </div>
         <p className="mt-3 font-sans text-[11px] leading-relaxed text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-xs">
           © Rory McMeekin 2026

@@ -285,6 +285,16 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       pointerCeilingY = null;
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") {
+        pointerCeilingY = null;
+      }
+    };
+
+    const onPointerCancel = () => {
+      pointerCeilingY = null;
+    };
+
     resize();
 
     const frame = (now: number) => {
@@ -461,19 +471,23 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
     rafId = window.requestAnimationFrame(frame);
     window.addEventListener("resize", resize);
     canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
     canvas.addEventListener("pointerleave", onPointerLeave);
 
     return () => {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("pointerleave", onPointerLeave);
     };
   }, [labelPool]);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#030409] text-white">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#030409] text-white">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_65%,rgba(255,140,34,0.12),transparent_58%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">

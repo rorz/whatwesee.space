@@ -692,12 +692,24 @@ export default function LatentBloomScene() {
       pointer.active = false;
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") {
+        pointer.active = false;
+      }
+    };
+
+    const onPointerCancel = () => {
+      pointer.active = false;
+    };
+
     const onResize = () => {
       resize();
     };
 
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
     canvas.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("resize", onResize);
 
@@ -714,6 +726,8 @@ export default function LatentBloomScene() {
       window.cancelAnimationFrame(rafId);
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("resize", onResize);
 
@@ -727,8 +741,8 @@ export default function LatentBloomScene() {
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#f6f0de] text-[#11110f]">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#f6f0de] text-[#11110f]">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_55%_40%,rgba(125,171,102,0.12),transparent_58%)]" />
 
       <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-black/20 bg-white/70 px-4 py-4 backdrop-blur-sm relative">

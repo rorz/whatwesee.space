@@ -870,7 +870,12 @@ export default function CabaretProtocolScene() {
       emitWords(20, pointer.x, pointer.y, "negative");
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (event: PointerEvent) => {
+      const releaseX = pointer.active ? pointer.x : stageCenterX;
+      const releaseY = pointer.active ? pointer.y : stageCenterY;
+      if (event.pointerType !== "mouse") {
+        pointer.active = false;
+      }
       if (!pointer.down) {
         return;
       }
@@ -879,12 +884,7 @@ export default function CabaretProtocolScene() {
       setIsPressed(false);
       releaseGlow = 1;
       energy = clamp(energy + 0.26, 0.18, 1.6);
-      emitWords(
-        26,
-        pointer.active ? pointer.x : stageCenterX,
-        pointer.active ? pointer.y : stageCenterY,
-        "positive",
-      );
+      emitWords(26, releaseX, releaseY, "positive");
     };
 
     const onPointerLeave = () => {
@@ -941,7 +941,7 @@ export default function CabaretProtocolScene() {
   }, []);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#fdf2c8] text-[#2a123d]">
+    <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#fdf2c8] text-[#2a123d]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-pointer" />
 
       <div className="absolute left-4 top-4 z-20 w-[min(440px,92vw)] -rotate-[1.2deg] border-2 border-[#2f1742] bg-[#ffe56f]/95 px-5 py-4 shadow-[8px_8px_0px_#2f1742]">

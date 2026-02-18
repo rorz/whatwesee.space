@@ -1200,3 +1200,50 @@ Original prompt: i want enter exhibition button to be a next transition effect t
   - Verification:
     - `pnpm exec eslint app/page.tsx` passes.
     - Playwright screenshot `/tmp/wws-title-under-note/shot-0.png` visually confirms note sits below title and paragraphs are regular weight.
+
+- Creator section restructure (user-requested):
+  - Removed `RORY MCMEEKIN` label next to the profile picture.
+  - Added dashed demarcation line (`----`) above creator content.
+  - Reordered creator block to:
+    1) `About the creator:`
+    2) creator text
+    3) profile picture
+    4) X link
+    5) copyright notice below section.
+  - Verification:
+    - `pnpm exec eslint app/page.tsx` passes.
+    - Playwright screenshot `/tmp/wws-creator-ordered/shot-0.png` visually confirms removed name label and creator order/demarcation.
+## 2026-02-18
+- Mobile compatibility pass across the exhibition and guestbook.
+- Replaced scene root sizing from `h-screen w-screen` / `min-h-screen` to `min-h-[100svh] h-[100dvh] w-full` for better mobile browser viewport behavior across:
+  - `app/page.tsx`
+  - `app/guestbook/page.tsx`
+  - `app/pieces/_components/piece-placeholder.tsx`
+  - all implemented scene files under `app/pieces/_scenes/`
+- Improved mobile tap ergonomics:
+  - Updated `app/pieces/_components/piece-navigation-controls.tsx` quick links to larger touch targets.
+  - Changed piece index grid to `5 x 2` on mobile (`sm` and up remains `10 x 1`) and increased tile height.
+  - Updated guestbook `start/pieces` buttons and form action buttons to larger touch targets.
+- Added `touch-none` on interactive canvases to prevent touch scroll/gesture conflicts during interactions.
+- Fixed touch pointer lifecycle in scenes so effects don’t stay latched after tap release:
+  - Added/updated `pointerup` + `pointercancel` handling in Token Ceiling, Latent Bloom, Hypnogagia, Evals, Prompt Feed, Prompt Cage, and Cabaret Protocol.
+  - For touch pointers, `pointer.active` now deactivates on release where hover semantics do not exist.
+- Prompt Cage mobile layout refinement:
+  - Hid the right-side status rail on mobile (`md` and up only) to prevent panel crowding.
+- Home page mobile readability/layout refinements:
+  - Raised CTA position on small screens and increased button minimum height.
+  - Reduced bottom-copy footprint on mobile by hiding the top intro lines and creator detail block below `sm`.
+  - Prevented CTA/copy overlap observed in mobile screenshot verification.
+- Validation:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Ran `$WEB_GAME_CLIENT` verification on `/pieces/1` (no runtime errors emitted).
+  - Ran custom mobile Playwright sweep (iPhone 14 viewport) for `/`, `/pieces/1`, `/pieces/2`, `/pieces/4`, `/pieces/7`, `/pieces/8`, `/pieces/9`, `/guestbook`:
+    - No console/page errors.
+    - `overflowX = 0` on all pages.
+    - `tinyTapTargets = 0` on all tested pages.
+    - Screenshots saved under `/tmp/wws-mobile-check/`.
+
+### TODO
+- Re-run manual tactile testing on a physical iOS + Android device for inertial gesture feel and Safari URL-bar show/hide edge cases.
+- Consider a dedicated mobile copy variant for piece intro text where long descriptions still dominate first paint.
