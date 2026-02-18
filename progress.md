@@ -217,3 +217,119 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm lint` passes.
   - `pnpm exec tsc --noEmit` passes.
+- Piece 6 added and titled `Fed Prompts`:
+  - Added scene `app/pieces/_scenes/prompt-feed-scene.tsx` and wired route mapping in `app/pieces/[id]/page.tsx` so `/pieces/6` now renders the new prompt-feed experience.
+  - Scene direction: black-and-white horizontal prompt stream in a dark field, with generative phrase construction and minimalist dream-like copy.
+  - Updated piece title #6 to `Fed Prompts` in `app/pieces/_lib/piece-constants.ts`.
+  - Updated placeholder availability copy in `app/pieces/_components/piece-placeholder.tsx`.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright capture run against `http://localhost:3047/pieces/6` using `$WEB_GAME_CLIENT`:
+    - `output/web-game/piece6/shot-0.png`
+    - `output/web-game/piece6/shot-1.png`
+    - No `errors-*.json` emitted.
+- Piece 7 added and titled `Hypnogagia`:
+  - Added `app/pieces/_scenes/hypnogagia-scene.tsx` as a WebGL connection-field scene with dark generative motifs and pointer-reactive behavior.
+  - Wired piece ID `7` in `app/pieces/[id]/page.tsx`.
+  - Updated piece title #7 from `Silent Branch` to `Hypnogagia` in `app/pieces/_lib/piece-constants.ts`.
+  - Updated placeholder copy to include piece 7 as available.
+- Piece 7 loop dynamics update:
+  - Reworked the node simulation loop so topology continuously reorganizes via morphing reorganization targets (`reorgCurrent` -> `reorgNext`) blended each frame.
+  - Increased flow coupling and adaptive connection distance modulation to keep network structure fluid instead of settling.
+  - Added `reorganizationBlend` to `render_game_to_text` output for observability.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 7 interaction + continuity overhaul:
+  - Removed cycle-based target reseeding in `app/pieces/_scenes/hypnogagia-scene.tsx` and replaced it with fully continuous harmonic reorganization flow (no phase-reset snaps).
+  - Added hover-node interaction: hovering a node now reveals an alternate high-contrast connection graph specific to that node.
+  - Added click fracture behavior: click detonates nearby nodes (temporary destruction/respawn) and drives a decaying screen shudder in the WebGL vertex transform.
+  - Expanded `render_game_to_text` diagnostics to include `hoveredNode`, `destroyedNodes`, and `shake`.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 7 conical perforation warp + anti-snap pass:
+  - Replaced discrete motif handoff with continuous softmax-weighted motif blending so there is no periodic index-switch snap in node targets.
+  - Added cursor-centered conical warp uniforms in the WebGL vertex shader (`u_warp_center`, `u_warp_radius`, `u_warp_strength`) to create a PhotoBooth-like z-pull distortion field.
+  - Warp now affects both lines and points, including local tangential twist + point-scale boost near the cursor for stronger depth illusion.
+  - Added `warpStrength` to `render_game_to_text` for runtime observability.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 7 full-screen warp amplification:
+  - Updated vertex shader warp kernel so distortion applies globally across the viewport (not only local cursor radius) using combined local + global falloff terms.
+  - Increased active warp radius/strength substantially to make cursor feel like an extreme space-time perforation affecting the whole field.
+  - Kept center intensity highest while preserving visible warp influence at far-screen vertices.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/hypnogagia-scene.tsx` passes.
+- Piece 7 event-horizon escalation:
+  - Replaced prior cone warp with an extreme black-hole transform in vertex space: global sink, high twist, ring pinch, and near-center collapse.
+  - Increased cursor-active warp range/strength again (`warpStrength` up to 9, radius > viewport min dimension) so distortion remains screen-wide and violent.
+  - Added per-node horizon treatment in simulation (`hole` fade + bright ring amplification) to visually reinforce the perforation.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/hypnogagia-scene.tsx` passes.
+- Piece 7 full-screen post-processing pass + global slowdown:
+  - Added a real 2-pass render pipeline in `app/pieces/_scenes/hypnogagia-scene.tsx`:
+    - Pass 1 renders scene geometry into an offscreen framebuffer texture.
+    - Pass 2 runs a fullscreen post shader (event-horizon warp + chromatic aberration + ring glow) over the rendered texture.
+  - Scene geometry warp is now disabled in the first pass (`u_warp_strength = 0`), so distortion is applied as a true full-screen post effect.
+  - Added render-target lifecycle management on resize (`updateRenderTarget`) and cleanup for framebuffer/texture/quad/program resources.
+  - Applied global simulation damping: introduced `simDt = dt * 0.1` so all simulation timing and motion run at ~10% speed (10x slower).
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/hypnogagia-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+- Piece 6 (`Fed Prompts`) refinement: typewriter + glyph pass
+  - Updated `app/pieces/_scenes/prompt-feed-scene.tsx` to reveal each scrolling line character-by-character with a blinking block cursor.
+  - Slowed reveal cadence and added per-line start delay so partial typing is visible continuously.
+  - Switched line rendering to pixel font stack (`--font-geist-pixel-square`) and per-glyph snapped drawing on a 2px grid for a harsher pixel-glyph texture.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright verification against `/pieces/6`:
+    - `output/web-game/piece6-typewriter-v2/shot-0.png`
+    - `output/web-game/piece6-typewriter-v2/shot-1.png`
+    - No `errors-*.json` emitted.
+- Piece 6 text semantics update (user-requested):
+  - Replaced surreal phrase mashup generator with coherent hostile prompt templates in `app/pieces/_scenes/prompt-feed-scene.tsx`.
+  - New generated lines now follow real prompt structure: header + abusive address + concrete task + strict constraints + threat clause.
+  - Updated scene panel copy to match hostile prompt-stream framing.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright capture on `/pieces/6`:
+    - `output/web-game/piece6-abusive-prompts/shot-0.png`
+    - `output/web-game/piece6-abusive-prompts/shot-1.png`
+    - No `errors-*.json` emitted.
+- Piece 6 (`Fed Prompts`) looping behavior fix:
+  - Updated `app/pieces/_scenes/prompt-feed-scene.tsx` band lifecycle so typed lines regenerate before full off-screen exit.
+  - New condition: once a band is fully typed and post-type hold expires, it respawns from the right side (seeded offset) when it reaches ~68% of viewport width.
+  - This keeps new typewriter entries continuously appearing instead of only the initial wave.
+- Validation status:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` currently fails due unrelated workspace issue: missing `app/pieces/_scenes/hypnogagia-scene.tsx` import from `app/pieces/[id]/page.tsx`.
+  - Playwright `/pieces/6` verification also blocked by the same module-not-found runtime error before scene render.
+- Piece 6 (`Fed Prompts`) glitch + chromatic resonance pass:
+  - Added interactive pointer-driven resonance state in `app/pieces/_scenes/prompt-feed-scene.tsx`.
+  - Added random/click-triggered aberration burst particles (cyan/magenta/white radial splashes) with additive blend for 3D-feel color separation.
+  - Added randomized text jitter glitches at glyph level and stronger chromatic channel split passes around each typed line.
+  - Added color glitch strips tied to resonance intensity for scanline tearing artifacts.
+  - Increased effect intensity for visible neon aberration splashes and stronger 3D text separation.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/prompt-feed-scene.tsx` passes.
+  - Playwright interaction capture on `/pieces/6` (with pointer clicks) produced:
+    - `output/web-game/piece6-resonance-v2/shot-0.png`
+    - `output/web-game/piece6-resonance-v2/shot-1.png`
+    - `output/web-game/piece6-resonance-v2/shot-2.png`
+    - No `errors-*.json` emitted.
+- Piece 6 (`Fed Prompts`) softening pass (user-requested):
+  - Reduced glitch/chromatic intensity by ~4x in `app/pieces/_scenes/prompt-feed-scene.tsx`.
+  - Removed aberration burst cloud system entirely (no radial cursor color clouds).
+  - Kept only subtle pointer-reactive chromatic split and very light strip tearing.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/prompt-feed-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Playwright interaction capture on `/pieces/6`:
+    - `output/web-game/piece6-resonance-soft/shot-0.png`
+    - `output/web-game/piece6-resonance-soft/shot-1.png`
+    - No `errors-*.json` emitted.

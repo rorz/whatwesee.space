@@ -6,9 +6,9 @@ export const PIECE_TITLES = [
   "Evals",
   "Quanta",
   "Rolling Shutter",
-  "State Mirror",
-  "Silent Branch",
-  "Fork Pulse",
+  "Fed Prompts",
+  "Hypnogagia",
+  "Prompt Cage",
   "Memory Lattice",
   "Final Resolve",
 ] as const;
