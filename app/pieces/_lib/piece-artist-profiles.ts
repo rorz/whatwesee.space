@@ -5,7 +5,7 @@ export type PieceArtistProfile = {
 };
 
 export const PIECE_ARTIST_PROFILES: Record<number, PieceArtistProfile> = {
-  1: { name: "Arden Vale", city: "Rotterdam", avatar: "/profiles/piece-1.jpg" },
+  1: { name: "Avery Vale", city: "Rotterdam", avatar: "/profiles/piece-1.jpg" },
   2: { name: "Mina Calder", city: "Glasgow", avatar: "/profiles/piece-2.jpg" },
   3: { name: "Luca Stern", city: "Tallinn", avatar: "/profiles/piece-3.jpg" },
   4: { name: "Priya Noam", city: "Lisbon", avatar: "/profiles/piece-4.jpg" },
