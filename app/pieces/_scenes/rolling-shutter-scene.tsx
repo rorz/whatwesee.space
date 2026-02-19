@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 import type { RollingShutterFrame } from "../_lib/rolling-shutter-types";
 
@@ -166,12 +167,12 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
   const initialLive = initialFrames.length > 0;
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [clock, setClock] = useState(() => Date.now());
+  const [clock, setClock] = useState(0);
   const [frames, setFrames] = useState<RollingShutterFrame[]>(
     initialLive ? initialFrames : FALLBACK_FRAMES,
   );
   const [hasLiveFrames, setHasLiveFrames] = useState(initialLive);
-  const [hasLoadedRealImage, setHasLoadedRealImage] = useState(false);
+  const [hasLoadedRealImage, setHasLoadedRealImage] = useState(initialLive);
   const [nameBubbles, setNameBubbles] = useState<NameBubble[]>([]);
   const [loadedSrcByFrameId, setLoadedSrcByFrameId] = useState<Record<string, string>>({});
   const [lastVisibleSrc, setLastVisibleSrc] = useState(FALLBACK_FRAMES[0].url);
@@ -575,6 +576,7 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
 
         if (frame.rawId.startsWith("fallback-")) {
           setLoadedSrcByFrameId((previous) => ({ ...previous, [frame.id]: frame.url }));
+          setHasLoadedRealImage(true);
           return;
         }
 
@@ -607,6 +609,7 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
     const loaded = loadedSrcByFrameId[currentFrame.id];
     if (loaded) {
       setLastVisibleSrc(loaded);
+      setHasLoadedRealImage(true);
     }
   }, [currentFrame.id, loadedSrcByFrameId]);
 
@@ -614,7 +617,10 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
 
   return (
     <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#020202]">
-      <div className="absolute left-4 top-4 z-30 flex max-w-md flex-col gap-3 border border-white/15 bg-black/55 px-4 py-4 backdrop-blur-sm">
+      <MobileControlsPane
+        rootClassName="absolute left-4 top-4 z-30 w-[min(92vw,28rem)]"
+        panelClassName="flex flex-col gap-3 border border-white/15 bg-black/55 px-4 py-4 backdrop-blur-sm"
+      >
         <PieceNavigationControls pieceId={5} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-orange-200 sm:text-4xl">
           Rolling Shutter
@@ -624,7 +630,7 @@ export default function RollingShutterScene({ initialFrames }: RollingShutterSce
           constant. The rapid turnover feels restless and slightly disorienting.
         </p>
         <PieceNavigationControls pieceId={5} hideQuickLinks />
-      </div>
+      </MobileControlsPane>
 
       <div className="absolute left-1/2 top-1/2 z-10 w-[min(84vmin,860px)] -translate-x-1/2 -translate-y-1/2">
         <div className="relative aspect-square overflow-hidden border border-white/95 bg-black shadow-[0_0_0_2px_rgba(255,255,255,0.2)]">

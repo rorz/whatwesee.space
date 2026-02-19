@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 
 type EvalCard = {
@@ -749,7 +750,10 @@ export default function EvalsScene() {
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-pointer" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(255,255,255,0.05),transparent_62%)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">
+      <MobileControlsPane
+        rootClassName="absolute left-4 top-4 z-10 w-[min(92vw,28rem)]"
+        panelClassName="relative flex flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm"
+      >
         <PieceNavigationControls pieceId={8} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-white sm:text-4xl">Evals</h1>
         <p className="font-sans text-xs leading-relaxed text-white/84 sm:text-sm">
@@ -757,7 +761,7 @@ export default function EvalsScene() {
           local turnover. The cycle feels judgmental and hard to exit.
         </p>
         <PieceNavigationControls pieceId={8} hideQuickLinks />
-      </div>
+      </MobileControlsPane>
     </div>
   );
 }

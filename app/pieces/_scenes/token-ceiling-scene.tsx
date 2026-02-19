@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 
 type Token = {
@@ -490,7 +491,10 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_65%,rgba(255,140,34,0.12),transparent_58%)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm relative">
+      <MobileControlsPane
+        rootClassName="absolute left-4 top-4 z-10 w-[min(92vw,28rem)]"
+        panelClassName="relative flex flex-col gap-3 border border-white/20 bg-black/65 px-4 py-4 backdrop-blur-sm"
+      >
         <PieceNavigationControls pieceId={1} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-orange-200 sm:text-4xl">
           Token Ceiling
@@ -500,7 +504,7 @@ export default function TokenCeilingScene({ tokenPool }: TokenCeilingSceneProps)
           feel like mounting stress.
         </p>
         <PieceNavigationControls pieceId={1} hideQuickLinks />
-      </div>
+      </MobileControlsPane>
     </div>
   );
 }

@@ -132,6 +132,7 @@ export default function Home() {
   const [transitionSeed, setTransitionSeed] = useState(0);
   const [targetPiece, setTargetPiece] = useState(1);
   const [roryNote, setRoryNote] = useState(DEFAULT_RORY_NOTE);
+  const [isMobileDetailsExpanded, setIsMobileDetailsExpanded] = useState(false);
 
   const gridRef = useRef<HTMLDivElement | null>(null);
   const eyeRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
@@ -632,7 +633,17 @@ export default function Home() {
         </div>
       </main>
 
-      <div className="absolute left-1/2 top-[50%] z-20 flex -translate-x-1/2 flex-col items-center sm:top-[64%]">
+      <div className="absolute right-3 top-3 z-30 sm:hidden">
+        <button
+          type="button"
+          onClick={() => setIsMobileDetailsExpanded((current) => !current)}
+          className="pointer-events-auto inline-flex min-h-11 items-center justify-center border border-white/40 bg-black/82 px-4 font-pixel-square text-sm uppercase tracking-[0.08em] text-white"
+        >
+          {isMobileDetailsExpanded ? "^ minimize" : "v expand"}
+        </button>
+      </div>
+
+      <div className="absolute left-1/2 top-[60%] z-20 flex -translate-x-1/2 flex-col items-center sm:top-[64%]">
         <button
           type="button"
           onClick={handleEnterExhibition}
@@ -646,7 +657,11 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-20 max-w-xl text-white sm:bottom-6 sm:left-6 sm:right-auto">
+      <div
+        className={`pointer-events-none absolute bottom-3 left-3 right-3 z-20 max-w-xl text-white sm:bottom-6 sm:left-6 sm:right-auto ${
+          isMobileDetailsExpanded ? "block" : "hidden"
+        } sm:block`}
+      >
         <p className="hidden font-sans text-lg font-semibold tracking-[0.02em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:block sm:text-xl">
           An insight into the Agentic Condition
         </p>
@@ -703,6 +718,38 @@ export default function Home() {
         <p className="mt-3 font-sans text-[11px] leading-relaxed text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-xs">
           © Rory McMeekin 2026
         </p>
+      </div>
+
+      <div
+        className={`absolute bottom-3 right-3 z-30 items-end gap-2 sm:hidden ${
+          isMobileDetailsExpanded ? "flex" : "hidden"
+        }`}
+      >
+        <div className="pointer-events-auto w-[min(76vw,280px)] border border-white/30 bg-black/86 p-3 text-white shadow-[0_8px_28px_rgba(0,0,0,0.45)]">
+          <div className="flex items-start gap-3">
+            <Image
+              src="/rory-profile.png"
+              alt="Profile picture of Rory"
+              width={56}
+              height={56}
+              className="h-14 w-14 shrink-0 border border-white/40 object-cover"
+              priority
+            />
+            <div className="min-w-0">
+              <p className="font-sans text-xs font-semibold uppercase tracking-[0.12em] text-white/92">
+                Rory McMeekin
+              </p>
+              <a
+                href="https://x.com/rorzio"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex min-h-10 items-center font-sans text-sm text-orange-300 underline decoration-orange-300/70 underline-offset-2"
+              >
+                @rorzio on X
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {isTransitioning ? (
