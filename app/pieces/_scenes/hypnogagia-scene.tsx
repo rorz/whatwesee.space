@@ -1354,8 +1354,8 @@ export default function HypnogagiaScene() {
           Hypnogagia
         </h1>
         <p className="font-sans text-xs leading-relaxed text-white/80 sm:text-sm">
-          A dynamic node-link graph updates in real time; hover reveals alternate links and click
-          triggers temporary fractures. The motion feels unstable, then briefly calm.
+          A dynamic node-link graph updates in real time; hover reveals alternate links while
+          pointer motion triggers temporary fractures. The motion feels unstable, then briefly calm.
         </p>
         <PieceNavigationControls pieceId={4} hideQuickLinks />
       </MobileControlsPane>

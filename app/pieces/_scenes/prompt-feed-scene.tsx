@@ -855,8 +855,8 @@ export default function PromptFeedScene() {
           Fed Prompts
         </h1>
         <p className="font-sans text-xs leading-relaxed text-white/78 sm:text-sm">
-          Prompt text streams continuously across a monochrome field, and pointer/click input adds
-          local disturbances. The constant feed feels oppressive.
+          Prompt text streams continuously across a monochrome field, and pointer input adds local
+          disturbances. The constant feed feels oppressive.
         </p>
         <PieceNavigationControls pieceId={7} hideQuickLinks />
       </MobileControlsPane>
