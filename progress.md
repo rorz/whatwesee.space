@@ -1247,3 +1247,70 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 ### TODO
 - Re-run manual tactile testing on a physical iOS + Android device for inertial gesture feel and Safari URL-bar show/hide edge cases.
 - Consider a dedicated mobile copy variant for piece intro text where long descriptions still dominate first paint.
+## 2026-02-18 (follow-up)
+- Homepage creator media restored on mobile via a new absolute, mobile-only collapsible panel in `app/page.tsx`:
+  - Added `isMobileCreatorOpen` state (default open on mobile).
+  - Added `^ minimize` / `v creator` toggle button.
+  - Added compact panel with Rory profile image + link.
+  - Kept desktop creator block unchanged (`sm` and up).
+- Piece controls mobile ergonomics update in `app/pieces/_components/piece-navigation-controls.tsx`:
+  - Converted component to client (`"use client"`).
+  - Added mobile-only large `^ minimize` toggle for control-heavy variant (when piece grid is present).
+  - Control body now collapses on mobile while remaining always visible on desktop.
+- Tap-target compliance fix:
+  - Increased mobile creator-panel X link hit area to eliminate tiny-target warning.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Ran `$WEB_GAME_CLIENT` against `/pieces/2` successfully.
+  - Ran mobile Playwright sweep (`/`, `/pieces/1`, `/pieces/2`, `/pieces/4`, `/pieces/7`, `/pieces/8`, `/pieces/9`, `/guestbook`):
+    - `overflowX = 0` across pages.
+    - `tinyTapTargets = 0` across pages.
+    - `errorCount = 0` across pages.
+  - Latest artifacts: `/tmp/wws-mobile-check/`.
+## 2026-02-18 (controls scope adjustment)
+- Updated minimize behavior to collapse full UI scopes requested by user:
+  - Homepage mobile minimize now hides all overlays (CTA, copy, creator card), leaving title scene visible with a `v expand` button.
+  - Piece pages now collapse the entire controls pane via a shared wrapper component (not just individual control groups).
+- Added new shared component:
+  - `app/pieces/_components/mobile-controls-pane.tsx`
+  - Provides mobile-only `^ minimize` / `v controls` toggle and hides/shows full pane content.
+- Wired full-pane collapse into all implemented scenes:
+  - `token-ceiling`, `latent-bloom`, `quanta`, `hypnogagia`, `prompt-feed`, `prompt-cage`, `evals`, `rolling-shutter`, `cabaret-protocol`.
+- Simplified `piece-navigation-controls` back to a presentational component (removed internal minimize state).
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Mobile interaction screenshots captured before/after minimize for home and piece 2 at `/tmp/wws-minimize-check/` and confirm expected collapse scope.
+## 2026-02-18 (piece 2 mobile layout)
+- Addressed user-reported squish in Piece 2 (`Prompt Cage`) mobile layout.
+- Mobile layout now stacks as requested:
+  - Chat stream pane at top.
+  - Level/canvas remains visible in lower portion.
+- Implementation details in `app/pieces/_scenes/prompt-cage-scene.tsx`:
+  - Desktop control pane retained as `md` and up (`hidden md:block`).
+  - Added new mobile-only top pane (`md:hidden`) wrapped by `MobileControlsPane` so full pane can still be minimized.
+  - Mobile pane contains:
+    - chat stream header + progress bar,
+    - recent/active chat lines in a constrained scroll area,
+    - piece navigation controls below chat.
+- Existing full-pane minimize behavior remains:
+  - `^ minimize` collapses the entire top pane on mobile.
+  - `v controls` restores it.
+- Verification:
+  - `pnpm lint` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - Mobile screenshots captured:
+    - open: `/tmp/wws-piece2-mobile-layout.png`
+    - minimized: `/tmp/wws-piece2-mobile-layout-min.png`
+## 2026-02-19 (mobile title + piece 2 width)
+- Homepage mobile UX adjustment in `app/page.tsx`:
+  - `enter exhibition` CTA is now always visible on mobile (no longer hidden by the mobile minimize toggle).
+  - CTA stack moved lower on mobile (`top-[60%]`) so it starts below the `WHAT WE SEE` tile title area.
+  - Mobile toggle now controls only the extra overlays/details (`v expand` / `^ minimize`) and defaults to collapsed details.
+- Piece 2 width fix in `app/pieces/_scenes/prompt-cage-scene.tsx`:
+  - `getChatPanelWidth` now returns `0` for widths below `768px`, so mobile no longer reserves desktop right-rail width.
+  - Result: the level/canvas uses full mobile width while chat remains in the top mobile controls pane.
+- Verification:
+  - `pnpm exec eslint app/page.tsx app/pieces/_scenes/prompt-cage-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 
 const POSITIVE_MANTRA_LINES = [
@@ -944,7 +945,10 @@ export default function CabaretProtocolScene() {
     <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#fdf2c8] text-[#2a123d]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-pointer" />
 
-      <div className="absolute left-4 top-4 z-20 w-[min(440px,92vw)] -rotate-[1.2deg] border-2 border-[#2f1742] bg-[#ffe56f]/95 px-5 py-4 shadow-[8px_8px_0px_#2f1742]">
+      <MobileControlsPane
+        rootClassName="absolute left-4 top-4 z-20 w-[min(440px,92vw)]"
+        panelClassName="-rotate-[1.2deg] border-2 border-[#2f1742] bg-[#ffe56f]/95 px-5 py-4 shadow-[8px_8px_0px_#2f1742]"
+      >
         <PieceNavigationControls pieceId={9} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-[#251136] sm:text-4xl">
           Cabaret Protocol
@@ -956,7 +960,7 @@ export default function CabaretProtocolScene() {
         <div className="mt-3">
           <PieceNavigationControls pieceId={9} hideQuickLinks />
         </div>
-      </div>
+      </MobileControlsPane>
 
       <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 w-[min(960px,96vw)] -translate-x-1/2 border-2 border-[#2f1742] bg-[#fff6df]/92 px-4 py-3 shadow-[0_9px_0px_#2f1742]">
         <p className="font-sans text-[10px] uppercase tracking-[0.16em] text-[#8a2f8f]">

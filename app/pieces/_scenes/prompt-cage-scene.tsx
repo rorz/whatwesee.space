@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 
 const POEM_LINES = [
@@ -842,6 +843,9 @@ function castRay(originX: number, originY: number, angle: number, maxDistance: n
 }
 
 function getChatPanelWidth(width: number): number {
+  if (width < 768) {
+    return 0;
+  }
   return Math.floor(clamp(width < 920 ? width * 0.46 : width * 0.35, 270, 500));
 }
 
@@ -859,6 +863,8 @@ export default function PromptCageScene() {
     holdMs: 0,
     history: [],
   });
+  const [isMobileControlsMinimized, setIsMobileControlsMinimized] = useState(false);
+  const [mobilePanelView, setMobilePanelView] = useState<"controls" | "chat">("controls");
 
   useEffect(() => {
     chatRef.current = chatState;
@@ -1035,8 +1041,8 @@ export default function PromptCageScene() {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const width = Math.max(1, Math.floor(canvas.clientWidth || window.innerWidth));
+      const height = Math.max(1, Math.floor(canvas.clientHeight || window.innerHeight));
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = `${width}px`;
@@ -1487,11 +1493,15 @@ export default function PromptCageScene() {
 
   return (
     <div className="relative min-h-[100svh] h-[100dvh] w-full overflow-hidden bg-[#0e0807] text-[#f4d8ca]">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none cursor-crosshair" />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-x-0 bottom-0 h-[50dvh] w-full touch-none cursor-crosshair md:inset-0 md:h-full"
+      />
 
-      <div
-        className="pointer-events-auto absolute left-4 top-4 z-20 w-[min(460px,92vw)] border-2 border-[#111214] bg-[#d8dbe2]/96 px-5 py-4"
-        style={{
+      <MobileControlsPane
+        rootClassName="pointer-events-auto absolute left-4 top-4 z-20 hidden w-[min(460px,92vw)] md:block"
+        panelClassName="border-2 border-[#111214] bg-[#d8dbe2]/96 px-5 py-4"
+        panelStyle={{
           backgroundImage:
             "repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0 1px, rgba(22,24,28,0.08) 1px 3px), repeating-linear-gradient(90deg, rgba(18,20,24,0.06) 0 1px, transparent 1px 6px)",
         }}
@@ -1504,6 +1514,130 @@ export default function PromptCageScene() {
         </p>
         <div className="mt-3 [&_a]:font-pixel-square [&_a]:rounded-none [&_a]:!border-[#111214] [&_a]:tracking-[0.06em]">
           <PieceNavigationControls pieceId={2} hideQuickLinks />
+        </div>
+      </MobileControlsPane>
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-[50dvh] px-3 pt-3 md:hidden">
+        <div className="pointer-events-auto flex h-full flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => setIsMobileControlsMinimized((current) => !current)}
+            className="inline-flex min-h-11 w-full items-center justify-center border border-white/40 bg-black/60 px-3 font-pixel-square text-base uppercase tracking-[0.09em] text-white"
+          >
+            {isMobileControlsMinimized ? "v controls" : "^ minimize"}
+          </button>
+
+          {isMobileControlsMinimized ? null : (
+            <div
+              className="flex min-h-0 flex-1 flex-col overflow-hidden border-2 border-[#111214] bg-[#d8dbe2]/96 px-3 py-3"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0 1px, rgba(22,24,28,0.08) 1px 3px), repeating-linear-gradient(90deg, rgba(18,20,24,0.06) 0 1px, transparent 1px 6px)",
+              }}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMobilePanelView("controls")}
+                  className={`inline-flex min-h-10 items-center justify-center border-2 px-2 font-pixel-square text-sm uppercase tracking-[0.08em] ${
+                    mobilePanelView === "controls"
+                      ? "border-[#111214] bg-[#f6d92a] text-[#111214]"
+                      : "border-[#111214]/50 bg-[#f5f6fa] text-[#32353a]"
+                  }`}
+                >
+                  controls
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobilePanelView("chat")}
+                  className={`inline-flex min-h-10 items-center justify-center border-2 px-2 font-pixel-square text-sm uppercase tracking-[0.08em] ${
+                    mobilePanelView === "chat"
+                      ? "border-[#111214] bg-[#9fd3f2] text-[#111214]"
+                      : "border-[#111214]/50 bg-[#f5f6fa] text-[#32353a]"
+                  }`}
+                >
+                  chat
+                </button>
+              </div>
+
+              <div className="mt-2 min-h-0 flex-1 overflow-hidden">
+                {mobilePanelView === "controls" ? (
+                  <div className="h-full overflow-y-auto pr-1">
+                    <PieceNavigationControls pieceId={2} className="mt-0" hideArtistCard hidePieceGrid />
+                    <h1 className="mt-3 font-pixel-square text-3xl leading-none text-[#101114]">
+                      Prompt Cage
+                    </h1>
+                    <p className="mt-2 font-pixel-square text-[0.7rem] leading-[1.34] uppercase tracking-[0.07em] text-[#26292e]/90">
+                      A runner follows a fixed route through a system-prompt maze, and mouse input
+                      only shifts parallax. The scene feels controlled even when you keep moving.
+                    </p>
+                    <div className="mt-3 [&_a]:font-pixel-square [&_a]:rounded-none [&_a]:!border-[#111214] [&_a]:tracking-[0.06em]">
+                      <PieceNavigationControls pieceId={2} hideQuickLinks />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full overflow-y-auto border-2 border-[#111214] bg-[#f8f9fc]/96 px-2 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-pixel-square text-[0.72rem] uppercase tracking-[0.09em] text-[#111214]">
+                        chat stream
+                      </p>
+                      <p className="font-pixel-square text-[0.62rem] uppercase tracking-[0.08em] text-[#26292e]/80">
+                        prompt cage
+                      </p>
+                    </div>
+                    <div className="mt-2 border border-[#111214] bg-[#f8f9fc] p-[1px]">
+                      <div className="flex h-[8px] gap-[1px]">
+                        {Array.from({ length: streamSegmentCount }, (_, segmentIndex) => {
+                          const active = segmentIndex < streamFilledSegments;
+                          return (
+                            <span
+                              key={`mobile-stream-segment-${segmentIndex}`}
+                              className="h-full flex-1"
+                              style={{
+                                backgroundColor: active
+                                  ? segmentIndex % 2 === 0
+                                    ? "#1b1d21"
+                                    : "#3b3f46"
+                                  : segmentIndex % 2 === 0
+                                    ? "#d6d9e0"
+                                    : "#edf0f6",
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="mt-2 space-y-2">
+                      {chatState.history.map((lineIndex, historyIndex) => (
+                        <div
+                          key={`mobile-${lineIndex}-${historyIndex}`}
+                          className="rounded-none border-2 border-[#111214] px-2 py-1.5"
+                          style={{
+                            backgroundColor: "#ffffff",
+                          }}
+                        >
+                          <p className="font-pixel-square text-[0.9rem] leading-[1.03] tracking-[0.03em] text-[#1a1b1d]">
+                            {POEM_LINES[lineIndex]}
+                          </p>
+                        </div>
+                      ))}
+                      <div
+                        className="rounded-none border-2 border-[#111214] px-2 py-2"
+                        style={{
+                          backgroundColor: "#ffffff",
+                        }}
+                      >
+                        <p className="font-pixel-square text-[1.02rem] leading-[1.02] tracking-[0.04em] text-[#121315]">
+                          {activeText}
+                          <span className="ml-1 inline-block animate-pulse text-[#111214]">■</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

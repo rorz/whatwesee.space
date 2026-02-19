@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 
 type CloudNode = {
@@ -723,7 +724,10 @@ export default function QuantaScene() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_42%_18%,rgba(255,255,255,0.46),rgba(246,251,255,0.14)_42%,transparent_68%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.3)_0%,rgba(226,236,255,0.1)_52%,rgba(255,255,255,0.28)_100%)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-black/15 bg-white/82 px-4 py-4 backdrop-blur-sm relative">
+      <MobileControlsPane
+        rootClassName="absolute left-4 top-4 z-10 w-[min(92vw,28rem)]"
+        panelClassName="relative flex flex-col gap-3 border border-black/15 bg-white/82 px-4 py-4 backdrop-blur-sm"
+      >
         <PieceNavigationControls pieceId={3} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-black sm:text-4xl">Quanta</h1>
         <p className="font-sans text-xs leading-relaxed text-black/70 sm:text-sm">
@@ -731,7 +735,7 @@ export default function QuantaScene() {
           The image feels close to recognition but never fully settles.
         </p>
         <PieceNavigationControls pieceId={3} hideQuickLinks />
-      </div>
+      </MobileControlsPane>
     </div>
   );
 }

@@ -32,8 +32,9 @@ const OPEN_IMAGES_ID_SOURCES: OpenImagesSource[] = [
   },
 ];
 
-const ID_FETCH_TIMEOUT_MS = 60000;
-const SAMPLE_SIZE_PER_SOURCE = 12000;
+const ID_FETCH_TIMEOUT_MS = 18000;
+const SAMPLE_SIZE_PER_SOURCE = 5000;
+const MAX_LINES_SCANNED_PER_SOURCE = 90000;
 
 let pool: OpenImagesIdReference[] = [];
 let poolStatus: PoolStatus = "idle";
@@ -116,6 +117,7 @@ async function streamSampleSource(source: OpenImagesSource): Promise<OpenImagesI
 
     let seen = 0;
     let carry = "";
+    let reachedScanLimit = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -133,17 +135,33 @@ async function streamSampleSource(source: OpenImagesSource): Promise<OpenImagesI
         if (reference) {
           seen += 1;
           pushReservoir(reservoir, reference, seen);
+          if (seen >= MAX_LINES_SCANNED_PER_SOURCE) {
+            reachedScanLimit = true;
+            break;
+          }
         }
 
         newlineIndex = carry.indexOf("\n");
       }
+
+      if (reachedScanLimit) {
+        break;
+      }
     }
 
-    carry += decoder.decode();
-    const lastReference = parseSourceLine(source, carry);
-    if (lastReference) {
-      seen += 1;
-      pushReservoir(reservoir, lastReference, seen);
+    if (reachedScanLimit) {
+      try {
+        await reader.cancel();
+      } catch {
+        // Ignore cancellation errors from early exit.
+      }
+    } else {
+      carry += decoder.decode();
+      const lastReference = parseSourceLine(source, carry);
+      if (lastReference) {
+        seen += 1;
+        pushReservoir(reservoir, lastReference, seen);
+      }
     }
 
     return reservoir;
@@ -219,15 +237,14 @@ function ensurePoolWarmup(): void {
 
   poolStatus = "warming";
   void (async () => {
+    const sampledBySource = await Promise.all(
+      OPEN_IMAGES_ID_SOURCES.map((source) => streamSampleSource(source)),
+    );
     const nextPool: OpenImagesIdReference[] = [];
-
-    for (let index = 0; index < OPEN_IMAGES_ID_SOURCES.length; index += 1) {
-      const sampled = await streamSampleSource(OPEN_IMAGES_ID_SOURCES[index]);
-      if (sampled.length > 0) {
-        nextPool.push(...sampled);
-        setPool(nextPool);
-      }
+    for (let index = 0; index < sampledBySource.length; index += 1) {
+      nextPool.push(...sampledBySource[index]);
     }
+    setPool(nextPool);
 
     if (pool.length > 0) {
       poolStatus = "ready";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import MobileControlsPane from "../_components/mobile-controls-pane";
 import PieceNavigationControls from "../_components/piece-navigation-controls";
 
 type DreamNode = {
@@ -1344,7 +1345,10 @@ export default function HypnogagiaScene() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(38,71,142,0.2),transparent_56%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.06)_0px,rgba(255,255,255,0.06)_1px,transparent_1px,transparent_5px)]" />
 
-      <div className="absolute left-4 top-4 z-10 flex max-w-md flex-col gap-3 border border-white/20 bg-black/50 px-4 py-4 backdrop-blur-sm relative">
+      <MobileControlsPane
+        rootClassName="absolute left-4 top-4 z-10 w-[min(92vw,28rem)]"
+        panelClassName="relative flex flex-col gap-3 border border-white/20 bg-black/50 px-4 py-4 backdrop-blur-sm"
+      >
         <PieceNavigationControls pieceId={4} className="mt-0" hideArtistCard hidePieceGrid />
         <h1 className="font-pixel-square text-3xl leading-none text-cyan-100 sm:text-4xl">
           Hypnogagia
@@ -1354,7 +1358,7 @@ export default function HypnogagiaScene() {
           triggers temporary fractures. The motion feels unstable, then briefly calm.
         </p>
         <PieceNavigationControls pieceId={4} hideQuickLinks />
-      </div>
+      </MobileControlsPane>
     </div>
   );
 }
