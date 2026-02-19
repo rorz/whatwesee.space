@@ -755,8 +755,8 @@ export default function LatentBloomScene() {
           Latent Bloom
         </h1>
         <p className="font-sans text-xs leading-relaxed text-black/78 sm:text-sm">
-          Click spawns growth seeds, and drag bends branch trajectories as canopies and blooms
-          expand over time. The growth feels responsive and unexpectedly tender.
+          Pointer input plants growth seeds, and movement bends branch trajectories as canopies and
+          blooms expand over time. The growth feels responsive and unexpectedly tender.
         </p>
         <PieceNavigationControls pieceId={6} hideQuickLinks />
       </MobileControlsPane>
