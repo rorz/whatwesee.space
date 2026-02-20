@@ -1314,3 +1314,31 @@ Original prompt: i want enter exhibition button to be a next transition effect t
 - Verification:
   - `pnpm exec eslint app/page.tsx app/pieces/_scenes/prompt-cage-scene.tsx` passes.
   - `pnpm exec tsc --noEmit` passes.
+## 2026-02-19 (piece 2 mobile 50/50 split)
+- Implemented mobile-only 50/50 layout for Piece 2 (`Prompt Cage`) in `/app/pieces/_scenes/prompt-cage-scene.tsx`:
+  - Canvas now renders in bottom half on mobile (`h-[50dvh]`, anchored to bottom).
+  - Top half is a dedicated controls region with a mobile `^ minimize` / `v controls` toggle.
+- Added mobile tabbed views so chat is in its own panel behind controls:
+  - `controls` tab contains nav + title/description.
+  - `chat` tab contains the stream UI/history.
+- Scene sizing logic updated to use actual canvas client dimensions in `resize()` (instead of raw window dimensions), so projection scales correctly with half-height mobile canvas.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/prompt-cage-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - iPhone Playwright screenshots captured and inspected:
+    - `/tmp/wws-piece2-mobile-layout.png`
+    - `/tmp/wws-piece2-mobile-layout-min.png`
+    - `/tmp/wws-piece2-mobile-layout-chat.png`
+## 2026-02-19 (piece 2 chat moved out of controls)
+- Adjusted Piece 2 mobile layout to match latest request:
+  - Chat panel moved out of the controls card and placed directly in the top black half as its own panel.
+  - Controls remain a separate minimizable overlay at the top (`^ minimize` / `v controls`).
+  - Bottom-half game layout remains unchanged.
+- Mobile controls panel now only contains navigation controls + compact scene copy (no embedded chat).
+- Mobile chat panel persists in the black top region even when controls are minimized.
+- Verification:
+  - `pnpm exec eslint app/pieces/_scenes/prompt-cage-scene.tsx` passes.
+  - `pnpm exec tsc --noEmit` passes.
+  - iPhone screenshots inspected:
+    - expanded controls: `/tmp/wws-piece2-mobile-layout.png`
+    - minimized controls: `/tmp/wws-piece2-mobile-layout-min.png`
