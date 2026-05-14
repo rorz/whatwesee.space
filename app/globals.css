@@ -831,3 +831,45 @@ a[href] {
     opacity: 0.7;
   }
 }
+
+/* ---------- View on GitHub notch ---------- */
+
+.wws-github-notch {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgb(26 23 20 / 92%);
+  border: 1px solid rgb(251 248 239 / 28%);
+  color: #fbf8ef;
+  font-family: var(--font-pixel-square), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 2px;
+  backdrop-filter: blur(6px);
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.wws-github-notch:hover,
+.wws-github-notch:focus-visible {
+  transform: translateY(-2px);
+  background: rgb(26 23 20 / 98%);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 38%);
+  outline: none;
+}
+
+.wws-github-notch svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex-shrink: 0;
+}
