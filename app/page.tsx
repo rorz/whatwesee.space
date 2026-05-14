@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { PIECE_COUNT } from "./pieces/_lib/piece-constants";
+import { DailyMarquee } from "./daily/_components/daily-marquee";
 
 const WORDS = ["WHAT", "WE", "SEE"];
 const WORD_GAP = 4;
@@ -633,6 +634,10 @@ export default function Home() {
         </div>
       </main>
 
+      <div className="pointer-events-auto hidden sm:block">
+        <DailyMarquee variant="desktop-corner" />
+      </div>
+
       <div className="absolute right-3 top-3 z-30 sm:hidden">
         <button
           type="button"
@@ -714,6 +719,9 @@ export default function Home() {
           >
             @rorzio on X
           </a>
+        </div>
+        <div className="pointer-events-auto mt-3 sm:hidden">
+          <DailyMarquee variant="inline-mobile" />
         </div>
         <p className="mt-3 font-sans text-[11px] leading-relaxed text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-xs">
           © Rory McMeekin 2026

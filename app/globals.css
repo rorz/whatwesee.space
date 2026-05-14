@@ -381,3 +381,453 @@ a[href] {
 .wws-cart-notch--right {
   right: 8px;
 }
+
+/* ============================================================
+   Guest Wing — daily artwork visual idiom.
+   Deliberately distinct from the main exhibition's brutalist
+   arcade. Postmark/stamp + framed-photo gallery motif.
+   ============================================================ */
+
+.wws-daily-page {
+  position: relative;
+  min-height: 100svh;
+  background: #f1ead7;
+  color: #1a1714;
+  padding: 2rem 1.25rem 4rem;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.wws-daily-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(26, 23, 20, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(26, 23, 20, 0.03) 1px, transparent 1px);
+  background-size: 6px 6px, 17px 17px;
+  background-position: 0 0, 3px 5px;
+  z-index: 0;
+}
+
+.wws-daily-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.wws-daily-page-header {
+  max-width: 720px;
+  margin: 0 auto 2.5rem;
+  padding-top: 0.5rem;
+}
+
+.wws-daily-page-back {
+  display: inline-block;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5a4a3a;
+  text-decoration: none;
+  border-bottom: 1px solid #5a4a3a55;
+  padding-bottom: 1px;
+}
+
+.wws-daily-page-back:hover {
+  color: #1a1714;
+  border-bottom-color: #1a1714;
+}
+
+.wws-daily-page-title {
+  margin: 1.2rem 0 0.5rem;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-style: italic;
+}
+
+.wws-daily-page-subtitle {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #5a4a3a;
+  max-width: 38rem;
+}
+
+.wws-daily-page-frame-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4rem;
+}
+
+.wws-daily-page-archive-section {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.wws-daily-page-archive-title {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #5a4a3a;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #5a4a3a55;
+  padding-bottom: 0.5rem;
+}
+
+.wws-daily-page-empty {
+  max-width: 720px;
+  margin: 3rem auto;
+  text-align: center;
+  font-style: italic;
+  color: #5a4a3a;
+}
+
+/* ---------- Frame ---------- */
+
+.wws-daily-frame {
+  position: relative;
+  width: min(640px, 100%);
+  background: #fbf8ef;
+  border: 1px solid #1a1714;
+  box-shadow:
+    0 12px 30px rgba(40, 28, 18, 0.18),
+    0 2px 0 rgba(26, 23, 20, 0.06);
+  padding: 1rem 1rem 1.25rem;
+}
+
+.wws-daily-frame-stamp {
+  position: absolute;
+  top: -10px;
+  right: 18px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.65rem 0.5rem;
+  border: 2px solid #b32c2c;
+  background: #fbf8ef;
+  color: #b32c2c;
+  font-family: var(--font-pixel-square), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transform: rotate(4deg);
+  z-index: 2;
+  box-shadow: 0 1px 0 #1a17140d;
+}
+
+.wws-daily-frame-stamp-line {
+  font-weight: 700;
+}
+
+.wws-daily-frame-stamp-date {
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  margin-top: 0.1rem;
+  opacity: 0.85;
+}
+
+.wws-daily-frame-canvas {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  background: #f5efe2;
+  border: 1px solid #1a1714;
+  overflow: hidden;
+}
+
+.wws-daily-frame-canvas > * {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.wws-daily-frame-plaque {
+  padding: 1rem 0.25rem 0;
+}
+
+.wws-daily-frame-plaque-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-style: italic;
+  margin: 0;
+}
+
+.wws-daily-frame-plaque-artist {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: #1a1714;
+}
+
+.wws-daily-frame-plaque-dot {
+  color: #b32c2c;
+  margin: 0 0.15rem;
+}
+
+.wws-daily-frame-plaque-hometown {
+  color: #5a4a3a;
+}
+
+.wws-daily-frame-plaque-manifesto {
+  margin: 0.85rem 0 0;
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #3a3128;
+  border-left: 2px solid #b32c2c;
+  padding-left: 0.7rem;
+}
+
+.wws-daily-frame-plaque-explanation {
+  margin: 0.85rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #2a2520;
+}
+
+.wws-daily-frame-plaque-meta {
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+}
+
+.wws-daily-frame-plaque-meta > div {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 0.5rem;
+  border-top: 1px dashed #1a171428;
+  padding-top: 0.45rem;
+}
+
+.wws-daily-frame-plaque-meta dt {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #5a4a3a;
+}
+
+.wws-daily-frame-plaque-meta dd {
+  margin: 0;
+  color: #1a1714;
+}
+
+/* ---------- Archive ---------- */
+
+.wws-daily-archive {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.wws-daily-archive-empty {
+  font-style: italic;
+  color: #5a4a3a;
+}
+
+.wws-daily-archive-card {
+  --wws-tilt: 0deg;
+  transform: rotate(var(--wws-tilt));
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.wws-daily-archive-card:hover,
+.wws-daily-archive-card:focus-within {
+  transform: rotate(0deg) translateY(-3px);
+}
+
+.wws-daily-archive-card--current .wws-daily-archive-link {
+  outline: 2px solid #b32c2c;
+  outline-offset: 4px;
+}
+
+.wws-daily-archive-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: #fbf8ef;
+  border: 1px solid #1a1714;
+  box-shadow: 0 6px 14px rgba(40, 28, 18, 0.16);
+  padding: 0.6rem;
+}
+
+.wws-daily-archive-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border: 1px solid #1a171455;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.4rem;
+}
+
+.wws-daily-archive-thumb-date {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  background: #1a1714;
+  color: #fbf8ef;
+  padding: 0.15rem 0.35rem;
+}
+
+.wws-daily-archive-meta {
+  padding-top: 0.6rem;
+}
+
+.wws-daily-archive-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-style: italic;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.wws-daily-archive-artist {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: #5a4a3a;
+}
+
+/* ---------- Marquee (home top-right + mobile inline) ---------- */
+
+.wws-daily-marquee {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: #fbf8ef;
+  background: #1a1714;
+  border: 1px solid #fbf8ef33;
+  padding: 0.45rem 0.7rem 0.45rem 0.45rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.wws-daily-marquee:hover {
+  transform: translateY(-1px);
+}
+
+.wws-daily-marquee--corner {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 35;
+  max-width: 280px;
+}
+
+.wws-daily-marquee--inline {
+  width: 100%;
+  margin-top: 0.6rem;
+}
+
+.wws-daily-marquee-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.42rem;
+  background: #ff4533;
+  color: #1a1714;
+  font-family: var(--font-pixel-square), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  border: 1px solid #1a1714;
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+}
+
+.wws-daily-marquee-body {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.18;
+  min-width: 0;
+}
+
+.wws-daily-marquee-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fbf8efaa;
+}
+
+.wws-daily-marquee-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 12rem;
+}
+
+.wws-daily-marquee-title {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: #fbf8efbb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 12rem;
+}
+
+.wws-daily-marquee-arrow {
+  font-size: 0.95rem;
+  color: #fbf8ef;
+  flex-shrink: 0;
+}
+
+/* ---------- Loading skeleton ---------- */
+
+.wws-daily-loading {
+  position: relative;
+  min-height: 100svh;
+  background: #f1ead7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wws-daily-loading-stamp {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  font-family: var(--font-pixel-square), monospace;
+  letter-spacing: 0.18em;
+  font-size: 0.95rem;
+  color: #b32c2c;
+  border: 2px solid #b32c2c;
+  padding: 0.5rem 0.9rem;
+  background: #fbf8ef;
+  z-index: 1;
+}
+
+.wws-daily-loading-paper {
+  width: min(560px, 86%);
+  aspect-ratio: 1 / 1;
+  background: #fbf8ef;
+  border: 1px solid #1a1714;
+  box-shadow: 0 12px 30px rgba(40, 28, 18, 0.18);
+  animation: wws-daily-loading-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes wws-daily-loading-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
