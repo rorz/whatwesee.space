@@ -508,7 +508,7 @@ a[href] {
   border: 2px solid #b32c2c;
   background: #fbf8ef;
   color: #b32c2c;
-  font-family: var(--font-pixel-square), monospace;
+  font-family: var(--font-geist-pixel-square), monospace;
   font-size: 0.62rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -737,7 +737,7 @@ a[href] {
   padding: 0.2rem 0.42rem;
   background: #ff4533;
   color: #1a1714;
-  font-family: var(--font-pixel-square), monospace;
+  font-family: var(--font-geist-pixel-square), monospace;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   font-weight: 700;
@@ -803,7 +803,7 @@ a[href] {
   top: 36%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-3deg);
-  font-family: var(--font-pixel-square), monospace;
+  font-family: var(--font-geist-pixel-square), monospace;
   letter-spacing: 0.18em;
   font-size: 0.95rem;
   color: #b32c2c;
@@ -846,7 +846,7 @@ a[href] {
   background: rgb(26 23 20 / 92%);
   border: 1px solid rgb(251 248 239 / 28%);
   color: #fbf8ef;
-  font-family: var(--font-pixel-square), monospace;
+  font-family: var(--font-geist-pixel-square), monospace;
   font-size: 0.6rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
