@@ -202,8 +202,8 @@ export default function BorrowedPage() {
         <defs>
           <mask id={maskId}>
             <rect x="0" y="0" width="100" height="100" fill="white" />
-            {circles.map((circle) => (
-              <circle key={`${circle.cx}-${circle.cy}`} cx={circle.cx} cy={circle.cy} r={circle.r} fill="black" />
+            {circles.map((circle, index) => (
+              <circle key={`mask-cell-${index}`} cx={circle.cx} cy={circle.cy} r={circle.r} fill="black" />
             ))}
           </mask>
         </defs>
