@@ -38,7 +38,7 @@ jobs:
       - name: Create issue for Copilot
         if: steps.gate.outputs.proceed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RUNNER_PAT }}
           DAILY_DATE: ${{ steps.gate.outputs.date }}
         run: |
           gh issue create \
@@ -90,7 +90,7 @@ jobs:
 
       - name: Squash and merge
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RUNNER_PAT }}
         run: |
           gh pr merge ${{ github.event.pull_request.number }} \
             --squash \
