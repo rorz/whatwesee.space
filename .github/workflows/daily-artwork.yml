@@ -87,7 +87,10 @@ jobs:
     steps:
       - name: Label, mark ready, and squash-merge
         env:
-          GH_TOKEN: ${{ secrets.RUNNER_PAT }}
+          # GITHUB_TOKEN has pull-requests: write per the top-level permissions
+          # block, which covers add-label, mark-ready, and squash-merge. The
+          # RUNNER_PAT we use for issue assignment lacks PR-write scope.
+          GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           IS_DRAFT: ${{ github.event.pull_request.draft }}
           HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'daily-artwork') }}
