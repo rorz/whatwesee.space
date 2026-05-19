@@ -1,10 +1,16 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import invisibleReply from "@/app/daily/_artworks/2026-05-19-invisible-reply";
+import sharedShelf from "@/app/daily/_artworks/2026-05-19-shared-shelf";
 import borrowedPage from "@/app/daily/_artworks/2026-05-18-borrowed-page";
 import platformRubbing from "@/app/daily/_artworks/2026-05-16-platform-rubbing";
+import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  invisibleReply,
+  sharedShelf,
+  heldLine,
   borrowedPage,
   platformRubbing,
   singleStroke,
