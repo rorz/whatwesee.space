@@ -15,7 +15,7 @@ const COOLING = 0.0032;
 const BRUSH_RADIUS = 2.5;
 const BRUSH_GAIN = 0.34;
 const NOTE =
-  "dear you i wrote this at dusk and left the page by the stove what appears is what your hands allowed to stay ";
+  "dear you i wrote this at dusk and left the page by the stove what appears is what your hands allowed to stay.";
 
 type Glyph = {
   x: number;
