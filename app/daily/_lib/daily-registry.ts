@@ -1,10 +1,12 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
 import borrowedPage from "@/app/daily/_artworks/2026-05-18-borrowed-page";
+import platformRubbing from "@/app/daily/_artworks/2026-05-16-platform-rubbing";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
   borrowedPage,
+  platformRubbing,
   singleStroke,
 ];
 
