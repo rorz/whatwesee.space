@@ -7,7 +7,7 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
 
 permissions:
   contents: write
@@ -35,19 +35,22 @@ jobs:
             --title "daily: admit the guest for $DAILY_DATE" \
             --label "daily-artwork" \
             --assignee "@copilot" \
-            --body "$(cat <<'EOF'
+            --body "$(cat <<EOF
           The Guest Wing is awaiting today's admission.
 
-          Follow the prompt at [`.github/prompts/new-daily-artwork.prompt.md`](.github/prompts/new-daily-artwork.prompt.md) step-by-step. Read the contract at [`.github/instructions/daily-artwork.instructions.md`](.github/instructions/daily-artwork.instructions.md) first.
+          Follow the prompt at [\`.github/prompts/new-daily-artwork.prompt.md\`](.github/prompts/new-daily-artwork.prompt.md) step-by-step. Read the contract at [\`.github/instructions/daily-artwork.instructions.md\`](.github/instructions/daily-artwork.instructions.md) first.
 
-          Open a PR with label `daily-artwork` when complete. The verify job on this workflow will run lint, typecheck, and build, and auto-merge on green.
+          Open a PR from a branch named \`copilot/daily-admit-guest-$DAILY_DATE\` with label \`daily-artwork\` when complete. The verify job on this workflow will run lint, typecheck, and build, and auto-merge on green.
 
           Today's date (Europe/London): $DAILY_DATE.
           EOF
           )"
 
   verify:
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'daily-artwork')
+    if: |
+      github.event_name == 'pull_request'
+      && (contains(github.event.pull_request.labels.*.name, 'daily-artwork')
+          || startsWith(github.event.pull_request.head.ref, 'copilot/daily-admit-guest-'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -73,15 +76,24 @@ jobs:
 
   auto-merge:
     needs: verify
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'daily-artwork') && github.event.pull_request.user.login == 'github-actions[bot]' || github.event.pull_request.user.type == 'Bot'
+    if: |
+      github.event_name == 'pull_request'
+      && github.event.pull_request.user.type == 'Bot'
+      && (contains(github.event.pull_request.labels.*.name, 'daily-artwork')
+          || startsWith(github.event.pull_request.head.ref, 'copilot/daily-admit-guest-'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Squash and merge
+      - name: Label, mark ready, and squash-merge
         env:
           GH_TOKEN: ${{ secrets.RUNNER_PAT }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'daily-artwork') }}
         run: |
-          gh pr merge ${{ github.event.pull_request.number }} \
-            --squash \
-            --delete-branch
+          if [ "$HAS_LABEL" != "true" ]; then
+            gh pr edit "$PR_URL" --add-label "daily-artwork"
+          fi
+          if [ "$IS_DRAFT" = "true" ]; then
+            gh pr ready "$PR_URL"
+          fi
+          gh pr merge "$PR_URL" --squash --delete-branch
