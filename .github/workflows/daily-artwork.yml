@@ -85,20 +85,46 @@ jobs:
               && contains(github.event.pull_request.head.ref, 'admit-guest-')))
     runs-on: ubuntu-latest
     steps:
-      - name: Label, mark ready, and squash-merge
+      - name: Label, queue auto-merge, mark ready (or comment)
         env:
-          # GITHUB_TOKEN has pull-requests: write per the top-level permissions
-          # block, which covers add-label, mark-ready, and squash-merge. The
-          # RUNNER_PAT we use for issue assignment lacks PR-write scope.
+          # GITHUB_TOKEN has pull-requests: write via the top-level permissions
+          # block. RUNNER_PAT is the user PAT used for issue assignment; it
+          # currently lacks PR-write scope, so we use github.token here.
+          # Caveat: GitHub blocks App-to-App `markPullRequestReadyForReview`
+          # on PRs created by other GitHub Apps (Copilot SWE agent), so the
+          # ready-mark step may still fail. We handle that gracefully.
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           IS_DRAFT: ${{ github.event.pull_request.draft }}
           HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'daily-artwork') }}
         run: |
+          set +e
+
+          # 1. Apply label if missing (cheap, always works with github.token).
           if [ "$HAS_LABEL" != "true" ]; then
             gh pr edit "$PR_URL" --add-label "daily-artwork"
           fi
+
+          # 2. Enable native GitHub auto-merge so the squash fires the moment
+          #    the PR is ready + checks are green. Requires Settings → General
+          #    → "Allow auto-merge" to be on. Failure here is non-fatal.
+          gh pr merge "$PR_URL" --auto --squash --delete-branch
+          AUTO=$?
+
+          # 3. Try to mark the draft ready. If the workflow token can't (App
+          #    restriction or scope), post a one-click instruction comment.
           if [ "$IS_DRAFT" = "true" ]; then
             gh pr ready "$PR_URL"
+            if [ $? -ne 0 ]; then
+              gh pr comment "$PR_URL" --body \
+                "Workflow verified green. Hit **Ready for review** and the squash-merge will fire automatically (auto-merge queued)."
+              # Job exits 0 — we did everything our token allows.
+              exit 0
+            fi
           fi
-          gh pr merge "$PR_URL" --squash --delete-branch
+
+          # 4. PR is ready (or just got marked ready). If --auto didn't queue,
+          #    merge directly.
+          if [ "$AUTO" -ne 0 ]; then
+            gh pr merge "$PR_URL" --squash --delete-branch
+          fi

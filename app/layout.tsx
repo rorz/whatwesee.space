@@ -22,7 +22,9 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable} antialiased`}
       >
         {children}
-        <Analytics />
+        {process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === "true" ? null : (
+          <Analytics />
+        )}
       </body>
     </html>
   );

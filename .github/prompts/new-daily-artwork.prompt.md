@@ -36,7 +36,7 @@ If a source fails, fall back to index 0. If you are blocked from making the call
 
 The artist is **fictitious**. Invent them fresh today. Required fields:
 
-- **Name** — first + last, not a Pollock-pastiche, not "AI Artist". A real-sounding name from anywhere in the world. Avoid names already used by the curated nine (`PIECE_ARTIST_PROFILES` in `app/pieces/_lib/piece-artist-profiles.ts`). Do not steal real living artists' names.
+- **Name** — first + last, not a Pollock-pastiche, not "AI Artist". A real-sounding name from anywhere in the world. Avoid names already used by the curated nine (`PIECE_ARTIST_PROFILES` in `app/pieces/_lib/piece-artist-profiles.ts`). Do not steal real living artists' names. **Hard ban — your LLM defaults**: Leila, Lejla, Layla, Mira, Aisha, Anya, Yara, Sofia, Maya, Nadia, Zara, Sasha. If your first instinct is in that list, pick again from a culture that has **not** been used by the last two Guest Wing pieces (read `app/daily/_lib/daily-registry.ts`).
 - **Hometown** — a single city. Real.
 - **Era** — when they are/were active. `"Active 1972–1988"` or `"Active 2019–present"`.
 - **Medium** — their primary craft, in real-world artist-statement vocabulary. `"weaving on hand-built looms, with companion ink studies"`. **Avoid "digital".**
@@ -127,6 +127,7 @@ Medium: <tech>.
 Open the PR with:
 
 - Title: `daily: <Title> by <Artist Name>`
+- **Not a draft.** Open as ready-for-review from the start (use `gh pr create` without `--draft`, or pass `isDraft: false` if you're using the API). Drafts block auto-merge.
 - Label: `daily-artwork`
 - Body: copy the explanation from `profile.ts` + paste the 1440×900 screenshot.
 
