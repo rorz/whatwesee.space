@@ -2,8 +2,9 @@ name: Daily artwork
 
 on:
   schedule:
+    # 07:00 UTC ≈ 08:00 London in BST (Mar–Oct), 07:00 in GMT (Nov–Feb).
+    # We accept ±1hr drift across DST rather than running two gated crons.
     - cron: "0 7 * * *"
-    - cron: "0 8 * * *"
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
@@ -18,28 +19,17 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Gate to 08:00 Europe/London
-        id: gate
-        run: |
-          HOUR_LONDON=$(TZ=Europe/London date +%H)
-          DATE_LONDON=$(TZ=Europe/London date +%Y-%m-%d)
-          echo "hour=$HOUR_LONDON" >> "$GITHUB_OUTPUT"
-          echo "date=$DATE_LONDON" >> "$GITHUB_OUTPUT"
-          if [ "$HOUR_LONDON" = "08" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "proceed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "proceed=false" >> "$GITHUB_OUTPUT"
-          fi
+      - name: Compute London date
+        id: date
+        run: echo "date=$(TZ=Europe/London date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        if: steps.gate.outputs.proceed == 'true'
         uses: actions/checkout@v4
 
       - name: Create issue for Copilot
-        if: steps.gate.outputs.proceed == 'true'
         env:
           GH_TOKEN: ${{ secrets.RUNNER_PAT }}
-          DAILY_DATE: ${{ steps.gate.outputs.date }}
+          DAILY_DATE: ${{ steps.date.outputs.date }}
         run: |
           gh issue create \
             --title "daily: admit the guest for $DAILY_DATE" \
