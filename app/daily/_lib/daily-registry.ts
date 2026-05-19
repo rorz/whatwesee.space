@@ -2,10 +2,12 @@ import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/d
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
 import sharedShelf from "@/app/daily/_artworks/2026-05-19-shared-shelf";
 import borrowedPage from "@/app/daily/_artworks/2026-05-18-borrowed-page";
+import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
   sharedShelf,
+  heldLine,
   borrowedPage,
   singleStroke,
 ];
