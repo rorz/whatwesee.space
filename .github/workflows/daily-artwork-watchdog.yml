@@ -1,0 +1,203 @@
+name: Daily artwork watchdog
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: daily-artwork-watchdog
+  cancel-in-progress: true
+
+jobs:
+  recover-stale-drafts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nudge or recycle stale Copilot drafts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUNNER_PAT: ${{ secrets.RUNNER_PAT }}
+          NUDGE_AFTER_MINUTES: "45"
+          READY_AFTER_MINUTES: "45"
+          RECYCLE_AFTER_MINUTES: "120"
+        run: |
+          set -euo pipefail
+
+          now_epoch="$(date -u +%s)"
+          gh pr list \
+            --state open \
+            --limit 100 \
+            --json number,title,url,isDraft,updatedAt,headRefName,author,labels,additions,deletions,changedFiles,closingIssuesReferences \
+            > /tmp/daily-artwork-open-prs.json
+
+          jq -c '
+            .[]
+            | select(.isDraft == true)
+            | select(.author.login == "app/copilot-swe-agent")
+            | select(
+                (.labels | map(.name) | index("daily-artwork"))
+                or (.headRefName | test("daily-artwork|admit-guest"))
+                or (.title | test("daily|guest|artwork"; "i"))
+              )
+          ' /tmp/daily-artwork-open-prs.json | while read -r pr; do
+            pr_number="$(jq -r '.number' <<< "$pr")"
+            pr_url="$(jq -r '.url' <<< "$pr")"
+            pr_title="$(jq -r '.title' <<< "$pr")"
+            head_ref="$(jq -r '.headRefName' <<< "$pr")"
+            changed_files="$(jq -r '.changedFiles' <<< "$pr")"
+            additions="$(jq -r '.additions' <<< "$pr")"
+            deletions="$(jq -r '.deletions' <<< "$pr")"
+            updated_at="$(jq -r '.updatedAt' <<< "$pr")"
+            updated_epoch="$(date -u -d "$updated_at" +%s)"
+            age_minutes="$(((now_epoch - updated_epoch) / 60))"
+
+            if [ "$age_minutes" -lt "$NUDGE_AFTER_MINUTES" ]; then
+              echo "PR #$pr_number is only ${age_minutes}m old; leaving it alone."
+              continue
+            fi
+
+            daily_date="$(printf '%s\n%s\n' "$pr_title" "$head_ref" | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -n 1 || true)"
+            if [ -z "$daily_date" ]; then
+              echo "PR #$pr_number looks stale but has no date in title/ref; skipping."
+              continue
+            fi
+
+            marker="<!-- daily-artwork-watchdog:$daily_date -->"
+            files_json="$(gh pr view "$pr_number" --json files --jq '.files')"
+            has_complete_payload="$(jq -r --arg date "$daily_date" '
+              . as $files
+              | [
+                  $files[]
+                  | select(.changeType == "ADDED")
+                  | .path
+                  | capture("^(?<dir>app/daily/_artworks/" + $date + "-[^/]+)/(?<file>[^/]+)$")?
+                  | .dir
+                ]
+              | unique as $dirs
+              | if ($dirs | length) != 1 then
+                  false
+                else
+                  (
+                    any($files[]; .path == "app/daily/_lib/daily-registry.ts")
+                    and all(["artwork.tsx", "index.ts", "profile.ts", "thumb.webp"][]; . as $file | any($files[]; .changeType == "ADDED" and .path == ($dirs[0] + "/" + $file)))
+                  )
+                end
+            ' <<< "$files_json")"
+
+            if [ "$has_complete_payload" = "true" ]; then
+              if [ "$age_minutes" -lt "$READY_AFTER_MINUTES" ]; then
+                echo "PR #$pr_number has a complete payload but was updated ${age_minutes}m ago; waiting until ${READY_AFTER_MINUTES}m before marking ready."
+                continue
+              fi
+
+              if ! jq -e '.[] | select(.name == "daily-artwork")' <<< "$(jq -c '.labels' <<< "$pr")" >/dev/null; then
+                gh pr edit "$pr_number" --add-label daily-artwork
+              fi
+
+              ready_marker="<!-- daily-artwork-watchdog:$daily_date:ready -->"
+              has_ready_comment="$(gh pr view "$pr_number" --json comments --jq --arg marker "$ready_marker" 'any(.comments[].body; contains($marker))')"
+              if [ "$has_ready_comment" = "true" ]; then
+                echo "PR #$pr_number already has a watchdog ready marker; leaving it alone."
+                continue
+              fi
+
+              if gh pr ready "$pr_number"; then
+                ready_body="$(printf '%s\n%s\n' \
+                  "$ready_marker" \
+                  "Watchdog marked this draft ready because it has the required ${daily_date} daily-artwork payload and had been idle for ${age_minutes} minutes. Verify and auto-merge will handle it from here.")"
+                gh pr comment "$pr_number" --body "$ready_body"
+              else
+                ready_body="$(printf '%s\n%s\n' \
+                  "$ready_marker" \
+                  "Watchdog found a complete ${daily_date} daily-artwork payload after ${age_minutes} idle minutes, but this token could not mark the Copilot draft ready. Please hit Ready for review; verify and auto-merge will handle it from there.")"
+                gh pr comment "$pr_number" --body "$ready_body"
+              fi
+              continue
+            fi
+
+            if [ "$changed_files" -ne 0 ] || [ "$additions" -ne 0 ] || [ "$deletions" -ne 0 ]; then
+              incomplete_marker="<!-- daily-artwork-watchdog:$daily_date:incomplete -->"
+              has_incomplete_comment="$(gh pr view "$pr_number" --json comments --jq --arg marker "$incomplete_marker" 'any(.comments[].body; contains($marker))')"
+              if [ "$has_incomplete_comment" != "true" ]; then
+                incomplete_body="$(printf '%s\n%s\n\n%s\n' \
+                  "$incomplete_marker" \
+                  "This draft has changes and has been idle for ${age_minutes} minutes, but the required ${daily_date} daily-artwork payload is incomplete." \
+                  "Before marking ready, it needs exactly one new \`app/daily/_artworks/${daily_date}-<slug>/\` folder with \`artwork.tsx\`, \`index.ts\`, \`profile.ts\`, \`thumb.webp\`, plus the registry update.")"
+                gh pr comment "$pr_number" --body "$incomplete_body"
+                echo "Nudged incomplete draft PR #$pr_number."
+              else
+                echo "PR #$pr_number is incomplete and already nudged; leaving it for Copilot."
+              fi
+              continue
+            fi
+
+            has_watchdog_comment="$(gh pr view "$pr_number" --json comments --jq --arg marker "$marker" 'any(.comments[].body; contains($marker))')"
+
+            if [ "$has_watchdog_comment" != "true" ]; then
+              pr_nudge_body="$(printf '%s\n%s\n\n%s\n' \
+                "$marker" \
+                "This draft has been open for ${age_minutes} minutes with no file changes. @copilot please continue the daily artwork for ${daily_date}: push the required artwork payload, then mark the PR ready for review only once it is complete." \
+                "Required payload: one new \`app/daily/_artworks/${daily_date}-<slug>/\` folder, \`artwork.tsx\`, \`index.ts\`, \`profile.ts\`, \`thumb.webp\`, and the registry update.")"
+              gh pr comment "$pr_number" --body "$pr_nudge_body"
+
+              jq -r '.closingIssuesReferences[].number' <<< "$pr" | while read -r issue_number; do
+                if [ -n "$issue_number" ]; then
+                  issue_nudge_body="$(printf '%s\n%s\n' \
+                    "$marker" \
+                    "Watchdog nudge: draft PR #${pr_number} has been open for ${age_minutes} minutes with no file changes. @copilot please continue the ${daily_date} backfill and only mark the PR ready when the required payload exists.")"
+                  gh issue comment "$issue_number" --body "$issue_nudge_body"
+                fi
+              done
+
+              echo "Nudged stale empty draft PR #$pr_number."
+              continue
+            fi
+
+            if [ "$age_minutes" -lt "$RECYCLE_AFTER_MINUTES" ]; then
+              echo "PR #$pr_number was already nudged but is ${age_minutes}m old; waiting until ${RECYCLE_AFTER_MINUTES}m before recycling."
+              continue
+            fi
+
+            pr_close_body="$(printf '%s\n%s\n' \
+              "$marker" \
+              "Closing this empty stale draft after ${age_minutes} minutes so the daily artwork state machine can retry cleanly.")"
+            gh pr close "$pr_number" --comment "$pr_close_body"
+
+            linked_issue_numbers="$(jq -r '.closingIssuesReferences[].number' <<< "$pr" | sed '/^$/d' || true)"
+            if [ -z "$linked_issue_numbers" ]; then
+              linked_issue_numbers="$(gh issue list \
+                --state open \
+                --label daily-artwork \
+                --search "$daily_date in:title" \
+                --json number \
+                --jq '.[].number')"
+            fi
+
+            printf '%s\n' "$linked_issue_numbers" | while read -r issue_number; do
+              if [ -n "$issue_number" ]; then
+                issue_close_body="$(printf '%s\n%s\n' \
+                  "$marker" \
+                  "Superseded by a watchdog retry after empty stale draft PR #${pr_number}.")"
+                gh issue close "$issue_number" --comment "$issue_close_body"
+              fi
+            done
+
+            retry_body="$(printf '%s\n\n%s\n\n%s\n\n%s\n' \
+              "The Guest Wing is missing the ${daily_date} admission because ${pr_url} stalled as an empty WIP draft and was recycled by the watchdog." \
+              "Treat this as a backfill: everywhere the prompt says today's date, use ${daily_date} in Europe/London." \
+              "Follow \`.github/prompts/new-daily-artwork.prompt.md\` step-by-step and read \`.github/instructions/daily-artwork.instructions.md\` first. Open a fresh, ready-for-review PR with label \`daily-artwork\` when complete." \
+              "Do not leave an empty placeholder PR as the final state; the workflow rejects empty daily-artwork PRs.")"
+            retry_token="${RUNNER_PAT:-$GH_TOKEN}"
+            retry_url="$(GH_TOKEN="$retry_token" gh issue create \
+              --title "daily: admit the guest for ${daily_date} (watchdog retry)" \
+              --label "daily-artwork" \
+              --assignee "@copilot" \
+              --body "$retry_body")"
+
+            echo "Recycled stale empty draft PR #$pr_number into $retry_url."
+          done
