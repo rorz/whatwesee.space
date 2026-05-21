@@ -24,7 +24,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUNNER_PAT: ${{ secrets.RUNNER_PAT }}
           NUDGE_AFTER_MINUTES: "45"
-          READY_AFTER_MINUTES: "45"
+          READY_AFTER_MINUTES: "20"
           RECYCLE_AFTER_MINUTES: "120"
           INCOMPLETE_RECYCLE_AFTER_MINUTES: "240"
         run: |
@@ -108,17 +108,22 @@ jobs:
                 continue
               fi
 
-              if gh pr ready "$pr_number"; then
-                ready_body="$(printf '%s\n%s\n' \
-                  "$ready_marker" \
-                  "Watchdog marked this draft ready because it has the required ${daily_date} daily-artwork payload and had been idle for ${age_minutes} minutes. Verify and auto-merge will handle it from here.")"
-                gh pr comment "$pr_number" --body "$ready_body"
-              else
-                ready_body="$(printf '%s\n%s\n' \
-                  "$ready_marker" \
-                  "Watchdog found a complete ${daily_date} daily-artwork payload after ${age_minutes} idle minutes, but this token could not mark the Copilot draft ready. Please hit Ready for review; verify and auto-merge will handle it from there.")"
-                gh pr comment "$pr_number" --body "$ready_body"
+              ready_token="${RUNNER_PAT:-}"
+              if [ -z "$ready_token" ]; then
+                echo "::error::RUNNER_PAT is required to mark Copilot-created drafts ready automatically."
+                exit 1
               fi
+
+              ready_output="$(GH_TOKEN="$ready_token" gh pr ready "$pr_number" 2>&1)" || {
+                printf '%s\n' "$ready_output"
+                echo "::error::RUNNER_PAT could not mark PR #$pr_number ready."
+                exit 1
+              }
+
+              ready_body="$(printf '%s\n%s\n' \
+                "$ready_marker" \
+                "Watchdog marked this draft ready because it has the required ${daily_date} daily-artwork payload and had been idle for ${age_minutes} minutes. Verify and auto-merge will handle it from here.")"
+              gh pr comment "$pr_number" --body "$ready_body"
               continue
             fi
 
