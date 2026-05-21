@@ -109,7 +109,10 @@ jobs:
                 exit 1
               fi
 
-              ready_output="$(GH_TOKEN="$ready_token" gh pr ready "$pr_number" 2>&1)" || {
+              pull_request_id="$(gh pr view "$pr_number" --json id --jq '.id')"
+              ready_output="$(GH_TOKEN="$ready_token" gh api graphql \
+                -f query='mutation($pullRequestId: ID!) { markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) { pullRequest { number isDraft } } }' \
+                -F pullRequestId="$pull_request_id" 2>&1)" || {
                 printf '%s\n' "$ready_output"
                 echo "::error::RUNNER_PAT could not mark PR #$pr_number ready."
                 exit 1
