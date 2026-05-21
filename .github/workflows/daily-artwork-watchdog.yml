@@ -125,8 +125,29 @@ jobs:
               }
               if jq -e '.errors' <<< "$ready_output" >/dev/null; then
                 printf '%s\n' "$ready_output"
-                echo "::error::GitHub rejected the ready transition for PR #$pr_number."
-                exit 1
+                echo "GitHub rejected the ready transition for PR #$pr_number; replacing the draft with a ready PR from the same branch."
+
+                replacement_body="$(printf '%s\n\n%s\n\n%s\n' \
+                  "Watchdog replacement for ${pr_url}." \
+                  "The original Copilot draft had the required ${daily_date} daily-artwork payload, but GitHub blocked the draft-to-ready transition for automation." \
+                  "$(jq -r '.closingIssuesReferences[].number | "Closes #\(.)"' <<< "$pr" | sed '/^$/d')")"
+
+                close_body="$(printf '%s\n%s\n' \
+                  "$ready_marker" \
+                  "Closing this complete draft because GitHub blocks automation from marking Copilot-created drafts ready. The watchdog is opening a ready replacement PR from the same branch.")"
+                if ! gh pr close "$pr_number" --comment "$close_body"; then
+                  GH_TOKEN="$ready_token" gh pr close "$pr_number" --comment "$close_body"
+                fi
+
+                replacement_url="$(GH_TOKEN="$ready_token" gh pr create \
+                  --head "$head_ref" \
+                  --base main \
+                  --title "$pr_title" \
+                  --body "$replacement_body" \
+                  --label daily-artwork)"
+
+                echo "Opened ready replacement PR for #$pr_number: $replacement_url"
+                continue
               fi
 
               ready_body="$(printf '%s\n%s\n' \

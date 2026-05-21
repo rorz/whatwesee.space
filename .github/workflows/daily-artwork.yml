@@ -126,7 +126,8 @@ jobs:
     if: |
       github.event_name == 'pull_request'
       && github.event.pull_request.draft == false
-      && github.event.pull_request.user.type == 'Bot'
+      && (github.event.pull_request.user.type == 'Bot'
+          || startsWith(github.event.pull_request.head.ref, 'copilot/'))
       && (contains(github.event.pull_request.labels.*.name, 'daily-artwork')
           || (startsWith(github.event.pull_request.head.ref, 'copilot/')
               && (contains(github.event.pull_request.head.ref, 'admit-guest-')
