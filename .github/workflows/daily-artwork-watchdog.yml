@@ -58,11 +58,6 @@ jobs:
             updated_epoch="$(date -u -d "$updated_at" +%s)"
             age_minutes="$(((now_epoch - updated_epoch) / 60))"
 
-            if [ "$age_minutes" -lt "$NUDGE_AFTER_MINUTES" ]; then
-              echo "PR #$pr_number is only ${age_minutes}m old; leaving it alone."
-              continue
-            fi
-
             daily_date="$(printf '%s\n%s\n' "$pr_title" "$head_ref" | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -n 1 || true)"
             if [ -z "$daily_date" ]; then
               echo "PR #$pr_number looks stale but has no date in title/ref; skipping."
@@ -124,6 +119,11 @@ jobs:
                 "$ready_marker" \
                 "Watchdog marked this draft ready because it has the required ${daily_date} daily-artwork payload and had been idle for ${age_minutes} minutes. Verify and auto-merge will handle it from here.")"
               gh pr comment "$pr_number" --body "$ready_body"
+              continue
+            fi
+
+            if [ "$age_minutes" -lt "$NUDGE_AFTER_MINUTES" ]; then
+              echo "PR #$pr_number is only ${age_minutes}m old and does not have a complete payload; leaving it alone."
               continue
             fi
 
