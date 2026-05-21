@@ -26,6 +26,7 @@ jobs:
           NUDGE_AFTER_MINUTES: "45"
           READY_AFTER_MINUTES: "45"
           RECYCLE_AFTER_MINUTES: "120"
+          INCOMPLETE_RECYCLE_AFTER_MINUTES: "240"
         run: |
           set -euo pipefail
 
@@ -131,9 +132,51 @@ jobs:
                   "Before marking ready, it needs exactly one new \`app/daily/_artworks/${daily_date}-<slug>/\` folder with \`artwork.tsx\`, \`index.ts\`, \`profile.ts\`, \`thumb.webp\`, plus the registry update.")"
                 gh pr comment "$pr_number" --body "$incomplete_body"
                 echo "Nudged incomplete draft PR #$pr_number."
-              else
-                echo "PR #$pr_number is incomplete and already nudged; leaving it for Copilot."
+                continue
               fi
+
+              if [ "$age_minutes" -lt "$INCOMPLETE_RECYCLE_AFTER_MINUTES" ]; then
+                echo "PR #$pr_number is incomplete and already nudged; waiting until ${INCOMPLETE_RECYCLE_AFTER_MINUTES}m before recycling."
+                continue
+              fi
+
+              incomplete_close_body="$(printf '%s\n%s\n' \
+                "$incomplete_marker" \
+                "Closing this incomplete stale draft after ${age_minutes} minutes so the daily artwork state machine can retry cleanly.")"
+              gh pr close "$pr_number" --comment "$incomplete_close_body"
+
+              linked_issue_numbers="$(jq -r '.closingIssuesReferences[].number' <<< "$pr" | sed '/^$/d' || true)"
+              if [ -z "$linked_issue_numbers" ]; then
+                linked_issue_numbers="$(gh issue list \
+                  --state open \
+                  --label daily-artwork \
+                  --search "$daily_date in:title" \
+                  --json number \
+                  --jq '.[].number')"
+              fi
+
+              printf '%s\n' "$linked_issue_numbers" | while read -r issue_number; do
+                if [ -n "$issue_number" ]; then
+                  issue_close_body="$(printf '%s\n%s\n' \
+                    "$incomplete_marker" \
+                    "Superseded by a watchdog retry after incomplete stale draft PR #${pr_number}.")"
+                  gh issue close "$issue_number" --comment "$issue_close_body"
+                fi
+              done
+
+              retry_body="$(printf '%s\n\n%s\n\n%s\n\n%s\n' \
+                "The Guest Wing is missing the ${daily_date} admission because ${pr_url} stalled as an incomplete WIP draft and was recycled by the watchdog." \
+                "Treat this as a backfill: everywhere the prompt says today's date, use ${daily_date} in Europe/London." \
+                "Follow \`.github/prompts/new-daily-artwork.prompt.md\` step-by-step and read \`.github/instructions/daily-artwork.instructions.md\` first. Open a fresh, ready-for-review PR with label \`daily-artwork\` when complete." \
+                "Do not leave an incomplete placeholder PR as the final state; the workflow rejects incomplete daily-artwork PRs.")"
+              retry_token="${RUNNER_PAT:-$GH_TOKEN}"
+              retry_url="$(GH_TOKEN="$retry_token" gh issue create \
+                --title "daily: admit the guest for ${daily_date} (watchdog retry)" \
+                --label "daily-artwork" \
+                --assignee "@copilot" \
+                --body "$retry_body")"
+
+              echo "Recycled incomplete stale draft PR #$pr_number into $retry_url."
               continue
             fi
 
