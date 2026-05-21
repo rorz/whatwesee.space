@@ -20,6 +20,7 @@ jobs:
     steps:
       - name: Nudge or recycle stale Copilot drafts
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
           RUNNER_PAT: ${{ secrets.RUNNER_PAT }}
           NUDGE_AFTER_MINUTES: "45"
