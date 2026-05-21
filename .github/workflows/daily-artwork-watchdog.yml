@@ -97,7 +97,7 @@ jobs:
               fi
 
               ready_marker="<!-- daily-artwork-watchdog:$daily_date:ready -->"
-              has_ready_comment="$(gh pr view "$pr_number" --json comments --jq --arg marker "$ready_marker" 'any(.comments[].body; contains($marker))')"
+              has_ready_comment="$(gh pr view "$pr_number" --json comments | jq -r --arg marker "$ready_marker" 'any(.comments[].body; contains($marker))')"
               if [ "$has_ready_comment" = "true" ]; then
                 echo "PR #$pr_number already has a watchdog ready marker; leaving it alone."
                 continue
@@ -143,7 +143,7 @@ jobs:
 
             if [ "$changed_files" -ne 0 ] || [ "$additions" -ne 0 ] || [ "$deletions" -ne 0 ]; then
               incomplete_marker="<!-- daily-artwork-watchdog:$daily_date:incomplete -->"
-              has_incomplete_comment="$(gh pr view "$pr_number" --json comments --jq --arg marker "$incomplete_marker" 'any(.comments[].body; contains($marker))')"
+              has_incomplete_comment="$(gh pr view "$pr_number" --json comments | jq -r --arg marker "$incomplete_marker" 'any(.comments[].body; contains($marker))')"
               if [ "$has_incomplete_comment" != "true" ]; then
                 incomplete_body="$(printf '%s\n%s\n\n%s\n' \
                   "$incomplete_marker" \
@@ -199,7 +199,7 @@ jobs:
               continue
             fi
 
-            has_watchdog_comment="$(gh pr view "$pr_number" --json comments --jq --arg marker "$marker" 'any(.comments[].body; contains($marker))')"
+            has_watchdog_comment="$(gh pr view "$pr_number" --json comments | jq -r --arg marker "$marker" 'any(.comments[].body; contains($marker))')"
 
             if [ "$has_watchdog_comment" != "true" ]; then
               pr_nudge_body="$(printf '%s\n%s\n\n%s\n' \
