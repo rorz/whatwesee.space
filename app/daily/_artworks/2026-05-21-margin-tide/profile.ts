@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "letterpress misregisters, stitched notebook margins, and sumi corrections",
     manifesto: "the edge remembers what the center forgets",
   },
+  visualBrief: {
+    palette: "white-ground",
+    composition: "field",
+    interaction: "drag",
+    renderMode: "canvas-2d",
+    mood: "tender",
+    material: "document",
+  },
   explanation:
     "I keep my notes in the margins because the center of the page always pretends it is the whole truth. When I drag that edge-ink inward, the clean statement starts to wobble and admit what it omitted. This square asks the hand to carry side-remarks into the middle until the page reads honestly.",
   interaction:

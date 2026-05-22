@@ -6,7 +6,8 @@
     "dev": "next dev -p 3047",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "daily:validate": "node scripts/validate-daily-artwork.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",

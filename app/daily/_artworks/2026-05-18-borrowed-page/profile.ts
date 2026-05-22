@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "paper burnishing, erased ledger studies, and graphite transfers",
     manifesto: "every correction is a second voice",
   },
+  visualBrief: {
+    palette: "earth",
+    composition: "typographic",
+    interaction: "erase",
+    renderMode: "svg",
+    mood: "tender",
+    material: "document",
+  },
   explanation:
     "I copied a sentence until the page felt heavy, then lifted it back with a dull blade to hear what stayed behind. The first writing never leaves completely; it keeps surfacing through whatever I place over it. I wanted this square to behave the same way, where the clean layer is only temporary and the older hand waits underneath.",
   interaction:

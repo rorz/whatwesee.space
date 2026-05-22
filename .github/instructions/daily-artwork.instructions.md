@@ -12,7 +12,8 @@ This file is the **non-negotiable** contract for anything you add under `app/dai
 app/daily/_artworks/<YYYY-MM-DD>-<kebab-slug>/
 ├── profile.ts     # named export `profile: DailyArtworkProfile`
 ├── artwork.tsx    # "use client" default export, the interactive piece
-└── index.ts       # default export { profile, Artwork } typed as DailyArtworkModule
+├── index.ts       # default export { profile, Artwork } typed as DailyArtworkModule
+└── thumb.webp     # 480x480 archive thumbnail
 ```
 
 The folder name uses today's date in `YYYY-MM-DD` form (Europe/London) followed by a kebab-case slug derived from the piece title. The folder name is the canonical route segment.
@@ -35,6 +36,14 @@ export const profile: DailyArtworkProfile = {
     medium: "pigment-on-handmade-paper, digital companion pieces",
     manifesto: "the paper decides; the brush only asks.",
   },
+  visualBrief: {
+    palette: "white-ground",
+    composition: "single-object",
+    interaction: "drag",
+    renderMode: "canvas-2d",
+    mood: "ceremonial",
+    material: "paper",
+  },
   explanation:
     // 2-4 sentences in the artist's voice about their own piece. First person.
     "...",
@@ -46,6 +55,31 @@ export const profile: DailyArtworkProfile = {
   thumbColor: "#f5efe2",         // the dominant calm color of the piece (hex)
 };
 ```
+
+## Visual brief diversity
+
+Every profile must include `visualBrief`. It is a concrete promise about what the visitor sees before reading the plaque.
+
+Allowed values:
+
+| Axis | Values |
+|---|---|
+| `palette` | `black-ground`, `white-ground`, `high-chroma`, `fluorescent`, `monochrome`, `primary`, `earth`, `pastel`, `institutional`, `metallic`, `night` |
+| `composition` | `single-object`, `diagram`, `map`, `instrument`, `room-scene`, `typographic`, `game-board`, `pattern-system`, `timeline`, `split-screen`, `field` |
+| `interaction` | `press`, `drag`, `type`, `hold`, `erase`, `tune`, `collide`, `sort`, `trace`, `plant`, `shake` |
+| `renderMode` | `canvas-2d`, `svg`, `css-dom`, `webgl`, `html-controls`, `text-grid`, `mixed-dom` |
+| `mood` | `loud`, `clinical`, `comic`, `severe`, `tender`, `chaotic`, `ceremonial`, `deadpan`, `meditative`, `industrial` |
+| `material` | `paper`, `textile`, `mineral`, `organism`, `machine`, `architecture`, `weather`, `screen`, `body`, `food`, `transit`, `document` |
+
+For a new daily PR:
+
+1. The new brief must share zero axis values with the immediately previous Guest Wing piece.
+2. The new brief may share at most two axis values with any of the last five pieces.
+3. If two of the last three thumbnails are muted light colors, the new thumbnail must not be muted light.
+4. Do not reuse a cluster of recent material words such as paper, ledger, rubbing, margin, ink, thread, graphite, dust, grain, field, or page.
+5. Avoid the stock phrase `this square` in new explanations. It has become a tell.
+
+The workflow enforces these rules with `node scripts/validate-daily-artwork.mjs`.
 
 **The `explanation` field must read like a real artist's own statement.** No marketing copy. No "this piece explores...". Speak from inside the work.
 
@@ -137,11 +171,12 @@ Examples of superfluous interactions:
 1. `pnpm lint` exits 0.
 2. `pnpm exec tsc --noEmit` exits 0.
 3. `pnpm build` exits 0.
-4. `pnpm dev` starts on `:3047`. You can open `http://localhost:3047/daily` and see your piece.
-5. You have screenshotted your piece via Playwright at 280px, 480px, and 640px wide. **All three** must look intentional. Save the 640px screenshot as `thumb.webp` inside your artwork folder (use `sharp` to convert PNG → WebP).
-6. `window.<slug>_render_to_text()` returns a sensible string.
-7. Re-render check: navigate away and back; no console errors, no leaked listeners (DevTools "Performance Monitor" → "Event listeners" should not climb).
-8. Mobile check: open at 375×667; the piece must still be playable.
+4. `node scripts/validate-daily-artwork.mjs` exits 0.
+5. `pnpm dev` starts on `:3047`. You can open `http://localhost:3047/daily` and see your piece.
+6. You have screenshotted your piece via Playwright at 280px, 480px, and 640px wide. **All three** must look intentional. Save the 640px screenshot as `thumb.webp` inside your artwork folder (use `sharp` to convert PNG → WebP).
+7. `window.<slug>_render_to_text()` returns a sensible string.
+8. Re-render check: navigate away and back; no console errors, no leaked listeners (DevTools "Performance Monitor" → "Event listeners" should not climb).
+9. Mobile check: open at 375×667; the piece must still be playable.
 
 ## Don't
 

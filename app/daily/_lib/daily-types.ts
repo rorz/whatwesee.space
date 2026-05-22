@@ -29,6 +29,83 @@ export type DailyArtist = {
   manifesto: string;
 };
 
+export type DailyVisualBrief = {
+  /** Dominant color world. Must be intentionally different from recent guests. */
+  palette:
+    | "black-ground"
+    | "white-ground"
+    | "high-chroma"
+    | "fluorescent"
+    | "monochrome"
+    | "primary"
+    | "earth"
+    | "pastel"
+    | "institutional"
+    | "metallic"
+    | "night";
+  /** The first read of the square before details. */
+  composition:
+    | "single-object"
+    | "diagram"
+    | "map"
+    | "instrument"
+    | "room-scene"
+    | "typographic"
+    | "game-board"
+    | "pattern-system"
+    | "timeline"
+    | "split-screen"
+    | "field";
+  /** The user's primary verb. */
+  interaction:
+    | "press"
+    | "drag"
+    | "type"
+    | "hold"
+    | "erase"
+    | "tune"
+    | "collide"
+    | "sort"
+    | "trace"
+    | "plant"
+    | "shake";
+  /** The dominant rendering system. */
+  renderMode:
+    | "canvas-2d"
+    | "svg"
+    | "css-dom"
+    | "webgl"
+    | "html-controls"
+    | "text-grid"
+    | "mixed-dom";
+  /** The piece's visible emotional register. */
+  mood:
+    | "loud"
+    | "clinical"
+    | "comic"
+    | "severe"
+    | "tender"
+    | "chaotic"
+    | "ceremonial"
+    | "deadpan"
+    | "meditative"
+    | "industrial";
+  /** The dominant metaphorical material, not necessarily the implementation. */
+  material:
+    | "paper"
+    | "textile"
+    | "mineral"
+    | "organism"
+    | "machine"
+    | "architecture"
+    | "weather"
+    | "screen"
+    | "body"
+    | "food"
+    | "transit"
+    | "document";
+};
+
 export type DailyArtworkProfile = {
   /** ISO 8601 date this piece was made. YYYY-MM-DD. */
   date: string;
@@ -37,6 +114,8 @@ export type DailyArtworkProfile = {
   /** Piece title. Title-case. Short. */
   title: string;
   artist: DailyArtist;
+  /** Seeded visual diversity contract for archive-scale variety. */
+  visualBrief: DailyVisualBrief;
   /** Artist's own 2-4 sentence reflection on THIS piece. First-person. */
   explanation: string;
   /** One-line description of the non-superfluous interaction. Required. */

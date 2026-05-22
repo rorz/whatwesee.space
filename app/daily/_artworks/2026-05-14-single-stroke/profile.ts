@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "pigment-on-handmade-paper, digital companion pieces",
     manifesto: "the paper decides, the brush only asks",
   },
+  visualBrief: {
+    palette: "white-ground",
+    composition: "single-object",
+    interaction: "drag",
+    renderMode: "canvas-2d",
+    mood: "ceremonial",
+    material: "paper",
+  },
   explanation:
     "I spend hours preparing the paper before I dip the brush. The pleasure is in the readying — the ink merely confirms what has already been decided. A dry sheet refuses; a wet sheet remembers. This piece is a small ceremony for that refusal.",
   interaction:

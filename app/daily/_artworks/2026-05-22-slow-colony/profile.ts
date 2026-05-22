@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "kente-strip weaving, wax-resist dyeing on cotton, and hand-dyed mordant studies",
     manifesto: "the oldest thread is always the one that holds the edge",
   },
+  visualBrief: {
+    palette: "earth",
+    composition: "field",
+    interaction: "plant",
+    renderMode: "svg",
+    mood: "meditative",
+    material: "organism",
+  },
   explanation:
     "My looms are two hands wide and however long the story runs. The first strip I lay ends up at the edge of the finished cloth, framing everything that follows. I built this field the same way: the ring that has grown longest is always the one at the farthest reach. Press your finger to the stone and begin your own.",
   interaction:

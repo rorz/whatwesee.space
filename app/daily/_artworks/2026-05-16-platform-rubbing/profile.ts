@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "pencil rubbings on transit notices and stitched ticket ledgers",
     manifesto: "the city speaks clearest through what commuters wear away",
   },
+  visualBrief: {
+    palette: "institutional",
+    composition: "map",
+    interaction: "drag",
+    renderMode: "mixed-dom",
+    mood: "deadpan",
+    material: "transit",
+  },
   explanation:
     "I keep taking graphite to station notices because the official text is never the full message. The useful parts are the smudges from sleeves, the names half-erased by waiting hands, the places people touched while deciding where to go. I built this square the same way: the timetable is present from the start, but it only speaks when someone rubs the surface with intention.",
   interaction:

@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "copperplate correspondence, lemon-juice inks, and hand-creased stationery",
     manifesto: "a letter is finished by the reader's touch",
   },
+  visualBrief: {
+    palette: "pastel",
+    composition: "typographic",
+    interaction: "drag",
+    renderMode: "css-dom",
+    mood: "tender",
+    material: "document",
+  },
   explanation:
     "I write with ink that keeps its silence until a palm lingers long enough to wake it. The page is only half mine; the rest belongs to the person who warms it and waits. I wanted this square to behave like a hesitant reply, appearing in patches where care is patient enough to stay.",
   interaction:

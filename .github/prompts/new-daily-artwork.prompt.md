@@ -32,7 +32,55 @@ If a source fails, fall back to index 0. If you are blocked from making the call
 
 **Distill what you found into one sentence**: "What if [observation about the source]?". This is your *premise*. Write it down. You will refer back to it.
 
-## 2. Invent the artist
+## 2. Lock the visual brief
+
+Before inventing the artist, pick a seeded **visual brief**. This is the diversity contract. It matters as much as the premise.
+
+Use the same date seed, then derive indexes for these axes:
+
+```bash
+BRIEF_SEED=$(printf "%s-visual-brief" "$SEED" | sha256sum | head -c 12)
+PALETTE_INDEX=$(( 0x${BRIEF_SEED:0:2} % 11 ))
+COMPOSITION_INDEX=$(( 0x${BRIEF_SEED:2:2} % 11 ))
+INTERACTION_INDEX=$(( 0x${BRIEF_SEED:4:2} % 11 ))
+RENDER_INDEX=$(( 0x${BRIEF_SEED:6:2} % 7 ))
+MOOD_INDEX=$(( 0x${BRIEF_SEED:8:2} % 10 ))
+MATERIAL_INDEX=$(( 0x${BRIEF_SEED:10:2} % 12 ))
+```
+
+| Axis | Values |
+|---|---|
+| `palette` | `black-ground`, `white-ground`, `high-chroma`, `fluorescent`, `monochrome`, `primary`, `earth`, `pastel`, `institutional`, `metallic`, `night` |
+| `composition` | `single-object`, `diagram`, `map`, `instrument`, `room-scene`, `typographic`, `game-board`, `pattern-system`, `timeline`, `split-screen`, `field` |
+| `interaction` | `press`, `drag`, `type`, `hold`, `erase`, `tune`, `collide`, `sort`, `trace`, `plant`, `shake` |
+| `renderMode` | `canvas-2d`, `svg`, `css-dom`, `webgl`, `html-controls`, `text-grid`, `mixed-dom` |
+| `mood` | `loud`, `clinical`, `comic`, `severe`, `tender`, `chaotic`, `ceremonial`, `deadpan`, `meditative`, `industrial` |
+| `material` | `paper`, `textile`, `mineral`, `organism`, `machine`, `architecture`, `weather`, `screen`, `body`, `food`, `transit`, `document` |
+
+Read the last five profiles in `app/daily/_lib/daily-registry.ts`.
+
+Hard diversity rules:
+
+1. The new brief must share **zero** visual brief axis values with the immediately previous Guest Wing piece. If a seeded value matches yesterday, advance to the next value in that axis until it differs.
+2. The new brief may share **at most two** axis values with any of the last five Guest Wing pieces.
+3. If two of the last three thumbnails are muted light colors, today's `thumbColor` must not be muted light. Use black, saturated color, fluorescent color, metallic/dark, primary color, or a sharp monochrome.
+4. If your first concept has paper, ink, ledger, margin, rubbing, thread, graphite, dust, quiet grain, or a beige archive mood, throw it away unless the seeded brief explicitly demands that material. We have done enough of that.
+5. The archive thumbnail must look different before anyone reads the title. Squint at it. If it could be confused with yesterday, redesign.
+
+Write the chosen values into `profile.visualBrief` exactly:
+
+```ts
+visualBrief: {
+  palette: "...",
+  composition: "...",
+  interaction: "...",
+  renderMode: "...",
+  mood: "...",
+  material: "...",
+},
+```
+
+## 3. Invent the artist
 
 The artist is **fictitious**. Invent them fresh today. Required fields:
 
@@ -44,19 +92,21 @@ The artist is **fictitious**. Invent them fresh today. Required fields:
 
 Then write **two more drafts in your head** before committing. Boring names produce boring pieces.
 
-## 3. Design the piece
+## 4. Design the piece
 
 The piece must:
 
 1. Embody the *premise* from step 1, refracted through the artist's *manifesto*.
-2. Use a medium technique that is **not** the medium of the last three Guest Wing pieces. Read `app/daily/_lib/daily-registry.ts` to see what's been used recently. Force variety: if the last three used Canvas 2D, you use SVG, CSS, or WebGL. If the last three were quiet, yours is loud. **Do not default to canvas.**
-3. Have one **non-superfluous** interaction. Re-read the "Anti-slop" and "Interaction" sections of the contract.
-4. Render at a 1:1 aspect ratio inside the parent container.
-5. Pass the verify checklist.
+2. Obey every axis in `profile.visualBrief`. If the brief says `html-controls`, make a real control surface. If it says `game-board`, make the piece read like a board. If it says `comic`, do not ship another hushed handmade field.
+3. Use a medium technique that is **not** the medium of the last three Guest Wing pieces. Read `app/daily/_lib/daily-registry.ts` to see what's been used recently. Force variety: if the last three used Canvas 2D, you use SVG, CSS, HTML controls, text-grid, or WebGL. If the last three were quiet, yours is loud. **Do not default to canvas.**
+4. Make the first viewport visually unlike the last two pieces: different ground color, different density, different silhouette, different movement style.
+5. Have one **non-superfluous** interaction. Re-read the "Anti-slop" and "Interaction" sections of the contract.
+6. Render at a 1:1 aspect ratio inside the parent container.
+7. Pass the verify checklist.
 
-**Spend at least three thinking turns on this before writing code.** If your first idea is a particle field, gradient, or mouse-parallax piece, **discard it.** Try again.
+**Spend at least three thinking turns on this before writing code.** If your first idea is a particle field, gradient, mouse-parallax piece, paper texture, archive card, or quiet hand-drawn field, **discard it.** Try again.
 
-## 4. Write the files
+## 5. Write the files
 
 Create the folder `app/daily/_artworks/<YYYY-MM-DD>-<slug>/` with:
 
@@ -71,7 +121,7 @@ Then edit `app/daily/_lib/daily-registry.ts`:
 
 Use the seed daily at `app/daily/_artworks/2026-05-14-single-stroke/` as a structural template. **Do not copy its idea.**
 
-## 5. Install any deps you need (optional)
+## 6. Install any deps you need (optional)
 
 You may add packages with `pnpm add <pkg>`. Constraints:
 
@@ -80,7 +130,7 @@ You may add packages with `pnpm add <pkg>`. Constraints:
 - Must be `latest` stable, no betas.
 - Justify each new dep in your commit message.
 
-## 6. Self-verify with Playwright
+## 7. Self-verify with Playwright
 
 Use the Playwright MCP server (it is configured on this agent runner). For each of these viewports, navigate, screenshot, and look at the result:
 
@@ -92,9 +142,9 @@ Use the Playwright MCP server (it is configured on this agent runner). For each 
 
 **Then interact.** Move the cursor, click, drag — exercise your own interaction. Screenshot the result. If the piece does not visibly respond, **fix it.**
 
-You have up to **three** edit-screenshot iterations. If you cannot satisfy yourself in three, redesign the piece from step 3 with a different medium. Do not ship a piece you do not believe in.
+You have up to **three** edit-screenshot iterations. If you cannot satisfy yourself in three, redesign the piece from step 4 with a different medium. Do not ship a piece you do not believe in.
 
-## 7. Generate the thumb
+## 8. Generate the thumb
 
 From your best 1440×900 screenshot, crop the inner 1:1 canvas region, resize to 480×480, save as `thumb.webp` inside your artwork folder:
 
@@ -102,17 +152,18 @@ From your best 1440×900 screenshot, crop the inner 1:1 canvas region, resize to
 pnpm dlx sharp-cli -i /tmp/shot.png -o app/daily/_artworks/<folder>/thumb.webp --format webp --quality 82 --resize 480 480
 ```
 
-## 8. Run the gates
+## 9. Run the gates
 
 ```bash
+node scripts/validate-daily-artwork.mjs
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build
 ```
 
-All three must exit 0. If any fail, fix the cause. **Do not** disable lint rules or add `@ts-ignore` to pass.
+All four must exit 0. If any fail, fix the cause. **Do not** disable lint rules or add `@ts-ignore` to pass.
 
-## 9. Commit & open PR
+## 10. Commit & open PR
 
 Commit message format:
 

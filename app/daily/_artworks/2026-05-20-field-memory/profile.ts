@@ -11,6 +11,14 @@ export const profile: DailyArtworkProfile = {
     medium: "forged-iron rubbings, compass soot, and hand-ruled star charts",
     manifesto: "metal keeps the direction of every touch",
   },
+  visualBrief: {
+    palette: "earth",
+    composition: "field",
+    interaction: "drag",
+    renderMode: "canvas-2d",
+    mood: "meditative",
+    material: "mineral",
+  },
   explanation:
     "I grind meteor iron into dark dust and ask it to settle before I decide where to draw. The filings never lie flat for long; they turn toward whichever pull is closest, as if they still remember falling through night. I wanted this square to keep that memory alive, so each pass of your hand leaves a temporary north that the grains obey.",
   interaction:
