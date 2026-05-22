@@ -9,229 +9,255 @@ declare global {
   }
 }
 
-type Grain = {
-  x: number;
-  y: number;
-  angle: number;
-  drift: number;
-  wobble: number;
-};
+const vertexShaderSource = `
+attribute vec2 a_position;
 
-const GRAIN_COUNT = 720;
-const TWOPI = Math.PI * 2;
+void main() {
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`;
 
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+const fragmentShaderSource = `
+precision highp float;
+
+uniform vec2 u_resolution;
+uniform vec2 u_pointer;
+uniform float u_time;
+uniform float u_active;
+
+mat2 rotate2d(float angle) {
+  float s = sin(angle);
+  float c = cos(angle);
+  return mat2(c, -s, s, c);
 }
 
-function wrapAngle(radians: number): number {
-  const mod = radians % TWOPI;
-  return mod < 0 ? mod + TWOPI : mod;
+float lineField(vec2 p, float phase) {
+  vec2 q = p;
+  float field = 0.0;
+  for (int i = 0; i < 5; i++) {
+    q = rotate2d(0.52 + float(i) * 0.17) * q;
+    float wave = sin(q.x * (7.0 + float(i) * 2.4) + phase + float(i) * 1.9);
+    field += 0.09 / (0.018 + abs(q.y + wave * 0.06));
+    q *= 1.18;
+  }
+  return field;
+}
+
+float ring(vec2 p, float radius, float width) {
+  return smoothstep(width, 0.0, abs(length(p) - radius));
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  vec2 magnet = (u_pointer * 2.0 - 1.0);
+  magnet.y *= -1.0;
+
+  float time = u_time * 0.001;
+  float distanceToMagnet = length(p - magnet);
+  float pull = 0.35 / (0.08 + distanceToMagnet * distanceToMagnet);
+  float activePulse = mix(0.45, 1.0, u_active);
+
+  vec2 warped = p;
+  warped += normalize(p - magnet + 0.001) * sin(distanceToMagnet * 18.0 - time * 4.0) * pull * 0.085 * activePulse;
+  warped = rotate2d(time * 0.18 + pull * 0.22) * warped;
+
+  float field = lineField(warped, time * 2.1);
+  float rings = ring(p - magnet, 0.16 + sin(time * 1.7) * 0.025, 0.012);
+  rings += ring(p - magnet, 0.34 + cos(time * 1.3) * 0.035, 0.009) * 0.7;
+  float grid = smoothstep(0.985, 1.0, cos((uv.x + sin(time) * 0.01) * 82.0)) * 0.15;
+  grid += smoothstep(0.988, 1.0, cos((uv.y + cos(time) * 0.01) * 82.0)) * 0.12;
+
+  float flare = smoothstep(0.7, 0.0, distanceToMagnet) * activePulse;
+  vec3 cyan = vec3(0.02, 0.98, 1.0);
+  vec3 magenta = vec3(1.0, 0.07, 0.82);
+  vec3 yellow = vec3(1.0, 0.95, 0.05);
+  vec3 blue = vec3(0.01, 0.04, 0.24);
+
+  vec3 color = blue;
+  color += cyan * field * 0.36;
+  color += magenta * pow(field, 1.35) * 0.11;
+  color += yellow * rings * 1.4;
+  color += cyan * grid;
+  color += magenta * flare * 0.22;
+  color += vec3(0.0, 0.0, 0.02) * (1.0 - smoothstep(0.0, 1.3, length(p)));
+
+  float scanline = 0.88 + 0.12 * sin(gl_FragCoord.y * 1.9);
+  color *= scanline;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+function compileShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null {
+  const shader = gl.createShader(type);
+  if (!shader) {
+    return null;
+  }
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+  return shader;
+}
+
+function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
+  const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+  const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  if (!vertexShader || !fragmentShader) {
+    return null;
+  }
+
+  const program = gl.createProgram();
+  if (!program) {
+    return null;
+  }
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  gl.deleteShader(vertexShader);
+  gl.deleteShader(fragmentShader);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    return null;
+  }
+
+  return program;
 }
 
 export default function FieldMemory() {
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const grainsRef = useRef<Array<Grain>>([]);
-  const magnetRef = useRef({ x: 0.5, y: 0.5, active: false });
-  const pointerIdRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const sizeRef = useRef({ width: 1, height: 1, dpr: 1 });
 
   useEffect(() => {
-    const root = rootRef.current;
     const canvas = canvasRef.current;
-    if (!root || !canvas) {
-      return;
-    }
+    if (!canvas) return;
 
-    const random = mulberry32(0x9398ed39);
-    if (grainsRef.current.length === 0) {
-      grainsRef.current = Array.from({ length: GRAIN_COUNT }, () => ({
-        x: random(),
-        y: random(),
-        angle: random() * TWOPI,
-        drift: 0.2 + random() * 0.8,
-        wobble: 0.002 + random() * 0.005,
-      }));
-    }
+    const gl = canvas.getContext("webgl", {
+      antialias: false,
+      depth: false,
+      preserveDrawingBuffer: true,
+      stencil: false,
+    });
+    if (!gl) return;
 
-    const context = canvas.getContext("2d");
-    if (!context) {
-      return;
-    }
+    const program = createProgram(gl);
+    if (!program) return;
 
-    const syncSize = () => {
-      const rect = root.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const width = Math.max(1, Math.round(rect.width));
-      const height = Math.max(1, Math.round(rect.height));
-      sizeRef.current = { width, height, dpr };
-      const pixelWidth = Math.max(1, Math.round(width * dpr));
-      const pixelHeight = Math.max(1, Math.round(height * dpr));
-      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-        canvas.width = pixelWidth;
-        canvas.height = pixelHeight;
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, "a_position");
+    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+    const pointerLocation = gl.getUniformLocation(program, "u_pointer");
+    const timeLocation = gl.getUniformLocation(program, "u_time");
+    const activeLocation = gl.getUniformLocation(program, "u_active");
+
+    const pointer = { x: 0.58, y: 0.44, active: 0 };
+    let rafId = 0;
+    let manualOffset = 0;
+    let displayWidth = 1;
+    let displayHeight = 1;
+
+    const fit = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      displayWidth = Math.max(1, Math.floor(rect.width));
+      displayHeight = Math.max(1, Math.floor(rect.height));
+      const width = Math.max(1, Math.floor(displayWidth * dpr));
+      const height = Math.max(1, Math.floor(displayHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
       }
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      gl.viewport(0, 0, width, height);
     };
 
-    const draw = () => {
-      const { width, height, dpr } = sizeRef.current;
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.clearRect(0, 0, width, height);
-      context.fillStyle = "#ede4d2";
-      context.fillRect(0, 0, width, height);
-      context.fillStyle = "rgba(103, 79, 56, 0.08)";
-      for (let y = 0; y < height; y += Math.max(8, height / 36)) {
-        context.fillRect(0, y, width, 1);
+    const render = (timestamp = performance.now()) => {
+      fit();
+      gl.useProgram(program);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+      gl.uniform2f(pointerLocation, pointer.x, pointer.y);
+      gl.uniform1f(timeLocation, timestamp + manualOffset);
+      gl.uniform1f(activeLocation, pointer.active);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+
+    const loop = (timestamp: number) => {
+      render(timestamp);
+      rafId = window.requestAnimationFrame(loop);
+    };
+
+    const updatePointer = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)));
+      pointer.y = Math.max(0, Math.min(1, (event.clientY - rect.top) / Math.max(1, rect.height)));
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      pointer.active = 1;
+      updatePointer(event);
+      canvas.setPointerCapture(event.pointerId);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (pointer.active > 0) {
+        updatePointer(event);
       }
-
-      const magnet = magnetRef.current;
-      const centerX = magnet.x * width;
-      const centerY = magnet.y * height;
-
-      let aligned = 0;
-      context.lineCap = "round";
-      for (let i = 0; i < grainsRef.current.length; i += 1) {
-        const grain = grainsRef.current[i];
-        const gx = grain.x * width;
-        const gy = grain.y * height;
-        const dx = centerX - gx;
-        const dy = centerY - gy;
-        const distance = Math.hypot(dx, dy);
-        const influence = magnet.active ? Math.max(0, 1 - distance / (width * 0.7)) : 0;
-        const target = Math.atan2(dy, dx) + Math.sin((grain.x + grain.y) * 14) * 0.08;
-        const delta = Math.atan2(Math.sin(target - grain.angle), Math.cos(target - grain.angle));
-        grain.angle = wrapAngle(grain.angle + delta * (0.02 + influence * 0.14) + Math.sin(i * 0.17) * grain.wobble);
-
-        if (Math.abs(delta) < 0.14) {
-          aligned += 1;
-        }
-
-        const step = 0.0008 * grain.drift;
-        grain.x = (grain.x + Math.cos(grain.angle) * step + 1) % 1;
-        grain.y = (grain.y + Math.sin(grain.angle) * step + 1) % 1;
-
-        const len = 2.2 + influence * 2.6;
-        const ox = Math.cos(grain.angle) * len;
-        const oy = Math.sin(grain.angle) * len;
-        context.strokeStyle = `rgba(52, 36, 22, ${0.18 + influence * 0.62})`;
-        context.lineWidth = 0.75 + influence * 0.7;
-        context.beginPath();
-        context.moveTo(gx - ox, gy - oy);
-        context.lineTo(gx + ox, gy + oy);
-        context.stroke();
+    };
+    const onPointerEnd = (event: PointerEvent) => {
+      pointer.active = 0;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
       }
-
-      context.strokeStyle = magnet.active ? "rgba(120, 87, 54, 0.42)" : "rgba(120, 87, 54, 0.2)";
-      context.lineWidth = 1.2;
-      context.beginPath();
-      context.arc(centerX, centerY, Math.max(18, width * 0.08), 0, TWOPI);
-      context.stroke();
-
-      return aligned;
     };
 
-    const step = () => draw();
-
-    const loop = () => {
-      step();
-      rafRef.current = window.requestAnimationFrame(loop);
-    };
-
-    window.field_memory_render_to_text = () => {
-      const magnet = magnetRef.current;
-      const aligned = step();
-      return `Field Memory | aligned: ${aligned}/${GRAIN_COUNT} | magnet: ${magnet.active ? "active" : "idle"} @ ${magnet.x.toFixed(2)},${magnet.y.toFixed(2)}`;
-    };
+    window.field_memory_render_to_text = () =>
+      `Field Memory | webgl: active | pointer: ${pointer.x.toFixed(2)},${pointer.y.toFixed(2)} | armed: ${pointer.active}`;
 
     window.field_memory_advance = (steps: number) => {
-      for (let i = 0; i < steps; i += 1) {
-        step();
-      }
+      manualOffset += Math.max(0, steps) * 16.67;
+      render();
     };
 
-    const observer = new ResizeObserver(() => {
-      syncSize();
-      step();
-    });
+    const resizeObserver = new ResizeObserver(() => render());
+    resizeObserver.observe(canvas);
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerEnd);
+    canvas.addEventListener("pointercancel", onPointerEnd);
+    canvas.addEventListener("pointerleave", onPointerEnd);
 
-    syncSize();
-    observer.observe(root);
-    rafRef.current = window.requestAnimationFrame(loop);
+    render();
+    rafId = window.requestAnimationFrame(loop);
 
     return () => {
-      observer.disconnect();
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
+      window.cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", onPointerEnd);
+      canvas.removeEventListener("pointercancel", onPointerEnd);
+      canvas.removeEventListener("pointerleave", onPointerEnd);
+      gl.deleteBuffer(positionBuffer);
+      gl.deleteProgram(program);
       delete window.field_memory_render_to_text;
       delete window.field_memory_advance;
     };
   }, []);
 
-  const updateMagnetFromPointer = (clientX: number, clientY: number) => {
-    const root = rootRef.current;
-    if (!root) {
-      return;
-    }
-    const rect = root.getBoundingClientRect();
-    const x = rect.width > 0 ? (clientX - rect.left) / rect.width : 0.5;
-    const y = rect.height > 0 ? (clientY - rect.top) / rect.height : 0.5;
-    magnetRef.current.x = Math.min(1, Math.max(0, x));
-    magnetRef.current.y = Math.min(1, Math.max(0, y));
-  };
-
   return (
-    <div
-      ref={rootRef}
-      className="relative h-full w-full touch-none select-none overflow-hidden rounded-[1.2rem]"
-      onPointerDown={(event) => {
-        pointerIdRef.current = event.pointerId;
-        magnetRef.current.active = true;
-        updateMagnetFromPointer(event.clientX, event.clientY);
-      }}
-      onPointerMove={(event) => {
-        if (pointerIdRef.current !== event.pointerId) {
-          return;
-        }
-        updateMagnetFromPointer(event.clientX, event.clientY);
-      }}
-      onPointerUp={(event) => {
-        if (pointerIdRef.current !== event.pointerId) {
-          return;
-        }
-        magnetRef.current.active = false;
-        pointerIdRef.current = null;
-      }}
-      onPointerCancel={(event) => {
-        if (pointerIdRef.current !== event.pointerId) {
-          return;
-        }
-        magnetRef.current.active = false;
-        pointerIdRef.current = null;
-      }}
-      onPointerLeave={(event) => {
-        if (pointerIdRef.current !== event.pointerId) {
-          return;
-        }
-        magnetRef.current.active = false;
-        pointerIdRef.current = null;
-      }}
-      aria-label="A field of iron grains. Drag to move the magnetic pull and watch the grains align to your direction."
-    >
-      <canvas ref={canvasRef} className="block h-full w-full" />
-      <div className="pointer-events-none absolute left-[7%] top-[8%] rounded border border-[#5e452f]/35 bg-[#f2e7d4]/85 px-2 py-1 font-pixel-square text-[9px] uppercase tracking-[0.18em] text-[#433322]">
-        field memory
-      </div>
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="block h-full w-full touch-none bg-[#01040f]"
+      aria-label="A raw WebGL magnetic signal field. Drag to pull the neon field around the remembered point."
+    />
   );
 }

@@ -8,23 +8,23 @@ export const profile: DailyArtworkProfile = {
     name: "Lejla Marin",
     hometown: "Sarajevo",
     era: "Active 2018-present",
-    medium: "copperplate correspondence, lemon-juice inks, and hand-creased stationery",
+    medium: "shortwave logs, relay diagrams, phosphor burn studies, and intercepted civic audio",
     manifesto: "a letter is finished by the reader's touch",
   },
   visualBrief: {
-    palette: "pastel",
+    palette: "black-ground",
     composition: "typographic",
-    interaction: "drag",
-    renderMode: "css-dom",
-    mood: "tender",
-    material: "document",
+    interaction: "type",
+    renderMode: "text-grid",
+    mood: "clinical",
+    material: "screen",
   },
   explanation:
-    "I write with ink that keeps its silence until a palm lingers long enough to wake it. The page is only half mine; the rest belongs to the person who warms it and waits. I wanted this square to behave like a hesitant reply, appearing in patches where care is patient enough to stay.",
+    "I record messages that arrive already wounded: clipped numbers, empty carriers, a voice buried under municipal static. The reply is not hidden by delicacy here; it is hidden because no one has answered the circuit. When you type, the terminal spends your noise as permission and lets the message resolve in hard, green fragments.",
   interaction:
-    "Drag to warm the paper so the hidden script appears, because the message only exists when your touch completes the act of reading.",
-  medium: "DOM + CSS diffusion field",
+    "Type into the terminal to stabilize the reply, because the piece treats answering as the electrical act that makes the message legible.",
+  medium: "Text grid + CSS terminal surface",
   inspiration:
     "Open Library was blocked for the seeded source index, so I used a representative literary fact: epistolary fiction lets meaning arrive as fragments of private correspondence.",
-  thumbColor: "#ead8bf",
+  thumbColor: "#05070b",
 };
