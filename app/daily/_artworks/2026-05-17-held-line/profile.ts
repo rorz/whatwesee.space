@@ -5,26 +5,26 @@ export const profile: DailyArtworkProfile = {
   slug: "held-line",
   title: "Held Line",
   artist: {
-    name: "Lejla Kostic",
+    name: "Vesna Kovacevic",
     hometown: "Sarajevo",
     era: "Active 2012-present",
-    medium: "carbon-copy ledgers, hand-pressed receipts, and stitched noticeboards",
+    medium: "public-address switches, lacquered warning panels, switchboard choreography, and confiscated civic sirens",
     manifesto: "if nobody holds it, it was never said",
   },
   visualBrief: {
-    palette: "white-ground",
-    composition: "typographic",
+    palette: "primary",
+    composition: "instrument",
     interaction: "hold",
-    renderMode: "css-dom",
-    mood: "severe",
-    material: "document",
+    renderMode: "html-controls",
+    mood: "loud",
+    material: "machine",
   },
   explanation:
-    "I grew up reading news that changed by the hour, then watching one sentence survive because someone kept repeating it by hand. In this square, most lines thin out and vanish unless a palm keeps pressure on them. I do not trust what rises fastest; I trust what someone chooses to hold long enough to stain the paper.",
+    "I wanted the sentence to stop fading like a tasteful archive and start behaving like a public alarm with one very crude button. The line survives only while the body commits pressure to it; release it and the switchboard loses nerve. It is ugly on purpose, because quiet systems are too good at making refusal look procedural.",
   interaction:
-    "Drag to press lines into the board, because the work is about attention as a physical act that decides which statements remain legible.",
-  medium: "Pure CSS + DOM simulation",
+    "Hold the panel down to keep the warning circuit alive, because the work makes attention into a physical load on the machine.",
+  medium: "HTML control surface + CSS alarm grid",
   inspiration:
     "Seed index 2 (Hacker News top of day) was network-blocked, so I used a representative front-page fact: headlines churn quickly and only the lines readers keep returning to stay culturally visible.",
-  thumbColor: "#e6d8bf",
+  thumbColor: "#ff2638",
 };

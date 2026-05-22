@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Float, MeshDistortMaterial, OrbitControls } from "@react-three/drei";
+import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
 
 declare global {
   interface Window {
@@ -9,269 +12,213 @@ declare global {
   }
 }
 
-const GRID = 120;
-const MARGIN_RATIO = 0.18;
-const DIFFUSION = 0.08;
-const DECAY = 0.0022;
-const LOAD_RADIUS = 6;
-const DEPOSIT_RADIUS = 4;
-const DEPOSIT_GAIN = 0.16;
+type Gate = {
+  id: number;
+  color: string;
+  position: [number, number, number];
+  scale: number;
+  seed: number;
+};
 
-function idx(x: number, y: number): number {
-  return y * GRID + x;
+const gateColors = ["#00e5ff", "#ff304f", "#ffe600", "#25ff74", "#ff7a00"];
+
+function gateAt(id: number, point: THREE.Vector3, seed = id * 29): Gate {
+  return {
+    id,
+    color: gateColors[Math.abs(seed) % gateColors.length],
+    position: [point.x, -0.78, point.z],
+    scale: 0.82 + (Math.abs(seed) % 5) * 0.08,
+    seed,
+  };
 }
 
-function clamp01(value: number): number {
-  return value < 0 ? 0 : value > 1 ? 1 : value;
+function TideGate({ gate, surge }: { gate: Gate; surge: number }) {
+  const groupRef = useRef<THREE.Group | null>(null);
+  const armRef = useRef<THREE.Group | null>(null);
+  const vaneRef = useRef<THREE.Mesh | null>(null);
+
+  useFrame(({ clock }) => {
+    const time = clock.elapsedTime + surge * 0.035;
+    if (groupRef.current) {
+      groupRef.current.rotation.y = Math.sin(time * 0.8 + gate.seed) * 0.12;
+      groupRef.current.position.y = gate.position[1] + Math.sin(time * 1.4 + gate.seed) * 0.045;
+    }
+    if (armRef.current) {
+      armRef.current.rotation.z = Math.sin(time * 1.9 + gate.seed) * 0.65;
+    }
+    if (vaneRef.current) {
+      vaneRef.current.rotation.y = time * (1.4 + gate.scale * 0.4);
+      vaneRef.current.rotation.x = Math.sin(time * 2.2) * 0.22;
+    }
+  });
+
+  return (
+    <Float speed={1.25 + gate.scale * 0.35} rotationIntensity={0.25} floatIntensity={0.18}>
+      <group ref={groupRef} position={gate.position} scale={gate.scale}>
+        <mesh position={[0, 0.52, 0]}>
+          <boxGeometry args={[0.36, 1.78, 0.22]} />
+          <meshStandardMaterial color="#191a22" metalness={0.72} roughness={0.22} emissive={gate.color} emissiveIntensity={0.14} />
+        </mesh>
+        <mesh position={[0, 1.5, 0]}>
+          <sphereGeometry args={[0.28, 32, 16]} />
+          <MeshDistortMaterial color={gate.color} emissive={gate.color} emissiveIntensity={1.1} roughness={0.16} metalness={0.28} distort={0.34} speed={2.4} />
+        </mesh>
+        <group ref={armRef} position={[0, 0.72, 0.03]}>
+          <mesh position={[0.38, 0, 0]}>
+            <boxGeometry args={[0.92, 0.08, 0.1]} />
+            <meshStandardMaterial color="#f2f4ff" emissive={gate.color} emissiveIntensity={0.46} roughness={0.3} />
+          </mesh>
+          <mesh ref={vaneRef} position={[0.88, 0, 0]}>
+            <octahedronGeometry args={[0.18, 0]} />
+            <meshStandardMaterial color={gate.color} emissive={gate.color} emissiveIntensity={0.9} roughness={0.2} metalness={0.4} />
+          </mesh>
+        </group>
+        <mesh rotation={[Math.PI * 0.5, 0, 0]}>
+          <torusGeometry args={[0.68, 0.025, 12, 80]} />
+          <meshStandardMaterial color={gate.color} emissive={gate.color} emissiveIntensity={0.95} roughness={0.26} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+function FloodRoom({
+  gates,
+  surge,
+  onPlant,
+}: {
+  gates: Gate[];
+  surge: number;
+  onPlant: (point: THREE.Vector3) => void;
+}) {
+  const waterRef = useRef<THREE.Mesh | null>(null);
+  const frameRefs = useRef<Array<THREE.Mesh | null>>([]);
+
+  const frames = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, index) => ({
+        x: -3.4 + index * 0.76,
+        phase: index * 0.57,
+        color: index % 2 === 0 ? "#00e5ff" : "#ff304f",
+      })),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const time = clock.elapsedTime + surge * 0.03;
+    if (waterRef.current) {
+      waterRef.current.position.y = -0.92 + Math.sin(time * 0.9) * 0.035 + Math.min(0.22, surge * 0.002);
+      waterRef.current.rotation.z = Math.sin(time * 0.23) * 0.025;
+    }
+    frameRefs.current.forEach((frame, index) => {
+      if (!frame) return;
+      frame.position.y = -0.38 + Math.sin(time * 1.7 + frames[index].phase) * 0.18;
+    });
+  });
+
+  const handlePlant = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    onPlant(event.point);
+  };
+
+  return (
+    <>
+      <color attach="background" args={["#05050b"]} />
+      <fog attach="fog" args={["#05050b", 4.2, 11]} />
+      <ambientLight intensity={0.38} />
+      <pointLight position={[0, 3.8, 2.8]} intensity={4.8} color="#ffe600" />
+      <pointLight position={[-4, 1.5, 2.4]} intensity={3.2} color="#00e5ff" />
+      <pointLight position={[4, 1.4, -2.2]} intensity={3.8} color="#ff304f" />
+
+      <mesh ref={waterRef} rotation={[-Math.PI * 0.5, 0, 0]} position={[0, -0.92, 0]} onPointerDown={handlePlant}>
+        <planeGeometry args={[8.6, 8.6, 42, 42]} />
+        <MeshDistortMaterial color="#051f38" emissive="#006b8d" emissiveIntensity={0.48} roughness={0.08} metalness={0.18} distort={0.25} speed={1.4} />
+      </mesh>
+
+      <mesh rotation={[-Math.PI * 0.5, 0, 0]} position={[0, -0.88, 0]} onPointerDown={handlePlant}>
+        <planeGeometry args={[8.8, 8.8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
+      {frames.map((frame, index) => (
+        <mesh
+          key={frame.x}
+          ref={(node) => {
+            frameRefs.current[index] = node;
+          }}
+          position={[frame.x, -0.38, -2.7]}
+        >
+          <boxGeometry args={[0.08, 1.9, 0.18]} />
+          <meshStandardMaterial color="#1d1f27" metalness={0.8} roughness={0.24} emissive={frame.color} emissiveIntensity={0.32} />
+        </mesh>
+      ))}
+
+      <mesh position={[0, -0.96, -3.2]}>
+        <boxGeometry args={[7.6, 0.18, 0.35]} />
+        <meshStandardMaterial color="#2c2c34" metalness={0.86} roughness={0.18} emissive="#ff304f" emissiveIntensity={0.2} />
+      </mesh>
+      <mesh position={[0, 1.85, -3.25]}>
+        <boxGeometry args={[7.8, 0.22, 0.26]} />
+        <meshStandardMaterial color="#2b2b34" metalness={0.82} roughness={0.2} emissive="#ffe600" emissiveIntensity={0.22} />
+      </mesh>
+
+      {gates.map((gate) => (
+        <TideGate key={gate.id} gate={gate} surge={surge} />
+      ))}
+
+      <OrbitControls enablePan={false} enableZoom={false} rotateSpeed={0.48} minPolarAngle={Math.PI * 0.24} maxPolarAngle={Math.PI * 0.68} />
+    </>
+  );
 }
 
 export default function MarginTide() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const surgeRef = useRef(0);
+  const gatesRef = useRef<Gate[]>([]);
+  const [surge, setSurge] = useState(0);
+  const [gates, setGates] = useState<Gate[]>(() => [
+    gateAt(0, new THREE.Vector3(-1.9, -0.8, -0.5), 17),
+    gateAt(1, new THREE.Vector3(0.2, -0.8, 0.4), 31),
+    gateAt(2, new THREE.Vector3(1.9, -0.8, -0.8), 47),
+  ]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    gatesRef.current = gates;
+  }, [gates]);
 
-    const ctx = canvas.getContext("2d", { alpha: false });
-    if (!ctx) return;
+  useEffect(() => {
+    surgeRef.current = surge;
+  }, [surge]);
 
-    const ink = new Float32Array(GRID * GRID);
-    const buffer = new Float32Array(GRID * GRID);
-    let rafId = 0;
-    let displaySize = 0;
-    let resizeObserver: ResizeObserver | null = null;
-
-    const renderCanvas = document.createElement("canvas");
-    renderCanvas.width = GRID;
-    renderCanvas.height = GRID;
-    const renderCtx = renderCanvas.getContext("2d");
-    if (!renderCtx) return;
-    const renderImage = renderCtx.createImageData(GRID, GRID);
-
-    const pointer = { down: false, loaded: false, x: 0, y: 0 };
-
-    const seedMargins = () => {
-      for (let y = 0; y < GRID; y += 1) {
-        for (let x = 0; x < GRID; x += 1) {
-          const nx = x / (GRID - 1);
-          const ny = y / (GRID - 1);
-          const edge = nx < MARGIN_RATIO || nx > 1 - MARGIN_RATIO || ny < MARGIN_RATIO || ny > 1 - MARGIN_RATIO;
-          if (!edge) continue;
-          const stripe = Math.sin(x * 0.23) * Math.cos(y * 0.19);
-          if (stripe > 0.25) {
-            ink[idx(x, y)] = 0.4 + stripe * 0.3;
-          }
-        }
-      }
-    };
-
-    const fitCanvas = () => {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const size = Math.max(1, Math.floor(Math.min(rect.width, rect.height)));
-      displaySize = size;
-      canvas.width = Math.floor(size * dpr);
-      canvas.height = Math.floor(size * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-    };
-
-    const toGrid = (clientX: number, clientY: number) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((clientX - rect.left) / rect.width) * GRID;
-      const y = ((clientY - rect.top) / rect.height) * GRID;
-      return {
-        x: Math.max(0, Math.min(GRID - 1, Math.floor(x))),
-        y: Math.max(0, Math.min(GRID - 1, Math.floor(y))),
-      };
-    };
-
-    const isMargin = (x: number, y: number) => {
-      const nx = x / (GRID - 1);
-      const ny = y / (GRID - 1);
-      return nx < MARGIN_RATIO || nx > 1 - MARGIN_RATIO || ny < MARGIN_RATIO || ny > 1 - MARGIN_RATIO;
-    };
-
-    const loadInk = (x: number, y: number) => {
-      const r2 = LOAD_RADIUS * LOAD_RADIUS;
-      const x0 = Math.max(0, x - LOAD_RADIUS);
-      const x1 = Math.min(GRID - 1, x + LOAD_RADIUS);
-      const y0 = Math.max(0, y - LOAD_RADIUS);
-      const y1 = Math.min(GRID - 1, y + LOAD_RADIUS);
-      for (let yy = y0; yy <= y1; yy += 1) {
-        for (let xx = x0; xx <= x1; xx += 1) {
-          const dx = xx - x;
-          const dy = yy - y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 > r2) continue;
-          const falloff = 1 - d2 / r2;
-          ink[idx(xx, yy)] = clamp01(ink[idx(xx, yy)] + falloff * 0.08);
-        }
-      }
-    };
-
-    const depositInk = (x: number, y: number) => {
-      if (!pointer.loaded) return;
-      const r2 = DEPOSIT_RADIUS * DEPOSIT_RADIUS;
-      const x0 = Math.max(0, x - DEPOSIT_RADIUS);
-      const x1 = Math.min(GRID - 1, x + DEPOSIT_RADIUS);
-      const y0 = Math.max(0, y - DEPOSIT_RADIUS);
-      const y1 = Math.min(GRID - 1, y + DEPOSIT_RADIUS);
-      for (let yy = y0; yy <= y1; yy += 1) {
-        for (let xx = x0; xx <= x1; xx += 1) {
-          const dx = xx - x;
-          const dy = yy - y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 > r2) continue;
-          const falloff = 1 - d2 / r2;
-          ink[idx(xx, yy)] = clamp01(ink[idx(xx, yy)] + falloff * DEPOSIT_GAIN);
-        }
-      }
-    };
-
-    const step = () => {
-      for (let y = 0; y < GRID; y += 1) {
-        for (let x = 0; x < GRID; x += 1) {
-          const i = idx(x, y);
-          const current = ink[i];
-          const left = ink[idx(x > 0 ? x - 1 : x, y)];
-          const right = ink[idx(x < GRID - 1 ? x + 1 : x, y)];
-          const up = ink[idx(x, y > 0 ? y - 1 : y)];
-          const down = ink[idx(x, y < GRID - 1 ? y + 1 : y)];
-          const avg = (left + right + up + down) * 0.25;
-          const diffused = current + (avg - current) * DIFFUSION;
-          buffer[i] = diffused > DECAY ? diffused - DECAY : 0;
-        }
-      }
-      ink.set(buffer);
-    };
-
-    const render = () => {
-      const data = renderImage.data;
-      for (let y = 0; y < GRID; y += 1) {
-        for (let x = 0; x < GRID; x += 1) {
-          const i = idx(x, y);
-          const value = ink[i];
-          const base = 242 - Math.sin(y * 0.15) * 2;
-          const centerFadeX = Math.min(1, Math.abs(x - GRID * 0.5) / (GRID * 0.5));
-          const centerFadeY = Math.min(1, Math.abs(y - GRID * 0.5) / (GRID * 0.5));
-          const centerFade = Math.max(centerFadeX, centerFadeY);
-          const edgeTint = (1 - centerFade) * 6;
-          const inkAlpha = Math.min(1, value * 1.3);
-          data[i * 4 + 0] = base - edgeTint - inkAlpha * 170;
-          data[i * 4 + 1] = base - 8 - edgeTint - inkAlpha * 155;
-          data[i * 4 + 2] = base - 22 - edgeTint - inkAlpha * 135;
-          data[i * 4 + 3] = 255;
-        }
-      }
-      renderCtx.putImageData(renderImage, 0, 0);
-      ctx.fillStyle = "#f4ecdc";
-      ctx.fillRect(0, 0, displaySize, displaySize);
-      ctx.drawImage(renderCanvas, 0, 0, displaySize, displaySize);
-      ctx.strokeStyle = "rgba(94,72,50,0.24)";
-      ctx.lineWidth = Math.max(1, displaySize * 0.0022);
-      const inset = displaySize * MARGIN_RATIO;
-      ctx.strokeRect(inset, inset, displaySize - inset * 2, displaySize - inset * 2);
-    };
-
-    const onPointerDown = (event: PointerEvent) => {
-      event.preventDefault();
-      const { x, y } = toGrid(event.clientX, event.clientY);
-      pointer.down = true;
-      pointer.x = x;
-      pointer.y = y;
-      pointer.loaded = isMargin(x, y);
-      if (pointer.loaded) loadInk(x, y);
-      depositInk(x, y);
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (!pointer.down) return;
-      const { x, y } = toGrid(event.clientX, event.clientY);
-      pointer.x = x;
-      pointer.y = y;
-      if (!pointer.loaded && isMargin(x, y)) {
-        pointer.loaded = true;
-      }
-      if (pointer.loaded && isMargin(x, y)) {
-        loadInk(x, y);
-      }
-      depositInk(x, y);
-    };
-
-    const stopPointer = () => {
-      pointer.down = false;
-      pointer.loaded = false;
-    };
-
-    const loop = () => {
-      step();
-      render();
-      rafId = window.requestAnimationFrame(loop);
-    };
-
-    window.margin_tide_render_to_text = () => {
-      let total = 0;
-      let center = 0;
-      let centerCells = 0;
-      for (let y = 0; y < GRID; y += 1) {
-        for (let x = 0; x < GRID; x += 1) {
-          const value = ink[idx(x, y)];
-          total += value;
-          const centerBand = x > GRID * 0.3 && x < GRID * 0.7 && y > GRID * 0.3 && y < GRID * 0.7;
-          if (centerBand) {
-            center += value;
-            centerCells += 1;
-          }
-        }
-      }
-      return `Margin Tide | loaded: ${pointer.loaded ? 1 : 0} | density: ${(total / (GRID * GRID)).toFixed(3)} | center: ${(center / Math.max(1, centerCells)).toFixed(3)}`;
-    };
+  useEffect(() => {
+    window.margin_tide_render_to_text = () =>
+      `Margin Tide | gates:${gatesRef.current.length} | surge:${surgeRef.current}`;
 
     window.margin_tide_advance = (steps: number) => {
-      for (let i = 0; i < steps; i += 1) {
-        step();
-      }
-      render();
+      const next = surgeRef.current + Math.max(0, steps);
+      surgeRef.current = next;
+      setSurge(next);
     };
 
-    seedMargins();
-    fitCanvas();
-    render();
-
-    resizeObserver = new ResizeObserver(() => {
-      fitCanvas();
-      render();
-    });
-    resizeObserver.observe(canvas);
-
-    canvas.addEventListener("pointerdown", onPointerDown);
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", stopPointer);
-    canvas.addEventListener("pointercancel", stopPointer);
-    canvas.addEventListener("pointerleave", stopPointer);
-
-    rafId = window.requestAnimationFrame(loop);
-
     return () => {
-      window.cancelAnimationFrame(rafId);
-      resizeObserver?.disconnect();
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerup", stopPointer);
-      canvas.removeEventListener("pointercancel", stopPointer);
-      canvas.removeEventListener("pointerleave", stopPointer);
       delete window.margin_tide_render_to_text;
       delete window.margin_tide_advance;
     };
   }, []);
 
+  const addGate = (point: THREE.Vector3) => {
+    setGates((current) => {
+      const nextIndex = current.length;
+      const next = gateAt(nextIndex, point, Math.round((point.x * 83 + point.z * 151 + nextIndex * 43) * 10));
+      return [...current.slice(-8), next];
+    });
+    setSurge((current) => current + 11);
+  };
+
   return (
-    <canvas
-      ref={canvasRef}
-      className="block h-full w-full touch-none select-none"
-      aria-label="A page where margin notes can be pulled toward the center. Drag from the edges inward to carry the annotations across the page."
-    />
+    <div className="h-full w-full overflow-hidden bg-[#05050b]">
+      <Canvas camera={{ position: [0, 3.4, 6.2], fov: 47 }} dpr={[1, 2]} gl={{ antialias: true, alpha: false }}>
+        <FloodRoom gates={gates} surge={surge} onPlant={addGate} />
+      </Canvas>
+    </div>
   );
 }

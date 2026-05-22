@@ -9,220 +9,181 @@ declare global {
   }
 }
 
-const GRID = 22;
-const DIFFUSION = 0.14;
-const DECAY = 0.006;
-const RUB_RADIUS = 2.4;
-const RUB_GAIN = 0.32;
-
-function clamp01(value: number): number {
-  return value < 0 ? 0 : value > 1 ? 1 : value;
-}
-
-function idx(x: number, y: number): number {
-  return y * GRID + x;
-}
-
-const ROW_LABELS = [
-  "06:14 ilidza",
-  "06:42 hrasnica",
-  "07:08 dobrinja",
-  "07:31 alipasino",
-  "08:02 old town",
-  "08:37 bistrik",
-  "09:10 skenderija",
-  "09:46 mejtas",
-  "10:22 marijin",
-  "11:05 gravica",
+const routes = [
+  { name: "NOON LOOP", color: "#ffcc00", path: "M 7 72 C 22 26, 43 21, 52 54 S 80 91, 93 35" },
+  { name: "CIVIC TEETH", color: "#00d5ff", path: "M 9 24 C 26 68, 41 69, 54 31 S 75 16, 91 77" },
+  { name: "PLATFORM 0", color: "#ff3b5c", path: "M 6 48 C 24 42, 34 88, 51 63 S 72 23, 94 52" },
+  { name: "LATE SAINT", color: "#42ff6b", path: "M 14 90 C 28 53, 38 37, 51 43 S 77 64, 86 9" },
 ];
 
-function toGrid(clientX: number, clientY: number, rect: DOMRect): { x: number; y: number } {
-  const x = ((clientX - rect.left) / rect.width) * (GRID - 1);
-  const y = ((clientY - rect.top) / rect.height) * (GRID - 1);
-  return { x, y };
+function clamp(value: number, min: number, max: number): number {
+  return value < min ? min : value > max ? max : value;
 }
 
 export default function PlatformRubbing() {
   const surfaceRef = useRef<HTMLDivElement | null>(null);
-  const fieldRef = useRef<Float32Array>(new Float32Array(GRID * GRID));
-  const bufferRef = useRef<Float32Array>(new Float32Array(GRID * GRID));
-  const pointerDownRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
-  const frameRef = useRef(0);
-  const [levels, setLevels] = useState<number[]>(() => Array.from({ length: GRID * GRID }, () => 0));
+  const dragRef = useRef(false);
+  const signalRef = useRef({ x: 50, y: 50 });
+  const phaseRef = useRef(0);
+  const [signal, setSignal] = useState({ x: 50, y: 50 });
+  const [phase, setPhase] = useState(0);
 
-  const lineNodes = useMemo(
+  const tiles = useMemo(
     () =>
-      ROW_LABELS.map((label, index) => ({
-        y: 11 + index * 8.6,
-        text: label,
+      Array.from({ length: 30 }, (_, index) => ({
+        left: 6 + ((index * 23) % 86),
+        top: 7 + ((index * 37) % 82),
+        width: 7 + (index % 5) * 2.2,
+        color: routes[index % routes.length].color,
+        label: `${String((index * 7) % 99).padStart(2, "0")}`,
       })),
     [],
   );
 
   useEffect(() => {
-    const field = fieldRef.current;
-    const buffer = bufferRef.current;
+    let rafId = 0;
 
-    const rebuild = () => {
-      setLevels(Array.from(field));
-    };
-
-    const step = () => {
-      for (let y = 0; y < GRID; y += 1) {
-        for (let x = 0; x < GRID; x += 1) {
-          const i = idx(x, y);
-          const current = field[i];
-          const left = field[idx(x > 0 ? x - 1 : x, y)];
-          const right = field[idx(x < GRID - 1 ? x + 1 : x, y)];
-          const up = field[idx(x, y > 0 ? y - 1 : y)];
-          const down = field[idx(x, y < GRID - 1 ? y + 1 : y)];
-          const neighborAverage = (left + right + up + down) * 0.25;
-          const diffuse = current + (neighborAverage - current) * DIFFUSION;
-          buffer[i] = clamp01(diffuse > DECAY ? diffuse - DECAY : 0);
-        }
+    const step = (boost = 1) => {
+      phaseRef.current += 0.018 * boost;
+      if (Math.floor(phaseRef.current * 60) % 2 === 0) {
+        setPhase(phaseRef.current);
       }
-      field.set(buffer);
     };
 
     const loop = () => {
       step();
-      frameRef.current += 1;
-      if (frameRef.current % 2 === 0) {
-        rebuild();
-      }
-      rafRef.current = window.requestAnimationFrame(loop);
+      rafId = window.requestAnimationFrame(loop);
     };
 
-    window.platform_rubbing_render_to_text = () => {
-      let openCells = 0;
-      let sum = 0;
-      for (let i = 0; i < field.length; i += 1) {
-        const value = field[i];
-        if (value > 0.12) openCells += 1;
-        sum += value;
-      }
-      return `Platform Rubbing | revealed: ${openCells}/${GRID * GRID} | abrasion: ${(sum / (GRID * GRID)).toFixed(3)}`;
-    };
+    window.platform_rubbing_render_to_text = () =>
+      `Platform Rubbing | signal:${signalRef.current.x.toFixed(1)},${signalRef.current.y.toFixed(1)} | phase:${phaseRef.current.toFixed(2)}`;
 
     window.platform_rubbing_advance = (steps: number) => {
       for (let i = 0; i < steps; i += 1) {
-        step();
+        step(2.5);
       }
-      rebuild();
+      setPhase(phaseRef.current);
+      setSignal({ ...signalRef.current });
     };
 
-    rebuild();
-    rafRef.current = window.requestAnimationFrame(loop);
+    rafId = window.requestAnimationFrame(loop);
 
     return () => {
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
+      window.cancelAnimationFrame(rafId);
       delete window.platform_rubbing_render_to_text;
       delete window.platform_rubbing_advance;
     };
   }, []);
 
-  const applyRub = (clientX: number, clientY: number) => {
+  const moveSignal = (clientX: number, clientY: number) => {
     const el = surfaceRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const { x, y } = toGrid(clientX, clientY, rect);
-    const field = fieldRef.current;
-    const r2 = RUB_RADIUS * RUB_RADIUS;
-    const x0 = Math.max(0, Math.floor(x - RUB_RADIUS));
-    const x1 = Math.min(GRID - 1, Math.ceil(x + RUB_RADIUS));
-    const y0 = Math.max(0, Math.floor(y - RUB_RADIUS));
-    const y1 = Math.min(GRID - 1, Math.ceil(y + RUB_RADIUS));
-
-    for (let gy = y0; gy <= y1; gy += 1) {
-      for (let gx = x0; gx <= x1; gx += 1) {
-        const dx = gx - x;
-        const dy = gy - y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 > r2) continue;
-        const falloff = 1 - d2 / r2;
-        const i = idx(gx, gy);
-        field[i] = clamp01(field[i] + RUB_GAIN * falloff);
-      }
-    }
+    const next = {
+      x: clamp(((clientX - rect.left) / rect.width) * 100, 5, 95),
+      y: clamp(((clientY - rect.top) / rect.height) * 100, 5, 95),
+    };
+    signalRef.current = next;
+    phaseRef.current += 0.2;
+    setSignal(next);
+    setPhase(phaseRef.current);
   };
 
   return (
     <div
       ref={surfaceRef}
-      className="relative h-full w-full touch-none select-none overflow-hidden"
+      className="relative h-full w-full touch-none select-none overflow-hidden bg-[#080b0f]"
       onPointerDown={(event) => {
-        pointerDownRef.current = true;
-        applyRub(event.clientX, event.clientY);
+        dragRef.current = true;
+        moveSignal(event.clientX, event.clientY);
       }}
       onPointerMove={(event) => {
-        if (!pointerDownRef.current) return;
-        applyRub(event.clientX, event.clientY);
+        if (!dragRef.current) return;
+        moveSignal(event.clientX, event.clientY);
       }}
       onPointerUp={() => {
-        pointerDownRef.current = false;
+        dragRef.current = false;
       }}
       onPointerCancel={() => {
-        pointerDownRef.current = false;
+        dragRef.current = false;
       }}
       onPointerLeave={() => {
-        pointerDownRef.current = false;
+        dragRef.current = false;
       }}
-      aria-label="A station board under paper dust. Drag to rub and reveal route names that commuters have worn into memory."
+      aria-label="A metallic transit map with a signal puck that reroutes the board when dragged."
     >
-      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" role="img" aria-hidden>
-        <rect x="0" y="0" width="100" height="100" fill="#e8dcc8" />
-        <rect x="6" y="6" width="88" height="88" fill="#1f2124" rx="1.4" />
-        <rect x="9" y="9" width="82" height="82" fill="#272a2f" />
-        {lineNodes.map((line, index) => (
-          <g key={line.text}>
-            <line x1="12" y1={line.y} x2="88" y2={line.y} stroke="#3c4048" strokeWidth="0.36" />
-            <text
-              x="14"
-              y={line.y - 1.5}
-              fill="#dbddd8"
-              style={{
-                fontSize: "3.2px",
-                letterSpacing: "0.6px",
-                textTransform: "uppercase",
-                fontFamily: "var(--font-geist-mono)",
-              }}
-            >
-              {line.text}
-            </text>
-            <text
-              x="84"
-              y={line.y - 1.5}
-              fill="#f4bf4f"
-              textAnchor="end"
-              style={{
-                fontSize: "3.2px",
-                letterSpacing: "0.5px",
-                fontFamily: "var(--font-geist-mono)",
-              }}
-            >
-              {String(index + 1).padStart(2, "0")}
-            </text>
-          </g>
-        ))}
-      </svg>
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 50%, rgba(0,213,255,0.14), transparent 31%), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 18px), linear-gradient(135deg, #10151b, #050608)",
+        }}
+      />
 
-      <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${GRID}, minmax(0, 1fr))` }}>
-        {levels.map((value, index) => {
-          const opacity = 0.16 + (1 - value) * 0.84;
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" role="img" aria-hidden>
+        <rect x="4" y="4" width="92" height="92" fill="none" stroke="#d7dde6" strokeWidth="1.2" opacity="0.34" />
+        <rect x="8" y="8" width="84" height="84" fill="none" stroke="#3b4554" strokeWidth="0.7" />
+        {routes.map((route, index) => {
+          const intensity = 0.48 + Math.sin(phase * 2.2 + index + signal.x * 0.03) * 0.16;
           return (
-            <span
-              key={`dust-${index}`}
-              style={{
-                opacity,
-                background: "#d6c9b2",
-                boxShadow: "inset 0 0 0 0.2px rgba(173, 155, 126, 0.45)",
-              }}
-            />
+            <g key={route.name}>
+              <path d={route.path} fill="none" stroke="#030407" strokeWidth="8.5" strokeLinecap="round" />
+              <path
+                d={route.path}
+                fill="none"
+                stroke={route.color}
+                strokeWidth={3.4 + intensity * 1.4}
+                strokeLinecap="round"
+                strokeDasharray={`${8 + index * 2} ${6 + index}`}
+                strokeDashoffset={-(phase * 42 + index * 7)}
+                opacity={0.76 + intensity * 0.2}
+              />
+            </g>
           );
         })}
+        <circle cx={signal.x} cy={signal.y} r="9.5" fill="#f4f7fb" opacity="0.92" />
+        <circle cx={signal.x} cy={signal.y} r="6.2" fill="#ff3b5c" />
+        <circle cx={signal.x} cy={signal.y} r="13.5" fill="none" stroke="#ffcc00" strokeWidth="1.4" strokeDasharray="2 2" />
+      </svg>
+
+      {tiles.map((tile, index) => {
+        const dx = tile.left - signal.x;
+        const dy = tile.top - signal.y;
+        const near = Math.max(0, 1 - Math.hypot(dx, dy) / 52);
+        return (
+          <div
+            key={`${tile.label}-${index}`}
+            className="absolute flex items-center justify-center border border-white/20 bg-[#111821] font-mono text-[clamp(0.46rem,1.5vw,0.78rem)] font-black text-white shadow-[0_0_18px_rgba(0,0,0,0.55)]"
+            style={{
+              left: `${tile.left}%`,
+              top: `${tile.top}%`,
+              width: `${tile.width}%`,
+              height: "5.4%",
+              color: near > 0.4 ? "#050608" : "#eef3f8",
+              background: near > 0.4 ? tile.color : "#111821",
+              transform: `translate(-50%, -50%) rotate(${Math.sin(phase + index) * 9 + near * 15}deg) scale(${1 + near * 0.18})`,
+              boxShadow: near > 0.4 ? `0 0 ${16 + near * 32}px ${tile.color}` : "0 0 18px rgba(0,0,0,0.55)",
+              zIndex: near > 0.4 ? 5 : 2,
+            }}
+          >
+            {tile.label}
+          </div>
+        );
+      })}
+
+      <div className="absolute left-[5%] right-[5%] top-[5%] grid grid-cols-4 gap-[1.5%]">
+        {routes.map((route, index) => (
+          <div
+            key={route.name}
+            className="truncate border border-white/20 bg-[#030407] px-[3%] py-[4%] text-center font-mono text-[clamp(0.44rem,1.4vw,0.76rem)] font-black uppercase"
+            style={{
+              color: route.color,
+              transform: `translateY(${Math.sin(phase * 1.8 + index) * 5}px)`,
+            }}
+          >
+            {route.name}
+          </div>
+        ))}
       </div>
     </div>
   );

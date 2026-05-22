@@ -5,26 +5,26 @@ export const profile: DailyArtworkProfile = {
   slug: "platform-rubbing",
   title: "Platform Rubbing",
   artist: {
-    name: "Lejla Arslan",
+    name: "Nermin Basic",
     hometown: "Sarajevo",
     era: "Active 2018-present",
-    medium: "pencil rubbings on transit notices and stitched ticket ledgers",
+    medium: "tram enamel, traffic bollards, laminated strike maps, and queue-barrier hardware",
     manifesto: "the city speaks clearest through what commuters wear away",
   },
   visualBrief: {
-    palette: "institutional",
+    palette: "metallic",
     composition: "map",
     interaction: "drag",
     renderMode: "mixed-dom",
-    mood: "deadpan",
+    mood: "comic",
     material: "transit",
   },
   explanation:
-    "I keep taking graphite to station notices because the official text is never the full message. The useful parts are the smudges from sleeves, the names half-erased by waiting hands, the places people touched while deciding where to go. I built this square the same way: the timetable is present from the start, but it only speaks when someone rubs the surface with intention.",
+    "The old version waited for someone to uncover a route; this one panics first. The map is a municipal mouth full of colored tracks, loose route teeth, and a signal puck that keeps making confident decisions. Drag the signal and the timetable becomes less like information and more like a small transport authority having a public episode.",
   interaction:
-    "Drag to rub the board, because this piece is about recovering a route map from commuter wear, not passively looking at a finished sign.",
-  medium: "DOM grid abrasion field + SVG timetable lines",
+    "Drag the signal puck to reroute the board, because the piece treats commuter memory as an unstable machine rather than a recovered surface.",
+  medium: "Mixed DOM + SVG transit apparatus",
   inspiration:
     "The seeded source was Random Wikipedia (index 0), but network access was blocked; I used a representative fact that random entries often surface obscure station pages where almost everything meaningful is in small local details.",
-  thumbColor: "#cec3ad",
+  thumbColor: "#00d5ff",
 };

@@ -9,242 +9,165 @@ declare global {
   }
 }
 
-const GRID_X = 24;
-const GRID_Y = 18;
-const CELL_COUNT = GRID_X * GRID_Y;
-const HOLD_FRAMES = 96;
-const DIFFUSION = 0.1;
-const DECAY = 0.0048;
-const DEPOSIT_RADIUS = 1.8;
-const DEPOSIT_GAIN = 0.34;
-
-function idx(x: number, y: number): number {
-  return y * GRID_X + x;
-}
+const LAMP_COUNT = 48;
+const labels = ["HOLD", "LINE", "PUBLIC", "ALARM", "REPEAT", "UNTIL", "TRUE", "LOUD"];
 
 function clamp01(value: number): number {
   return value < 0 ? 0 : value > 1 ? 1 : value;
 }
 
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 export default function HeldLine() {
-  const surfaceRef = useRef<HTMLDivElement | null>(null);
-  const valuesRef = useRef<Float32Array>(new Float32Array(CELL_COUNT));
-  const baseRef = useRef<Float32Array>(new Float32Array(CELL_COUNT));
-  const bufferRef = useRef<Float32Array>(new Float32Array(CELL_COUNT));
-  const holdRef = useRef<Uint16Array>(new Uint16Array(CELL_COUNT));
-  const pointerDownRef = useRef(false);
+  const pressureRef = useRef(0);
   const frameRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const [snapshot, setSnapshot] = useState<{
-    values: Float32Array;
-    holds: Uint16Array;
-  }>({
-    values: new Float32Array(CELL_COUNT),
-    holds: new Uint16Array(CELL_COUNT),
-  });
+  const holdingRef = useRef(false);
+  const [pressure, setPressure] = useState(0);
+  const [frame, setFrame] = useState(0);
 
-  const glyphWidths = useMemo(() => {
-    const rand = mulberry32(0xd18573a2);
-    return Array.from({ length: CELL_COUNT }, (_, i) => {
-      const x = i % GRID_X;
-      const rowBias = (Math.sin((Math.floor(i / GRID_X) + 1) * 0.84) + 1) * 0.11;
-      return 0.4 + rowBias + rand() * (x % 5 === 0 ? 0.45 : 0.32);
-    });
-  }, []);
+  const lamps = useMemo(
+    () =>
+      Array.from({ length: LAMP_COUNT }, (_, index) => ({
+        x: index % 8,
+        y: Math.floor(index / 8),
+        color: ["#ff2638", "#ffe600", "#0cf6ff", "#20ff78"][index % 4],
+        phase: index * 0.41,
+      })),
+    [],
+  );
 
   useEffect(() => {
-    const values = valuesRef.current;
-    const base = baseRef.current;
-    const buffer = bufferRef.current;
-    const holds = holdRef.current;
-    const syncSnapshot = () => {
-      setSnapshot({
-        values: values.slice(),
-        holds: holds.slice(),
-      });
-    };
+    let rafId = 0;
 
-    for (let y = 0; y < GRID_Y; y += 1) {
-      for (let x = 0; x < GRID_X; x += 1) {
-        const i = idx(x, y);
-        const baseValue = y % 3 === 0 ? 0.13 : y % 3 === 1 ? 0.08 : 0.045;
-        const rhythm = ((x * 17 + y * 11) % 7) * 0.008;
-        base[i] = baseValue;
-        values[i] = baseValue + rhythm;
-      }
-    }
-
-    const step = () => {
-      for (let y = 0; y < GRID_Y; y += 1) {
-        for (let x = 0; x < GRID_X; x += 1) {
-          const i = idx(x, y);
-          const current = values[i];
-          const left = values[idx(x > 0 ? x - 1 : x, y)];
-          const right = values[idx(x < GRID_X - 1 ? x + 1 : x, y)];
-          const up = values[idx(x, y > 0 ? y - 1 : y)];
-          const down = values[idx(x, y < GRID_Y - 1 ? y + 1 : y)];
-          const neighborAverage = (left + right + up + down) * 0.25;
-          const diffuse = current + (neighborAverage - current) * DIFFUSION;
-          const heldFrames = holds[i];
-          const holdFloor = heldFrames > 0 ? 0.3 + (heldFrames / HOLD_FRAMES) * 0.35 : 0;
-          const floor = holdFloor > base[i] ? holdFloor : base[i];
-          const faded = diffuse > DECAY ? diffuse - DECAY : 0;
-          buffer[i] = clamp01(faded < floor ? floor : faded);
-          if (heldFrames > 0) {
-            holds[i] = heldFrames - 1;
-          }
-        }
-      }
-      values.set(buffer);
+    const step = (boost = 0) => {
+      const direction = holdingRef.current ? 0.032 : -0.018;
+      pressureRef.current = clamp01(pressureRef.current + direction + boost);
       frameRef.current += 1;
       if (frameRef.current % 2 === 0) {
-        syncSnapshot();
+        setPressure(pressureRef.current);
+        setFrame(frameRef.current);
       }
     };
 
     const loop = () => {
       step();
-      rafRef.current = window.requestAnimationFrame(loop);
+      rafId = window.requestAnimationFrame(loop);
     };
 
-    window.held_line_render_to_text = () => {
-      let active = 0;
-      let held = 0;
-      let density = 0;
-      for (let i = 0; i < CELL_COUNT; i += 1) {
-        const value = values[i];
-        density += value;
-        if (value > 0.22) {
-          active += 1;
-        }
-        if (holds[i] > 0) {
-          held += 1;
-        }
-      }
-      return `Held Line | active: ${active}/${CELL_COUNT} | held: ${held} | density: ${(density / CELL_COUNT).toFixed(3)}`;
-    };
+    window.held_line_render_to_text = () =>
+      `Held Line | pressure:${pressureRef.current.toFixed(3)} | holding:${holdingRef.current ? 1 : 0} | frame:${frameRef.current}`;
 
     window.held_line_advance = (steps: number) => {
       for (let i = 0; i < steps; i += 1) {
-        step();
+        step(0.006);
       }
-      syncSnapshot();
+      setPressure(pressureRef.current);
+      setFrame(frameRef.current);
     };
 
-    syncSnapshot();
-    rafRef.current = window.requestAnimationFrame(loop);
+    rafId = window.requestAnimationFrame(loop);
 
     return () => {
-      if (rafRef.current !== null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
+      window.cancelAnimationFrame(rafId);
       delete window.held_line_render_to_text;
       delete window.held_line_advance;
     };
   }, []);
 
-  const pressLine = (clientX: number, clientY: number) => {
-    const surface = surfaceRef.current;
-    if (!surface) return;
-    const rect = surface.getBoundingClientRect();
-    const gx = ((clientX - rect.left) / rect.width) * (GRID_X - 1);
-    const gy = ((clientY - rect.top) / rect.height) * (GRID_Y - 1);
-    const values = valuesRef.current;
-    const holds = holdRef.current;
-    const r2 = DEPOSIT_RADIUS * DEPOSIT_RADIUS;
-    const x0 = Math.max(0, Math.floor(gx - DEPOSIT_RADIUS));
-    const x1 = Math.min(GRID_X - 1, Math.ceil(gx + DEPOSIT_RADIUS));
-    const y0 = Math.max(0, Math.floor(gy - DEPOSIT_RADIUS));
-    const y1 = Math.min(GRID_Y - 1, Math.ceil(gy + DEPOSIT_RADIUS));
-
-    for (let y = y0; y <= y1; y += 1) {
-      for (let x = x0; x <= x1; x += 1) {
-        const dx = x - gx;
-        const dy = y - gy;
-        const d2 = dx * dx + dy * dy;
-        if (d2 > r2) continue;
-        const strength = 1 - d2 / r2;
-        const i = idx(x, y);
-        values[i] = clamp01(values[i] + DEPOSIT_GAIN * strength);
-        const held = Math.round(HOLD_FRAMES * (0.35 + strength * 0.65));
-        if (held > holds[i]) {
-          holds[i] = held;
-        }
-      }
-    }
-
-    setSnapshot({
-      values: values.slice(),
-      holds: holds.slice(),
-    });
+  const beginHold = () => {
+    holdingRef.current = true;
+    pressureRef.current = clamp01(pressureRef.current + 0.08);
+    setPressure(pressureRef.current);
   };
+
+  const endHold = () => {
+    holdingRef.current = false;
+    setPressure(pressureRef.current);
+  };
+
+  const siren = Math.sin(frame * 0.18) * 0.5 + 0.5;
+  const hot = pressure > 0.62;
 
   return (
     <div
-      ref={surfaceRef}
-      className="h-full w-full touch-none select-none overflow-hidden rounded-[1.35rem] border border-[#5a4637]/25 bg-[#f1e4d0]"
-      onPointerDown={(event) => {
-        pointerDownRef.current = true;
-        pressLine(event.clientX, event.clientY);
-      }}
-      onPointerMove={(event) => {
-        if (!pointerDownRef.current) return;
-        pressLine(event.clientX, event.clientY);
-      }}
-      onPointerUp={() => {
-        pointerDownRef.current = false;
-      }}
-      onPointerCancel={() => {
-        pointerDownRef.current = false;
-      }}
-      onPointerLeave={() => {
-        pointerDownRef.current = false;
-      }}
-      aria-label="A field of fading lines. Drag across it to press certain lines into the board so they remain visible longer."
+      className="relative h-full w-full touch-none select-none overflow-hidden bg-[#09090d]"
+      onPointerDown={beginHold}
+      onPointerUp={endHold}
+      onPointerCancel={endHold}
+      onPointerLeave={endHold}
+      aria-label="A warning panel that only stays alive while pressed."
     >
-      <div className="relative h-full w-full">
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(180deg, rgba(94,61,39,0.08) 0%, rgba(94,61,39,0.02) 30%, rgba(94,61,39,0.08) 100%), repeating-linear-gradient(180deg, transparent 0, transparent 3.7%, rgba(121,88,64,0.06) 3.7%, rgba(121,88,64,0.06) 4.1%)",
-          }}
-        />
-        {Array.from({ length: CELL_COUNT }, (_, i) => {
-          const value = snapshot.values[i];
-          const x = i % GRID_X;
-          const y = Math.floor(i / GRID_X);
-          const held = snapshot.holds[i] > 0;
-          const lineWidth = ((100 / GRID_X) * glyphWidths[i]) * (held ? 1.08 : 1);
-          const lineHeight = 100 / (GRID_Y * 3.4);
-          const opacity = 0.06 + value * 0.9;
-          const color = held ? `rgba(93,52,28,${0.35 + value * 0.55})` : `rgba(76,52,38,${0.18 + value * 0.58})`;
-          return (
-            <span
-              key={i}
-              className="pointer-events-none absolute rounded-full"
-              style={{
-                left: `${((x + 0.5) / GRID_X) * 100}%`,
-                top: `${((y + 0.5) / GRID_Y) * 100}%`,
-                width: `${lineWidth}%`,
-                height: `${lineHeight}%`,
-                transform: "translate(-50%, -50%)",
-                opacity,
-                backgroundColor: color,
-              }}
-            />
-          );
-        })}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 38%, rgba(255,38,56,0.34), transparent 30%), linear-gradient(135deg, #09090d 0%, #10131a 44%, #050507 100%)",
+        }}
+      />
+
+      <div className="absolute inset-[4%] grid grid-cols-[1fr_1.1fr] gap-[4%]">
+        <div className="relative overflow-hidden border-[6px] border-[#f2f2f2] bg-[#ffe600] shadow-[0_0_36px_rgba(255,230,0,0.34)]">
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,#050507_0,#050507_18px,#ff2638_18px,#ff2638_36px)] opacity-35" />
+          <div
+            className="absolute left-1/2 top-1/2 aspect-square w-[68%] -translate-x-1/2 -translate-y-1/2 rounded-full border-[10px] border-[#050507] bg-[#ff2638] shadow-[0_0_42px_rgba(255,38,56,0.8)]"
+            style={{ transform: `translate(-50%, -50%) scale(${0.88 + pressure * 0.18})` }}
+          />
+          <div className="absolute left-1/2 top-1/2 flex aspect-square w-[45%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#f2f2f2] font-mono text-[clamp(1.2rem,5vw,3.2rem)] font-black text-[#050507]">
+            HOLD
+          </div>
+          <div
+            className="absolute bottom-[7%] left-[8%] right-[8%] h-[8%] bg-[#050507]"
+            style={{ boxShadow: `0 0 ${18 + pressure * 44}px rgba(5,5,7,0.65)` }}
+          />
+        </div>
+
+        <div className="relative overflow-hidden border-[6px] border-[#262b36] bg-[#111827]">
+          <div className="absolute inset-0 grid grid-cols-8 grid-rows-6 gap-[1.6%] p-[5%]">
+            {lamps.map((lamp, index) => {
+              const active = pressure + Math.sin(frame * 0.12 + lamp.phase) * 0.22 > (index % 7) / 7;
+              return (
+                <span
+                  key={`${lamp.x}-${lamp.y}`}
+                  className="rounded-[2px] border border-white/10"
+                  style={{
+                    background: active ? lamp.color : "#141923",
+                    boxShadow: active ? `0 0 ${10 + pressure * 28}px ${lamp.color}` : "inset 0 0 0 1px rgba(255,255,255,0.04)",
+                    opacity: active ? 0.9 : 0.45,
+                  }}
+                />
+              );
+            })}
+          </div>
+          <div
+            className="absolute left-0 top-0 h-full w-full mix-blend-screen"
+            style={{
+              background: `linear-gradient(${90 + siren * 140}deg, transparent 0%, rgba(12,246,255,${0.08 + pressure * 0.22}) 40%, transparent 72%)`,
+            }}
+          />
+          <div className="absolute bottom-[5%] left-[5%] right-[5%] grid grid-cols-4 gap-[2%]">
+            {labels.map((label, index) => (
+              <div
+                key={label}
+                className="truncate border border-white/20 bg-[#050507] px-[4%] py-[6%] text-center font-mono text-[clamp(0.48rem,1.8vw,0.86rem)] font-black uppercase text-white"
+                style={{
+                  color: hot && index % 2 === 0 ? "#ffe600" : "#f2f2f2",
+                  transform: `translateY(${Math.sin(frame * 0.18 + index) * pressure * 7}px)`,
+                }}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="absolute left-0 right-0 top-0 h-[9%] bg-[#ff2638]"
+        style={{
+          opacity: 0.18 + pressure * 0.58,
+          transform: `translateY(${hot ? Math.sin(frame * 0.5) * 8 : 0}px)`,
+        }}
+      />
+      <div className="absolute bottom-[3%] left-[5%] right-[5%] h-[2%] overflow-hidden bg-white/10">
+        <div className="h-full bg-[#0cf6ff]" style={{ width: `${Math.round(pressure * 100)}%` }} />
       </div>
     </div>
   );
