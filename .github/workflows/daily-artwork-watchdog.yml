@@ -3,6 +3,8 @@ name: Daily artwork watchdog
 on:
   schedule:
     - cron: "*/30 * * * *"
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +13,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: daily-artwork-watchdog
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || 'sweep' }}
   cancel-in-progress: true
 
 jobs:
@@ -24,11 +26,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUNNER_PAT: ${{ secrets.RUNNER_PAT }}
           NUDGE_AFTER_MINUTES: "45"
-          READY_AFTER_MINUTES: "20"
+          READY_AFTER_MINUTES: "5"
           RECYCLE_AFTER_MINUTES: "120"
           INCOMPLETE_RECYCLE_AFTER_MINUTES: "240"
         run: |
           set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Pull request event received; letting Copilot's latest push settle before scanning drafts."
+            sleep 330
+          fi
 
           now_epoch="$(date -u +%s)"
           gh pr list \
