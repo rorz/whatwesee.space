@@ -33,9 +33,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          ready_after_minutes="$READY_AFTER_MINUTES"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "Pull request event received; letting Copilot's latest push settle before scanning drafts."
             sleep 330
+            ready_after_minutes=0
           fi
 
           now_epoch="$(date -u +%s)"
@@ -95,8 +97,8 @@ jobs:
             ' <<< "$files_json")"
 
             if [ "$has_complete_payload" = "true" ]; then
-              if [ "$age_minutes" -lt "$READY_AFTER_MINUTES" ]; then
-                echo "PR #$pr_number has a complete payload but was updated ${age_minutes}m ago; waiting until ${READY_AFTER_MINUTES}m before marking ready."
+              if [ "$age_minutes" -lt "$ready_after_minutes" ]; then
+                echo "PR #$pr_number has a complete payload but was updated ${age_minutes}m ago; waiting until ${ready_after_minutes}m before marking ready."
                 continue
               fi
 
