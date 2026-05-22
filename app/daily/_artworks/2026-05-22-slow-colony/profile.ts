@@ -8,23 +8,23 @@ export const profile: DailyArtworkProfile = {
     name: "Kwame Asante",
     hometown: "Kumasi",
     era: "Active 1978–present",
-    medium: "kente-strip weaving, wax-resist dyeing on cotton, and hand-dyed mordant studies",
+    medium: "arcade cabinets, funeral cloth geometry, ultraviolet resin, and hacked planetarium projectors",
     manifesto: "the oldest thread is always the one that holds the edge",
   },
   visualBrief: {
-    palette: "earth",
-    composition: "field",
+    palette: "fluorescent",
+    composition: "room-scene",
     interaction: "plant",
-    renderMode: "svg",
-    mood: "meditative",
+    renderMode: "webgl",
+    mood: "chaotic",
     material: "organism",
   },
   explanation:
-    "My looms are two hands wide and however long the story runs. The first strip I lay ends up at the edge of the finished cloth, framing everything that follows. I built this field the same way: the ring that has grown longest is always the one at the farthest reach. Press your finger to the stone and begin your own.",
+    "I wanted the colony to stop behaving like a polite stain and start behaving like it had found electricity. The oldest growth is no longer a tidy ring at the edge; it is a glowing body that drags its own scaffolding through the dark. Plant another one and the room gets less like a specimen tray and more like a small, badly supervised planetarium.",
   interaction:
-    "Click to plant a spore; the outermost ring of each colony is always its oldest, so the piece can only be read from the periphery inward.",
-  medium: "SVG + requestAnimationFrame",
+    "Click the 3D floor to plant another neon colony, because the work treats growth as an invasive spatial event rather than a passive surface mark.",
+  medium: "Three.js via React Three Fiber + Drei",
   inspiration:
     "Seeded source index 3 (Wikimedia Commons featured file) was network-blocked; representative fact: Wikimedia Commons Featured Pictures frequently document crustose lichen colonies on rock surfaces, where circular growth rings record decades of patient expansion.",
-  thumbColor: "#9da89a",
+  thumbColor: "#ff2bd6",
 };

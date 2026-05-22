@@ -67,6 +67,16 @@ Hard diversity rules:
 4. If your first concept has paper, ink, ledger, margin, rubbing, thread, graphite, dust, quiet grain, or a beige archive mood, throw it away unless the seeded brief explicitly demands that material. We have done enough of that.
 5. The archive thumbnail must look different before anyone reads the title. Squint at it. If it could be confused with yesterday, redesign.
 
+Strangeness budget:
+
+- Spend at least one wild move before you become tasteful: impossible machine, ritual interface, tiny game, wrong instrument, fake operating system, architectural creature, feverish control room, hostile toy, edible weather, haunted spreadsheet, municipal hallucination.
+- The piece may be funny, abrasive, ugly, loud, mechanical, theatrical, or suspicious. It may look like software, hardware, signage, a game, a simulator, a failed kiosk, or a toy with a serious problem.
+- Do not sand the idea down into an elegant art-school square. If the premise is strange, let the visitor see that strangeness immediately.
+- A good thumbnail should make someone say "what the hell is that?" before they know whether they like it.
+- Make one choice that would get cut from a tasteful portfolio review: a wrong scale, a rude color, an overbuilt control, a useless warning light, a ceremonial button, an object that looks alive when it should not, or a tiny system behaving with too much confidence.
+- If the piece can be described as "subtle", "dreamy", "poetic", "minimal", or "textural" without also needing a second, more alarming word, it is undercooked.
+- Before writing code, name the most ordinary possible version of the idea. Then build something visibly less sensible than that.
+
 Write the chosen values into `profile.visualBrief` exactly:
 
 ```ts
@@ -104,7 +114,9 @@ The piece must:
 6. Render at a 1:1 aspect ratio inside the parent container.
 7. Pass the verify checklist.
 
-**Spend at least three thinking turns on this before writing code.** If your first idea is a particle field, gradient, mouse-parallax piece, paper texture, archive card, or quiet hand-drawn field, **discard it.** Try again.
+If `renderMode` is `webgl`, use the installed Three/pmndrs stack: `three`, `@react-three/fiber`, and `@react-three/drei`. Build a real spatial scene or shader surface with camera, lighting, depth, material behavior, and an interaction that changes the space. A token 3D object in the middle of a flat card fails this prompt.
+
+**Spend at least three thinking turns on this before writing code.** If your first idea is a particle field, gradient, mouse-parallax piece, paper texture, archive card, quiet hand-drawn field, tasteful lichen, one centered blob, or a nicely balanced decorative scene, **discard it.** Try again.
 
 ## 5. Write the files
 
@@ -123,7 +135,9 @@ Use the seed daily at `app/daily/_artworks/2026-05-14-single-stroke/` as a struc
 
 ## 6. Install any deps you need (optional)
 
-You may add packages with `pnpm add <pkg>`. Constraints:
+The repo already includes `three`, `@react-three/fiber`, and `@react-three/drei`. Use them when the brief asks for `webgl` or when the idea genuinely needs space, camera, lighting, geometry, or shader behavior.
+
+You may add more packages with `pnpm add <pkg>`. Constraints:
 
 - Must not duplicate functionality already present (e.g. don't add another canvas helper if you can write 30 lines yourself).
 - Must be tree-shakeable.
