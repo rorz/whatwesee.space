@@ -1,5 +1,6 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import chorusCanteen from "@/app/daily/_artworks/2026-05-23-chorus-canteen";
 import slowColony from "@/app/daily/_artworks/2026-05-22-slow-colony";
 import marginTide from "@/app/daily/_artworks/2026-05-21-margin-tide";
 import fieldMemory from "@/app/daily/_artworks/2026-05-20-field-memory";
@@ -10,6 +11,7 @@ import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  chorusCanteen,
   slowColony,
   marginTide,
   fieldMemory,
