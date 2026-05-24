@@ -15,10 +15,6 @@ pnpm dev
 
 Then [http://localhost:3047](http://localhost:3047).
 
-## Stack
-
-Next.js 16 · React 19 · TypeScript (strict) · Tailwind 4 · Postgres (Vercel).
-
 ## Layout
 
 - `app/page.tsx` — the lobby.
