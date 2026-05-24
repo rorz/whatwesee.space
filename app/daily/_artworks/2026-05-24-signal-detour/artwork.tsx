@@ -137,7 +137,7 @@ export default function SignalDetour() {
   }, []);
 
   const routeLoad = useMemo(() => {
-    const counts = new Map(routeLines.map((route) => [route.id, 0] as const));
+    const counts = new Map<string, number>(routeLines.map((route) => [route.id, 0]));
     for (const seal of seals) {
       counts.set(seal.route, (counts.get(seal.route) ?? 0) + 1);
     }
