@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 declare global {
@@ -111,18 +111,29 @@ function InstrumentScene({
 export default function RattleAlphabet() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ x: number; y: number; t: number } | null>(null);
-  const chaosRef = useRef(8);
-  const phaseRef = useRef(0);
-  const shakesRef = useRef(0);
+  const chaosRef = useRef<number>(8);
+  const phaseRef = useRef<number>(0);
+  const shakesRef = useRef<number>(0);
   const headWordRef = useRef(signalWords[0]);
 
+  const [chaos, setChaos] = useState(8);
+  const [phase, setPhase] = useState(0);
+  const [shakes, setShakes] = useState(0);
   const [wordOffset, setWordOffset] = useState(0);
   const [strips, setStrips] = useState<Strip[]>(() => makeStrips(5));
-  const [frameTick, setFrameTick] = useState(0);
-
-  const chaos = useMemo(() => chaosRef.current, [frameTick]);
-  const phase = useMemo(() => phaseRef.current, [frameTick]);
   const currentWord = signalWords[wordOffset % signalWords.length];
+
+  useEffect(() => {
+    chaosRef.current = chaos;
+  }, [chaos]);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(() => {
+    shakesRef.current = shakes;
+  }, [shakes]);
 
   useEffect(() => {
     headWordRef.current = currentWord;
@@ -130,9 +141,8 @@ export default function RattleAlphabet() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      phaseRef.current += 1;
-      chaosRef.current = Math.max(2, chaosRef.current - 0.26);
-      setFrameTick((value) => value + 1);
+      setPhase((value) => value + 1);
+      setChaos((value) => Math.max(2, value - 0.26));
     }, 16);
 
     return () => {
@@ -141,12 +151,14 @@ export default function RattleAlphabet() {
   }, []);
 
   const triggerShake = (energy: number) => {
-    shakesRef.current += 1;
-    chaosRef.current = Math.min(100, chaosRef.current + 16 + energy * 0.1);
-    const nextOffset = wordOffset + 1;
-    setWordOffset(nextOffset);
-    setStrips(makeStrips(nextOffset * 13 + shakesRef.current * 7));
-    setFrameTick((value) => value + 1);
+    const nextShakes = shakesRef.current + 1;
+    setShakes(nextShakes);
+    setChaos((value) => Math.min(100, value + 16 + energy * 0.1));
+    setWordOffset((value) => {
+      const nextOffset = value + 1;
+      setStrips(makeStrips(nextOffset * 13 + nextShakes * 7));
+      return nextOffset;
+    });
   };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -198,9 +210,8 @@ export default function RattleAlphabet() {
 
     window.rattle_alphabet_advance = (steps: number) => {
       const safeSteps = Math.max(0, Math.floor(steps));
-      phaseRef.current += safeSteps;
-      chaosRef.current = Math.max(2, chaosRef.current - safeSteps * 0.4);
-      setFrameTick((value) => value + 1);
+      setPhase((value) => value + safeSteps);
+      setChaos((value) => Math.max(2, value - safeSteps * 0.4));
     };
 
     return () => {
@@ -228,7 +239,7 @@ export default function RattleAlphabet() {
       </div>
 
       <div className="pointer-events-none absolute inset-x-3 bottom-3 border border-[#efe0bf]/55 bg-[#0c0c12]/86 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.13em] text-[#efe0bf]">
-        chaos {Math.round(chaos)} · strikes {shakesRef.current}
+        chaos {Math.round(chaos)} · strikes {shakes}
       </div>
     </div>
   );
