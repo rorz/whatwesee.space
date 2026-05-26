@@ -1,5 +1,6 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import sternumLedger from "@/app/daily/_artworks/2026-05-26-sternum-ledger";
 import rattleAlphabet from "@/app/daily/_artworks/2026-05-25-rattle-alphabet";
 import signalDetour from "@/app/daily/_artworks/2026-05-24-signal-detour";
 import chorusCanteen from "@/app/daily/_artworks/2026-05-23-chorus-canteen";
@@ -13,6 +14,7 @@ import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  sternumLedger,
   rattleAlphabet,
   signalDetour,
   chorusCanteen,
