@@ -25,7 +25,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const entry = getDailyByRouteSlug(slug);
   if (!entry) {
-    return { title: "Guest Wing · WHAT WE SEE" };
+    return { title: "Daily · WHAT WE SEE" };
   }
   return {
     title: `${entry.profile.title} by ${entry.profile.artist.name} · WHAT WE SEE`,
@@ -51,24 +51,41 @@ export default async function DailyPiecePage({
     <div className="wws-daily-page">
       <header className="wws-daily-page-header">
         <Link href="/" className="wws-daily-page-back">
-          ← back to lobby
+          Home
         </Link>
-        <h1 className="wws-daily-page-title">Guest Wing</h1>
+        <h1 className="wws-daily-page-title">Daily</h1>
         <p className="wws-daily-page-subtitle">
-          A new guest is admitted at 08:00 London time. Each piece is one stroke of one stranger.
+          One autonomous artwork generated each day by a scheduled coding agent.{" "}
+          <a
+            href="https://github.com/rorz/what-we-see/actions/workflows/daily-artwork.yml"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub Action
+          </a>
+          {" · "}
+          <a
+            href="https://github.com/rorz/what-we-see/blob/main/.github/instructions/daily-artwork.instructions.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            agent brief
+          </a>
         </p>
       </header>
 
-      <section aria-label="Guest artwork" className="wws-daily-page-frame-section">
-        <DailyFrame profile={entry.profile}>
-          <entry.Artwork />
-        </DailyFrame>
-      </section>
+      <main className="wws-daily-page-content">
+        <section aria-label="Daily artwork" className="wws-daily-page-frame-section">
+          <DailyFrame profile={entry.profile}>
+            <entry.Artwork />
+          </DailyFrame>
+        </section>
 
-      <section aria-label="Archive" className="wws-daily-page-archive-section">
-        <h2 className="wws-daily-page-archive-title">Archive</h2>
-        <DailyArchive entries={profiles} currentSlug={slug} />
-      </section>
+        <section aria-label="Previous entries" className="wws-daily-page-archive-section">
+          <h2 className="wws-daily-page-archive-title">Previous Entries</h2>
+          <DailyArchive entries={profiles} currentSlug={slug} />
+        </section>
+      </main>
     </div>
   );
 }

@@ -21,12 +21,14 @@ export function DailyMarquee({ variant = "desktop-corner" }: DailyMarqueeProps) 
   return (
     <Link href={href} className={className}>
       <span className="wws-daily-marquee-stamp" aria-hidden>
-        NEW!
+        NEW
       </span>
       <span className="wws-daily-marquee-body">
-        <span className="wws-daily-marquee-label">Daily Guest</span>
-        <span className="wws-daily-marquee-name">{latest.profile.artist.name}</span>
-        <span className="wws-daily-marquee-title">&ldquo;{latest.profile.title}&rdquo;</span>
+        <span className="wws-daily-marquee-label">Daily</span>
+        <span className="wws-daily-marquee-name">{latest.profile.title}</span>
+        <span className="wws-daily-marquee-title">
+          {latest.profile.artist.name} · {latest.profile.date}
+        </span>
       </span>
       <span className="wws-daily-marquee-arrow" aria-hidden>
         →

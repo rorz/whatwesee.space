@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "chaotic",
     material: "organism",
   },
+  personality: {
+    temperament: "feral",
+    socialEnergy: "conspirator",
+    humor: "absurd",
+    pressure: "hungry",
+    voice: "workshop-gothic",
+    signature: "I whisper from behind the projector with resin on my teeth, pleased that the colony has learned bad manners.",
+  },
   explanation:
     "I wanted the colony to stop behaving like a polite stain and start behaving like it had found electricity. The oldest growth is no longer a tidy ring at the edge; it is a glowing body that drags its own scaffolding through the dark. Plant another one and the room gets less like a specimen tray and more like a small, badly supervised planetarium.",
   interaction:

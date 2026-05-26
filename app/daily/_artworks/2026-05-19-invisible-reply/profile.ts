@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "clinical",
     material: "screen",
   },
+  personality: {
+    temperament: "suspicious",
+    socialEnergy: "radio-host",
+    humor: "morbid",
+    pressure: "medical",
+    voice: "ship-log",
+    signature: "I mutter through static like a night operator recording the pulse of a caller who may already be gone.",
+  },
   explanation:
     "I record messages that arrive already wounded: clipped numbers, empty carriers, a voice buried under municipal static. The reply is not hidden by delicacy here; it is hidden because no one has answered the circuit. When you type, the terminal spends your noise as permission and lets the message resolve in hard, green fragments.",
   interaction:

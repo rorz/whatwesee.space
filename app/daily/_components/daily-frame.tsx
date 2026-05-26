@@ -6,11 +6,28 @@ type DailyFrameProps = {
   children: ReactNode;
 };
 
+const RENDER_MODE_LABELS: Record<DailyArtworkProfile["visualBrief"]["renderMode"], string> = {
+  "canvas-2d": "Canvas 2D",
+  "css-dom": "CSS",
+  "html-controls": "HTML",
+  "mixed-dom": "Mixed DOM",
+  svg: "SVG",
+  "text-grid": "Text Grid",
+  webgl: "WebGL",
+};
+
+function labelFromSlug(value: string): string {
+  return value
+    .split("-")
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
 export function DailyFrame({ profile, children }: DailyFrameProps) {
   return (
     <div className="wws-daily-frame">
       <div className="wws-daily-frame-stamp" aria-hidden>
-        <span className="wws-daily-frame-stamp-line">GUEST</span>
+        <span className="wws-daily-frame-stamp-line">DAILY</span>
         <span className="wws-daily-frame-stamp-date">{profile.date}</span>
       </div>
       <div className="wws-daily-frame-canvas">{children}</div>
@@ -23,20 +40,14 @@ export function DailyFrame({ profile, children }: DailyFrameProps) {
           </span>
           <span className="wws-daily-frame-plaque-hometown">{profile.artist.hometown}</span>
         </p>
-        <p className="wws-daily-frame-plaque-manifesto">&ldquo;{profile.artist.manifesto}&rdquo;</p>
-        <p className="wws-daily-frame-plaque-explanation">{profile.explanation}</p>
         <dl className="wws-daily-frame-plaque-meta">
           <div>
-            <dt>Interaction</dt>
-            <dd>{profile.interaction}</dd>
+            <dt>Action</dt>
+            <dd>{labelFromSlug(profile.visualBrief.interaction)}</dd>
           </div>
           <div>
-            <dt>Medium</dt>
-            <dd>{profile.medium}</dd>
-          </div>
-          <div>
-            <dt>Era</dt>
-            <dd>{profile.artist.era}</dd>
+            <dt>System</dt>
+            <dd>{RENDER_MODE_LABELS[profile.visualBrief.renderMode]}</dd>
           </div>
         </dl>
       </div>

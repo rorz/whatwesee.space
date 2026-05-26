@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "comic",
     material: "transit",
   },
+  personality: {
+    temperament: "bossy",
+    socialEnergy: "street-vendor",
+    humor: "slapstick",
+    pressure: "civic",
+    voice: "municipal-romantic",
+    signature: "I bark like a ticket seller in love with a broken timetable, waving everyone toward the wrong bright platform.",
+  },
   explanation:
     "The old version waited for someone to uncover a route; this one panics first. The map is a municipal mouth full of colored tracks, loose route teeth, and a signal puck that keeps making confident decisions. Drag the signal and the timetable becomes less like information and more like a small transport authority having a public episode.",
   interaction:

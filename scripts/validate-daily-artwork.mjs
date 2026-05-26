@@ -8,6 +8,7 @@ const root = process.cwd();
 const artworkRoot = "app/daily/_artworks";
 const requiredFiles = ["artwork.tsx", "index.ts", "profile.ts", "thumb.webp"];
 const axes = ["palette", "composition", "interaction", "renderMode", "mood", "material"];
+const personalityAxes = ["temperament", "socialEnergy", "humor", "pressure", "voice"];
 const allowedBriefValues = {
   palette: [
     "black-ground",
@@ -40,6 +41,54 @@ const allowedBriefValues = {
   mood: ["loud", "clinical", "comic", "severe", "tender", "chaotic", "ceremonial", "deadpan", "meditative", "industrial"],
   material: ["paper", "textile", "mineral", "organism", "machine", "architecture", "weather", "screen", "body", "food", "transit", "document"],
 };
+const allowedPersonalityValues = {
+  temperament: ["brash", "wry", "tender", "prissy", "feral", "ceremonial", "suspicious", "giddy", "mournful", "bossy", "shy", "grandiose"],
+  socialEnergy: [
+    "confessional",
+    "heckling",
+    "maternal",
+    "bureaucratic",
+    "flirtatious",
+    "schoolteacher",
+    "street-vendor",
+    "doctor",
+    "foreman",
+    "oracle",
+    "radio-host",
+    "conspirator",
+  ],
+  humor: ["dry", "slapstick", "morbid", "camp", "deadpan", "petty", "absurd", "sardonic", "earnest-no-joke", "operatic", "childlike", "menacing"],
+  pressure: ["itchy", "overheated", "solemn", "panicked", "domestic", "litigious", "hungry", "medical", "civic", "ritual", "sulking", "triumphant"],
+  voice: [
+    "workshop-gothic",
+    "kitchen-table",
+    "municipal-romantic",
+    "stage-whisper",
+    "market-stall",
+    "diary-with-teeth",
+    "ship-log",
+    "school-notebook",
+    "emergency-manual",
+    "sermon",
+    "love-letter",
+    "lab-notes",
+  ],
+};
+const plaqueCliches = [
+  /\bthis (piece|work) explores\b/i,
+  /\bthe (piece|work) explores\b/i,
+  /\bthis (piece|work) treats\b/i,
+  /\bthe (piece|work) treats\b/i,
+  /\bas a meditation on\b/i,
+  /\binterrogates?\b/i,
+  /\binvestigates?\b/i,
+  /\bjuxtaposes?\b/i,
+  /\bliminal\b/i,
+  /\bmateriality\b/i,
+  /\btension between\b/i,
+  /\bembodied continuity\b/i,
+  /\bbehav(?:e|es|ing) like\b/i,
+];
 const overusedWords = [
   "paper",
   "ledger",
@@ -57,6 +106,22 @@ const overusedWords = [
   "letter",
   "cloth",
   "weaving",
+];
+const seedTraceTokens = [
+  "Seed trace:",
+  "source=",
+  "premise=",
+  "temperament=",
+  "socialEnergy=",
+  "humor=",
+  "pressure=",
+  "voice=",
+  "wildMove=",
+  "interface=",
+  "motion=",
+  "materialMutation=",
+  "scaleRupture=",
+  "antiDefault=",
 ];
 
 function git(args) {
@@ -105,6 +170,21 @@ function extractVisualBrief(content) {
   return brief;
 }
 
+function extractPersonalityBrief(content) {
+  const block = /personality:\s*{([\s\S]*?)\n\s*},/m.exec(content)?.[1] ?? "";
+  const personality = {};
+  for (const axis of personalityAxes) {
+    personality[axis] = extractString(block, axis);
+  }
+  personality.signature = extractString(block, "signature");
+  return personality;
+}
+
+function extractTopLevelString(content, fieldName) {
+  const match = new RegExp(`^  ${fieldName}:\\s*"([^"]*)"`, "m").exec(content);
+  return match?.[1] ?? "";
+}
+
 function parseProfile(profilePath) {
   const content = readRepoFile(profilePath);
   const folder = profilePath.split("/").at(-2) ?? "";
@@ -117,6 +197,7 @@ function parseProfile(profilePath) {
     title: extractString(content, "title"),
     thumbColor: extractString(content, "thumbColor"),
     visualBrief: extractVisualBrief(content),
+    personality: extractPersonalityBrief(content),
   };
 }
 
@@ -200,9 +281,52 @@ function sharedAxes(left, right) {
   return axes.filter((axis) => left.visualBrief[axis] === right.visualBrief[axis]);
 }
 
+function sharedPersonalityAxes(left, right) {
+  return personalityAxes.filter((axis) => left.personality[axis] && left.personality[axis] === right.personality[axis]);
+}
+
 function wordHits(content) {
   const lower = content.toLowerCase();
   return overusedWords.filter((word) => new RegExp(`\\b${word}\\b`, "i").test(lower));
+}
+
+function validatePersonality(newProfile, recentProfiles, errors) {
+  for (const axis of personalityAxes) {
+    const value = newProfile.personality[axis];
+    if (!value) {
+      errors.push(`${newProfile.path} is missing personality.${axis}.`);
+      continue;
+    }
+    if (!allowedPersonalityValues[axis].includes(value)) {
+      errors.push(`${newProfile.path} personality.${axis}="${value}" is not an allowed value.`);
+    }
+  }
+
+  const signature = newProfile.personality.signature;
+  if (!signature) {
+    errors.push(`${newProfile.path} is missing personality.signature.`);
+  } else if (signature.length < 70 || signature.length > 220) {
+    errors.push(`${newProfile.path} personality.signature should be one vivid sentence between 70 and 220 characters.`);
+  }
+
+  const previousWithPersonality = recentProfiles.find((profile) => profile.personality.signature);
+  if (previousWithPersonality) {
+    const immediateMatches = sharedPersonalityAxes(newProfile, previousWithPersonality);
+    if (immediateMatches.length > 1) {
+      errors.push(
+        `${newProfile.path} shares too much personality with ${previousWithPersonality.date} ${previousWithPersonality.title}: ${immediateMatches.join(", ")}. Maximum is 1.`,
+      );
+    }
+  }
+
+  for (const recent of recentProfiles.filter((profile) => profile.personality.signature).slice(0, 5)) {
+    const matches = sharedPersonalityAxes(newProfile, recent);
+    if (matches.length > 2) {
+      errors.push(
+        `${newProfile.path} shares ${matches.length} personality axes with ${recent.date} ${recent.title}: ${matches.join(", ")}. Maximum is 2.`,
+      );
+    }
+  }
 }
 
 function validateDiversity(newProfile, recentProfiles, errors) {
@@ -248,6 +372,43 @@ function validateDiversity(newProfile, recentProfiles, errors) {
   const explanation = extractString(newProfile.content, "explanation");
   if (/\bthis square\b/i.test(explanation)) {
     errors.push(`${newProfile.path} explanation uses "this square"; write a fresher artist statement.`);
+  }
+}
+
+function validatePlaqueVoice(newProfile, errors) {
+  const explanation = extractTopLevelString(newProfile.content, "explanation");
+  if (!explanation) {
+    errors.push(`${newProfile.path} must include a top-level explanation string.`);
+    return;
+  }
+
+  const sentences = explanation.split(/[.!?]+/).map((part) => part.trim()).filter(Boolean);
+  if (sentences.length < 2 || sentences.length > 4) {
+    errors.push(`${newProfile.path} explanation should be 2-4 sentences.`);
+  }
+
+  if (!/\b(I|I'm|I've|I'd|me|my|mine|we|we're|we've|our)\b/i.test(explanation)) {
+    errors.push(`${newProfile.path} explanation should sound first-person and inhabited, not curatorial.`);
+  }
+
+  for (const pattern of plaqueCliches) {
+    if (pattern.test(explanation)) {
+      errors.push(`${newProfile.path} explanation uses grant-speak/cliche: ${pattern}`);
+    }
+  }
+}
+
+function validateSeedTrace(newProfile, errors) {
+  const inspiration = extractString(newProfile.content, "inspiration");
+  if (!inspiration) {
+    errors.push(`${newProfile.path} must include inspiration with a one-line seed trace.`);
+    return;
+  }
+
+  for (const token of seedTraceTokens) {
+    if (!inspiration.includes(token)) {
+      errors.push(`${newProfile.path} inspiration seed trace is missing ${token}`);
+    }
   }
 }
 
@@ -299,12 +460,15 @@ function validatePullRequest(errors) {
   }
 
   const newProfile = parseProfile(`${artworkDir}/profile.ts`);
-  validateProfileShape(newProfile, errors);
-
   const recentProfiles = collectProfilePaths()
     .filter((profilePath) => profilePath !== newProfile.path)
     .map(parseProfile)
     .sort(profileSortNewestFirst);
+
+  validateProfileShape(newProfile, errors);
+  validatePersonality(newProfile, recentProfiles, errors);
+  validatePlaqueVoice(newProfile, errors);
+  validateSeedTrace(newProfile, errors);
   validateDiversity(newProfile, recentProfiles, errors);
 }
 

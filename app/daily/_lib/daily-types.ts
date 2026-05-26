@@ -106,6 +106,81 @@ export type DailyVisualBrief = {
     | "document";
 };
 
+export type DailyPersonalityBrief = {
+  /** The piece's social temperature. */
+  temperament:
+    | "brash"
+    | "wry"
+    | "tender"
+    | "prissy"
+    | "feral"
+    | "ceremonial"
+    | "suspicious"
+    | "giddy"
+    | "mournful"
+    | "bossy"
+    | "shy"
+    | "grandiose";
+  /** How the artwork seems to address the visitor. */
+  socialEnergy:
+    | "confessional"
+    | "heckling"
+    | "maternal"
+    | "bureaucratic"
+    | "flirtatious"
+    | "schoolteacher"
+    | "street-vendor"
+    | "doctor"
+    | "foreman"
+    | "oracle"
+    | "radio-host"
+    | "conspirator";
+  /** The comic pressure, even when the work is serious. */
+  humor:
+    | "dry"
+    | "slapstick"
+    | "morbid"
+    | "camp"
+    | "deadpan"
+    | "petty"
+    | "absurd"
+    | "sardonic"
+    | "earnest-no-joke"
+    | "operatic"
+    | "childlike"
+    | "menacing";
+  /** The kind of trouble the piece brings into the room. */
+  pressure:
+    | "itchy"
+    | "overheated"
+    | "solemn"
+    | "panicked"
+    | "domestic"
+    | "litigious"
+    | "hungry"
+    | "medical"
+    | "civic"
+    | "ritual"
+    | "sulking"
+    | "triumphant";
+  /** The English register of the plaque and visible copy. */
+  voice:
+    | "workshop-gothic"
+    | "kitchen-table"
+    | "municipal-romantic"
+    | "stage-whisper"
+    | "market-stall"
+    | "diary-with-teeth"
+    | "ship-log"
+    | "school-notebook"
+    | "emergency-manual"
+    | "sermon"
+    | "love-letter"
+    | "lab-notes";
+  /** One vivid sentence that makes the day's temperament inspectable. */
+  signature: string;
+};
+
 export type DailyArtworkProfile = {
   /** ISO 8601 date this piece was made. YYYY-MM-DD. */
   date: string;
@@ -116,14 +191,16 @@ export type DailyArtworkProfile = {
   artist: DailyArtist;
   /** Seeded visual diversity contract for archive-scale variety. */
   visualBrief: DailyVisualBrief;
+  /** Seeded temperament contract. Entries must feel palpably different here. */
+  personality: DailyPersonalityBrief;
   /** Artist's own 2-4 sentence reflection on THIS piece. First-person. */
   explanation: string;
   /** One-line description of the non-superfluous interaction. Required. */
   interaction: string;
   /** Concrete tech used. e.g. "Canvas 2D + DOM", "Pure CSS", "WebGL via three.js" */
   medium: string;
-  /** Optional seed-of-the-day note: how this idea came to be. e.g. "From a Wikipedia random walk landing on 'Sumi-e'". */
-  inspiration?: string;
+  /** Seed-of-the-day trace: source, premise, personality, weirdness, and anti-default values. */
+  inspiration: string;
   /** CSS color used as the archive card background. Pick something representative. */
   thumbColor: string;
 };

@@ -383,17 +383,18 @@ a[href] {
 }
 
 /* ============================================================
-   Guest Wing — daily artwork visual idiom.
-   Deliberately distinct from the main exhibition's brutalist
-   arcade. Postmark/stamp + framed-photo gallery motif.
+   Daily artwork page.
    ============================================================ */
 
 .wws-daily-page {
+  --wws-daily-art-size: min(680px, calc(100svh - 10rem));
   position: relative;
   min-height: 100svh;
-  background: #f1ead7;
+  display: flex;
+  flex-direction: column;
+  background: #f7f4ed;
   color: #1a1714;
-  padding: 2rem 1.25rem 4rem;
+  padding: clamp(0.9rem, 1.6vw, 1.4rem);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
@@ -416,9 +417,8 @@ a[href] {
 }
 
 .wws-daily-page-header {
-  max-width: 720px;
-  margin: 0 auto 2.5rem;
-  padding-top: 0.5rem;
+  width: min(1280px, 100%);
+  margin: 0 auto clamp(0.85rem, 1.8vw, 1.25rem);
 }
 
 .wws-daily-page-back {
@@ -439,29 +439,49 @@ a[href] {
 }
 
 .wws-daily-page-title {
-  margin: 1.2rem 0 0.5rem;
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  margin: 0.75rem 0 0.35rem;
+  font-size: clamp(2.65rem, 6vw, 4.8rem);
+  line-height: 0.95;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  font-style: italic;
+  letter-spacing: 0;
 }
 
 .wws-daily-page-subtitle {
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: clamp(0.96rem, 1.4vw, 1.08rem);
+  line-height: 1.4;
   color: #5a4a3a;
-  max-width: 38rem;
+  max-width: 42rem;
+  margin: 0;
+}
+
+.wws-daily-page-subtitle a {
+  color: #1a1714;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: #b32c2c80;
+  text-underline-offset: 0.18em;
+}
+
+.wws-daily-page-subtitle a:hover {
+  text-decoration-color: #b32c2c;
+}
+
+.wws-daily-page-content {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-items: start;
 }
 
 .wws-daily-page-frame-section {
   display: flex;
   justify-content: center;
-  margin-bottom: 4rem;
+  min-width: 0;
 }
 
 .wws-daily-page-archive-section {
-  max-width: 1120px;
-  margin: 0 auto;
+  min-width: 0;
 }
 
 .wws-daily-page-archive-title {
@@ -487,13 +507,13 @@ a[href] {
 
 .wws-daily-frame {
   position: relative;
-  width: min(640px, 100%);
+  width: min(100%, var(--wws-daily-art-size));
   background: #fbf8ef;
   border: 1px solid #1a1714;
   box-shadow:
     0 12px 30px rgba(40, 28, 18, 0.18),
     0 2px 0 rgba(26, 23, 20, 0.06);
-  padding: 1rem 1rem 1.25rem;
+  padding: clamp(0.75rem, 1.8vw, 1.4rem);
 }
 
 .wws-daily-frame-stamp {
@@ -533,7 +553,7 @@ a[href] {
   aspect-ratio: 1 / 1;
   width: 100%;
   background: #f5efe2;
-  border: 1px solid #1a1714;
+  border: 2px solid #1a1714;
   overflow: hidden;
 }
 
@@ -544,14 +564,14 @@ a[href] {
 }
 
 .wws-daily-frame-plaque {
-  padding: 1rem 0.25rem 0;
+  padding: clamp(1rem, 2vw, 1.5rem) 0.25rem 0;
 }
 
 .wws-daily-frame-plaque-title {
-  font-size: 1.45rem;
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+  line-height: 1;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  font-style: italic;
+  letter-spacing: 0;
   margin: 0;
 }
 
@@ -572,37 +592,20 @@ a[href] {
   color: #5a4a3a;
 }
 
-.wws-daily-frame-plaque-manifesto {
-  margin: 0.85rem 0 0;
-  font-style: italic;
-  font-size: 0.92rem;
-  line-height: 1.45;
-  color: #3a3128;
-  border-left: 2px solid #b32c2c;
-  padding-left: 0.7rem;
-}
-
-.wws-daily-frame-plaque-explanation {
-  margin: 0.85rem 0 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: #2a2520;
-}
-
 .wws-daily-frame-plaque-meta {
-  margin: 1rem 0 0;
+  margin: 1.15rem 0 0;
   display: grid;
-  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
   font-family: var(--font-geist-mono), monospace;
   font-size: 0.7rem;
 }
 
 .wws-daily-frame-plaque-meta > div {
   display: grid;
-  grid-template-columns: 6rem 1fr;
-  gap: 0.5rem;
+  gap: 0.25rem;
   border-top: 1px dashed #1a171428;
-  padding-top: 0.45rem;
+  padding-top: 0.55rem;
 }
 
 .wws-daily-frame-plaque-meta dt {
@@ -623,8 +626,7 @@ a[href] {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
+  border-top: 1px solid #1a171433;
 }
 
 .wws-daily-archive-empty {
@@ -633,68 +635,130 @@ a[href] {
 }
 
 .wws-daily-archive-card {
-  --wws-tilt: 0deg;
-  transform: rotate(var(--wws-tilt));
-  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-bottom: 1px solid #1a171433;
 }
 
 .wws-daily-archive-card:hover,
 .wws-daily-archive-card:focus-within {
-  transform: rotate(0deg) translateY(-3px);
-}
-
-.wws-daily-archive-card--current .wws-daily-archive-link {
-  outline: 2px solid #b32c2c;
-  outline-offset: 4px;
+  background: #fbf8ef;
 }
 
 .wws-daily-archive-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   text-decoration: none;
   color: inherit;
-  background: #fbf8ef;
-  border: 1px solid #1a1714;
-  box-shadow: 0 6px 14px rgba(40, 28, 18, 0.16);
-  padding: 0.6rem;
+  padding: 1.05rem 0.25rem;
 }
 
-.wws-daily-archive-thumb {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  width: 100%;
-  border: 1px solid #1a171455;
-  display: flex;
-  align-items: flex-end;
-  padding: 0.4rem;
-}
-
-.wws-daily-archive-thumb-date {
+.wws-daily-archive-date {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  background: #1a1714;
-  color: #fbf8ef;
-  padding: 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #5a4a3a;
+  margin: 0;
 }
 
 .wws-daily-archive-meta {
-  padding-top: 0.6rem;
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.18rem;
+  align-items: baseline;
 }
 
 .wws-daily-archive-title {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  font-style: italic;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  min-width: 0;
 }
 
 .wws-daily-archive-artist {
-  margin: 0.15rem 0 0;
+  margin: 0;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   letter-spacing: 0.06em;
   color: #5a4a3a;
+  min-width: 0;
+}
+
+.wws-daily-archive-arrow {
+  color: #b32c2c;
+  font-size: 1rem;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .wws-daily-page {
+    padding-bottom: 3.5rem;
+  }
+
+  .wws-daily-page-header {
+    margin-bottom: 1rem;
+  }
+
+  .wws-daily-archive-link {
+    align-items: flex-start;
+    padding: 0.95rem 0.1rem;
+  }
+
+  .wws-daily-archive-arrow {
+    padding-top: 0.1rem;
+  }
+}
+
+@media (min-width: 1180px) {
+  .wws-daily-page {
+    min-height: 100svh;
+    overflow: hidden;
+  }
+
+  .wws-daily-page-content {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  }
+
+  .wws-daily-page-frame-section {
+    justify-content: flex-start;
+  }
+
+  .wws-daily-page-archive-section {
+    max-height: calc(100svh - 7.2rem);
+    overflow: auto;
+    padding-right: 0.2rem;
+  }
+
+  .wws-daily-frame {
+    width: max-content;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, var(--wws-daily-art-size)) minmax(230px, 280px);
+    gap: clamp(0.85rem, 1.4vw, 1.1rem);
+    align-items: start;
+  }
+
+  .wws-daily-frame-canvas {
+    width: var(--wws-daily-art-size);
+    max-width: 100%;
+  }
+
+  .wws-daily-frame-plaque {
+    padding: 0.1rem 0.15rem 0;
+  }
+
+  .wws-daily-frame-plaque-title {
+    font-size: clamp(1.6rem, 2vw, 2.25rem);
+  }
+
+  .wws-daily-frame-plaque-meta {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- Marquee (home top-right + mobile inline) ---------- */
@@ -764,11 +828,11 @@ a[href] {
 .wws-daily-marquee-name {
   font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: -0.005em;
+  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 12rem;
+  max-width: 100%;
 }
 
 .wws-daily-marquee-title {
@@ -778,7 +842,7 @@ a[href] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 12rem;
+  max-width: 100%;
 }
 
 .wws-daily-marquee-arrow {

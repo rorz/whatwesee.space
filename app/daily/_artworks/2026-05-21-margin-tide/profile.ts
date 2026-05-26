@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "loud",
     material: "weather",
   },
+  personality: {
+    temperament: "grandiose",
+    socialEnergy: "oracle",
+    humor: "operatic",
+    pressure: "panicked",
+    voice: "sermon",
+    signature: "I announce the flood like a preacher with wet cuffs, convinced the smallest gate deserves a choir.",
+  },
   explanation:
     "I stopped trusting the polite edge and built it as a flood-control room instead. The omitted thing is not a note now; it is pressure, sirens, bad metal, and luminous gates bolted to the dark. Press the floor and another warning tower appears, because the center only listens once the perimeter starts behaving like infrastructure.",
   interaction:

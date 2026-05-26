@@ -44,6 +44,14 @@ export const profile: DailyArtworkProfile = {
     mood: "ceremonial",
     material: "paper",
   },
+  personality: {
+    temperament: "wry",
+    socialEnergy: "confessional",
+    humor: "dry",
+    pressure: "ritual",
+    voice: "kitchen-table",
+    signature: "I speak like someone polishing one stubborn cup while the house fills with weather.",
+  },
   explanation:
     // 2-4 sentences in the artist's voice about their own piece. First person.
     "...",
@@ -51,7 +59,8 @@ export const profile: DailyArtworkProfile = {
     // ONE sentence describing the non-superfluous interaction.
     "...",
   medium: "Canvas 2D cellular automaton + CSS",  // tech vocabulary
-  inspiration: "...",            // optional, the source/topic you researched
+  inspiration:
+    "Seed trace: source=random-wikipedia; premise=What if ...?; temperament=wry; socialEnergy=confessional; humor=dry; pressure=ritual; voice=kitchen-table; wildMove=ritual-interface; interface=switchboard; motion=stutter; materialMutation=wet-metal; scaleRupture=meter-already-in-red; antiDefault=no-poetic-grid.",
   thumbColor: "#f5efe2",         // the dominant calm color of the piece (hex)
 };
 ```
@@ -81,7 +90,13 @@ For a new daily PR:
 
 The workflow enforces these rules with `node scripts/validate-daily-artwork.mjs`.
 
+**New daily PRs must include `personality`.** The values must be seeded from the prompt, and the `signature` must be a vivid sentence that gives the day a readable temperament. A new entry should not feel like yesterday wearing a different color.
+
+**The `inspiration` field must preserve the seed trace for new PRs.** It should include source, premise, personality values, wild move, interface, motion, material mutation, scale rupture, and anti-default constraint. This is how we inspect what the agent was supposed to make before taste flattened it.
+
 **The `explanation` field must read like a real artist's own statement.** No marketing copy. No "this piece explores...". Speak from inside the work.
+
+Good explanation copy is personable, believable, and specific. It may be flowery, but it must keep touching the rendered object: a handle, warning lamp, queue, rib, stamp, switch, floor, tooth, receipt, cough, or whatever is actually on screen. Ban grant-language filler: "this piece explores", "the work treats", "as a meditation on", "interrogates", "investigates", "juxtaposes", "liminal", "materiality", and "tension between".
 
 **The `interaction` field must justify why the interaction matters to the piece.** If you cannot justify it, change the piece. See `Anti-slop` below.
 

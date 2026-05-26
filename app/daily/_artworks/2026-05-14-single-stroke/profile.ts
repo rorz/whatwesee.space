@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "ceremonial",
     material: "paper",
   },
+  personality: {
+    temperament: "tender",
+    socialEnergy: "confessional",
+    humor: "dry",
+    pressure: "ritual",
+    voice: "kitchen-table",
+    signature: "I speak quietly, as if the wet paper were a saucer on the table and one careless breath could tip it.",
+  },
   explanation:
     "I spend hours preparing the paper before I dip the brush. The pleasure is in the readying — the ink merely confirms what has already been decided. A dry sheet refuses; a wet sheet remembers. This piece is a small ceremony for that refusal.",
   interaction:

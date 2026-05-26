@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "comic",
     material: "document",
   },
+  personality: {
+    temperament: "giddy",
+    socialEnergy: "schoolteacher",
+    humor: "petty",
+    pressure: "domestic",
+    voice: "school-notebook",
+    signature: "I grin with chalk on my fingers, delighted by every bent corner that refuses to sit in the proper tray.",
+  },
   explanation:
     "I learned library order from the messy table near the returns desk, not from the catalogue. The good pages came back bent, loud, overdue, and full of somebody else's urgency. I made a sorting floor where borrowing is not quiet stewardship but a small public game of putting things back badly, then better.",
   interaction:

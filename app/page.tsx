@@ -663,6 +663,10 @@ export default function Home() {
         </button>
       </div>
 
+      <div className="pointer-events-auto absolute left-3 right-3 top-[4.25rem] z-30 sm:hidden">
+        <DailyMarquee variant="inline-mobile" />
+      </div>
+
       <div className="absolute left-1/2 top-[60%] z-20 flex -translate-x-1/2 flex-col items-center sm:top-[64%]">
         <button
           type="button"
@@ -734,9 +738,6 @@ export default function Home() {
           >
             @rorzio on X
           </a>
-        </div>
-        <div className="pointer-events-auto mt-3 sm:hidden">
-          <DailyMarquee variant="inline-mobile" />
         </div>
         <p className="mt-3 font-sans text-[11px] leading-relaxed text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.92)] sm:text-xs">
           © Rory McMeekin 2026

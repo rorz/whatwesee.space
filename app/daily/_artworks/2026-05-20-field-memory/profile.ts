@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "industrial",
     material: "machine",
   },
+  personality: {
+    temperament: "prissy",
+    socialEnergy: "doctor",
+    humor: "deadpan",
+    pressure: "medical",
+    voice: "lab-notes",
+    signature: "I adjust the neon with clean tweezers and a sour mouth, certain the machine is lying by half a millimeter.",
+  },
   explanation:
     "I stopped trusting magnets when they looked poetic and started trusting them when they looked measured. A relay cabinet tells the truth with ugly colors: charge, echo, bias, lock. I rebuilt the memory as a calibration bench, where direction is not something you admire but something you force into range.",
   interaction:
