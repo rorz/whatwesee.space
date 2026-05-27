@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "deadpan",
     material: "transit",
   },
+  personality: {
+    temperament: "prissy",
+    socialEnergy: "bureaucratic",
+    humor: "earnest-no-joke",
+    pressure: "litigious",
+    voice: "love-letter",
+    signature: "Every reroute I stamp is a sincere act of care — the network is only reliable because someone keeps correcting it.",
+  },
   explanation:
     "I found a brief note about Muriel Hazeldene and thought about the supporting operator who keeps a city moving while everyone watches the lead carriage. I drew a dispatch board where each pressed junction becomes an official detour stamp, because transit authority is mostly accumulated interruptions. The map stays calm, but every new seal proves the network only becomes believable after it has been rerouted in public.",
   interaction:

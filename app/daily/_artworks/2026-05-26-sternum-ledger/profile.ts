@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "tender",
     material: "body",
   },
+  personality: {
+    temperament: "prissy",
+    socialEnergy: "oracle",
+    humor: "camp",
+    pressure: "panicked",
+    voice: "love-letter",
+    signature: "I speak as if the archive already knows what you are about to lose, and is waiting for you to press the right rib.",
+  },
   explanation:
     "I found Ukrainian Greeks and kept thinking about how a people can keep its rhythm while maps keep being redrawn around them. I laid years out as a ribcage ledger where every mark is a breath caught in the sternum before a crossing. The field stays monochrome because memory arrives first as pressure, then as language.",
   interaction:

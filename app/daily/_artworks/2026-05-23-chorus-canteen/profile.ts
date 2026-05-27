@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "loud",
     material: "food",
   },
+  personality: {
+    temperament: "ceremonial",
+    socialEnergy: "maternal",
+    humor: "morbid",
+    pressure: "panicked",
+    voice: "sermon",
+    signature: "I feed you because the alternative is silence, and silence is how a menu forgets it was ever sung.",
+  },
   explanation:
     "I grew up where lunch was announced before it was served, so I rebuilt the menu as a shouting choir instead of a silent list. Every syllable you type reroutes who calls stew, who calls rice, and who bangs the tray edge to keep time. Hunger arrives as sound first, then color, then a body pushing toward the counter.",
   interaction:
