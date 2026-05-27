@@ -19,6 +19,14 @@ export const profile: DailyArtworkProfile = {
     mood: "chaotic",
     material: "paper",
   },
+  personality: {
+    temperament: "mournful",
+    socialEnergy: "conspirator",
+    humor: "sardonic",
+    pressure: "litigious",
+    voice: "market-stall",
+    signature: "I keep a rehearsal desk because certainty is a product I sell only to people willing to watch it fall apart.",
+  },
   explanation:
     "I found the Finnish Armed Forces radio alphabet and remembered how a clean call sign can collapse once the desk starts shaking. I built a rehearsal instrument where paper strips keep slapping the chassis and swapping order, because certainty in transmission is always temporary. The black room stays strict, but the labels only become trustworthy after I rattle them and watch which ones settle first.",
   interaction:
