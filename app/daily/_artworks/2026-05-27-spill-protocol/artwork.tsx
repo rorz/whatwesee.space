@@ -455,10 +455,8 @@ export default function SpillProtocol() {
           }}
         >
           {CATEGORIES.map((cat, i) => {
-            // no-even-spacing: deliberate varied gaps and slight height offsets
+            // no-even-spacing: deliberate varied gaps between sort buttons
             const gaps = ["0", "clamp(2px, 1.2%, 8px)", "clamp(6px, 2.8%, 18px)", "clamp(3px, 1.6%, 10px)"];
-            const offsets = ["0", "0", "0", "0"];
-            void offsets;
             return (
               <button
                 key={cat}
