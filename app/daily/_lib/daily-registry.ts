@@ -1,5 +1,6 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import epiphysisRedline from "@/app/daily/_artworks/2026-05-28-epiphysis-redline";
 import spillProtocol from "@/app/daily/_artworks/2026-05-27-spill-protocol";
 import sternumLedger from "@/app/daily/_artworks/2026-05-26-sternum-ledger";
 import rattleAlphabet from "@/app/daily/_artworks/2026-05-25-rattle-alphabet";
@@ -15,6 +16,7 @@ import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  epiphysisRedline,
   spillProtocol,
   sternumLedger,
   rattleAlphabet,
