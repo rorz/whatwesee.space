@@ -24,14 +24,15 @@ const checkpoints: Checkpoint[] = [
 ];
 
 const nodeRadius = 3.8;
+const maxTracePoints = 260;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function pointDistance(leftX: number, leftY: number, rightX: number, rightY: number) {
-  const dx = leftX - rightX;
-  const dy = leftY - rightY;
+function pointDistance(x1: number, y1: number, x2: number, y2: number) {
+  const dx = x1 - x2;
+  const dy = y1 - y2;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
@@ -135,7 +136,7 @@ export default function InjunctionRibbon() {
   const appendPoint = (point: { x: number; y: number }) => {
     setTrace((current) => {
       const next = [...current, point];
-      return next.slice(-260);
+      return next.slice(-maxTracePoints);
     });
 
     if (!activeCheckpoint) {

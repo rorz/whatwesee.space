@@ -34,6 +34,6 @@ export const profile: DailyArtworkProfile = {
     "Trace the ribbon checkpoints in sequence to arm the consequence button, because this warning only counts after your hand has physically carried the whole timeline.",
   medium: "Responsive SVG timeline console with React pointer-trace game logic and DOM control panel",
   inspiration:
-    "Seed trace: source=hacker-news-front-page; premise=What if the day\'s top Hacker News stories read like storm bulletins for lawsuits and we had to hand-stitch a legal evacuation route?; temperament=wry; socialEnergy=maternal; humor=childlike; pressure=litigious; voice=sermon; wildMove=tiny-game; interface=weather-console; motion=boil; materialMutation=edible-circuitry; scaleRupture=button-with-consequences; antiDefault=no-decorative-particles.",
+    "Seed trace: source=hacker-news-front-page; premise=What if the day's top Hacker News stories read like storm bulletins for lawsuits and we had to hand-stitch a legal evacuation route?; temperament=wry; socialEnergy=maternal; humor=childlike; pressure=litigious; voice=sermon; wildMove=tiny-game; interface=weather-console; motion=boil; materialMutation=edible-circuitry; scaleRupture=button-with-consequences; antiDefault=no-decorative-particles.",
   thumbColor: "#12f48a",
 };
