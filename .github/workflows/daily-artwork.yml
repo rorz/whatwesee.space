@@ -168,7 +168,11 @@ jobs:
           # 4. Squash-merge directly. verify (a needs dependency) is green and
           #    there are no required status checks, so a synchronous merge is
           #    deterministic — which lets the issue close below run reliably.
-          gh pr merge "$PR_URL" --squash --delete-branch --match-head-commit "$EXPECTED_HEAD_SHA"
+          #    No --delete-branch: this job has no checkout, so gh's local branch
+          #    cleanup would fail with "not a git repository" AFTER merging and
+          #    skip the close below. The repo's delete_branch_on_merge setting
+          #    removes the head branch instead.
+          gh pr merge "$PR_URL" --squash --match-head-commit "$EXPECTED_HEAD_SHA"
 
           # 5. Close the issue explicitly. GitHub suppresses `Closes #N` keyword
           #    auto-close when the merge is performed by GITHUB_TOKEN, so the
