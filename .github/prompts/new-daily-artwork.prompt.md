@@ -11,26 +11,34 @@ Before you begin: read [`.github/copilot-instructions.md`](../copilot-instructio
 
 ---
 
-## 1. Seed your randomness
+## 0. The house style is BANNED (read this first)
 
-Compute a deterministic seed from today's date in Europe/London. Use the seed to pick **one** inspiration source from the rotation below. **Do not bias toward your defaults.** The whole point is that you don't choose the topic; the world does.
+Left alone, you build the **same piece every day** and reskin it. We are done with it. The following is the banned house style. If today's piece drifts toward **any** of these, throw it out and start over:
+
+- **The dark control panel.** A near-black background with a status readout, a warning lamp, a caution console down one side, a counter/score, and a big ceremonial button. This is your default chassis and it is forbidden unless `visualBrief.composition` is literally `instrument`. A `timeline`, `map`, `game-board`, `field`, `room-scene`, or `typographic` piece must **not** ship as a console.
+- **CMY-neon-on-black.** Cyan (`#00e5ff`-ish), magenta/pink (`#ff2bd6`-ish), acid-yellow/green on a `#0a0a0e` ground. This is the generic-AI-art look the contract bans. Most days must have a **light or saturated-flat color world**, not glowing chrome on black.
+- **Glow as the rendering verb.** `box-shadow: 0 0 Npx`, radial-gradient halos, `mix-blend: screen` bloom, scanlines. Forbidden as your primary technique.
+- **The wounded bureaucrat.** A Balkan / post-Soviet artist who speaks in `sermon` / `lab-notes` / `love-letter` voice about a "system." You have used this persona and these three voices to death. Rotate the **continent**, not just the city, and avoid those three voices unless the seed truly demands one.
+- **The one thesis.** "The system only becomes real / true / legible once your body commits / carries / presses." You restate this every single day. It is banned. Your premise must come from today's world seed (below), not this groove.
+- **The plaque Mad-Lib.** "[verb] the [noun], because the work treats [abstract] as [system] rather than [other system]." Banned outright. So is every grant-word in the contract.
+
+The proof you *can* do better is `app/daily/_artworks/2026-05-27-spill-protocol/` — a real game with stakes and funny writing. **That is the floor, not the ceiling.**
+
+## 1. Take today's world seed
+
+You did **not** pick today's topic — the world did. Your **world seed** is provided in the GitHub issue you are working from: a random encyclopedia subject, a random book, and today's Hacker News front page, all fetched live. (You cannot fetch them yourself — your environment is firewalled — so do not try; use what the issue gives you.)
+
+1. Read the world seed in the issue.
+2. Pick the **single fragment that is strangest or most alive** — the one that makes you say "what would that even look like?".
+3. **Distill it into one sentence**: "What if [concrete observation about that fragment]?". This is your *premise*. It must be recognizably **about that real fragment**, not a generic idea you swapped in. Copy the chosen fragment verbatim into `profile.inspiration` (`source=` / `premise=`).
+
+Still compute the seed for the vector rolls in the next steps:
 
 ```bash
 SEED=$(TZ=Europe/London date +%Y%m%d | sha256sum | head -c 8)
-ROTATION_INDEX=$(( 0x$SEED % 5 ))
 ```
 
-| Index | Source | How |
-|---|---|---|
-| 0 | Random Wikipedia article | `curl -sL https://en.wikipedia.org/wiki/Special:Random -o /tmp/wiki.html` then extract `<title>` |
-| 1 | OED-style word of the day | `curl -sL "https://api.datamuse.com/words?rel_trg=$SEED&max=40"` and pick one |
-| 2 | Hacker News top of day | `curl -sL "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=3"` and pick the most poetic title |
-| 3 | Wikimedia Commons featured | `curl -sL "https://commons.wikimedia.org/wiki/Special:Random/File"` and read the file name + caption |
-| 4 | Open Library random subject | `curl -sL "https://openlibrary.org/subjects.json"` and pick one with literary weight |
-
-If a source fails, fall back to index 0. If you are blocked from making the call, choose the source whose `index` matches the same `ROTATION_INDEX` and invent a representative single fact from your knowledge for it — annotate this in your commit message.
-
-**Distill what you found into one sentence**: "What if [observation about the source]?". This is your *premise*. Write it down. You will refer back to it.
+If — and only if — the issue contains no world seed at all (every source said "unavailable"), pick the most surprising concrete noun you can and annotate that fallback in your commit message. This should essentially never happen.
 
 ## 2. Lock the visual brief
 
@@ -195,7 +203,7 @@ The piece must:
 1. Embody the *premise* from step 1, refracted through the artist's *manifesto*.
 2. Obey every axis in `profile.visualBrief`. If the brief says `html-controls`, make a real control surface. If it says `game-board`, make the piece read like a board. If it says `comic`, do not ship another hushed handmade field.
 3. Obey the personality vector from step 3. A `brash` / `heckling` / `camp` day should not look or read like a `shy` / `confessional` / `solemn` day. This must be visible in title, copy, interaction behavior, density, motion, and visual posture.
-4. Obey the weirdness vector from step 3. If the vector says `no-poetic-grid`, a monochrome table is not enough. If it says `warning-light-too-large`, make the warning light unmissable. If it says `factory-hmi`, build a real operational surface.
+4. Obey the weirdness vector from step 3. The seeded `wildMove` is the **whole chassis** of the piece, not a sticker on a console. `edible-weather` means the weather is genuinely edible and behaves like food; `haunted-spreadsheet` means a spreadsheet that is actually haunted; `architectural-organ` means a building that is an organ. `materialMutation`, `motion`, and `scaleRupture` must be **literally visible features** a stranger could point at — not vibes you mention in the plaque. If you cannot point at them on screen, you have not built them.
 5. Use a medium technique that is **not** the medium of the last three Guest Wing pieces. Read `app/daily/_lib/daily-registry.ts` to see what's been used recently. Force variety: if the last three used Canvas 2D, you use SVG, CSS, HTML controls, text-grid, or WebGL. If the last three were quiet, yours is loud. **Do not default to canvas.**
 6. Make the first viewport visually unlike the last two pieces: different ground color, different density, different silhouette, different movement style.
 7. Have one **non-superfluous** interaction. Re-read the "Anti-slop" and "Interaction" sections of the contract.

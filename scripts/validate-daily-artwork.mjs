@@ -88,6 +88,10 @@ const plaqueCliches = [
   /\btension between\b/i,
   /\bembodied continuity\b/i,
   /\bbehav(?:e|es|ing) like\b/i,
+  // The "treats X as Y rather than Z" plaque Mad-Lib (house-style ban #15).
+  /\bas\b[^".]{1,60}\brather than\b/i,
+  // The one recurring thesis: "only becomes real/true/... once the body commits/carries/presses" (ban #14).
+  /\bonly\s+(?:becomes?|turns?|is|reads?|counts?|opens?|listens?|works?|holds?|matters?)\b[^".]{0,55}\b(?:once|after|when|while)\b[^".]{0,45}\b(?:you|your|the body|the hand|hand|press(?:es|ing)?|carr(?:y|ies|ying)|commit(?:s|ting)?|overfeed)/i,
 ];
 const overusedWords = [
   "paper",
@@ -267,6 +271,10 @@ function isMutedLight(hex) {
   return hsl.saturation < 0.34 && hsl.lightness > 0.56;
 }
 
+function isDark(hex) {
+  return hexToHsl(hex).lightness < 0.2;
+}
+
 function isTooSimilarColor(leftHex, rightHex) {
   const left = hexToHsl(leftHex);
   const right = hexToHsl(rightHex);
@@ -327,6 +335,18 @@ function validatePersonality(newProfile, recentProfiles, errors) {
       );
     }
   }
+
+  // Break the voice monoculture: don't reuse a voice within the last 3 pieces
+  // (sermon/love-letter/lab-notes had run 7 of 14). House-style ban #16.
+  const recentVoices = recentProfiles
+    .map((profile) => profile.personality.voice)
+    .filter(Boolean)
+    .slice(0, 3);
+  if (newProfile.personality.voice && recentVoices.includes(newProfile.personality.voice)) {
+    errors.push(
+      `${newProfile.path} reuses the "${newProfile.personality.voice}" voice within the last 3 pieces. Rotate the voice.`,
+    );
+  }
 }
 
 function validateDiversity(newProfile, recentProfiles, errors) {
@@ -354,6 +374,23 @@ function validateDiversity(newProfile, recentProfiles, errors) {
   const mutedRecentCount = recentProfiles.slice(0, 3).filter((profile) => isMutedLight(profile.thumbColor)).length;
   if (isMutedLight(newProfile.thumbColor) && mutedRecentCount >= 2) {
     errors.push(`${newProfile.path} uses another muted light thumbColor after ${mutedRecentCount} of the last 3 did. Pick a more forceful color world.`);
+  }
+
+  // Break the near-black house style: dark thumbs only for black-ground/night,
+  // and at most twice per five days (house-style ban #12).
+  if (isDark(newProfile.thumbColor)) {
+    const palette = newProfile.visualBrief.palette;
+    if (palette !== "black-ground" && palette !== "night") {
+      errors.push(
+        `${newProfile.path} thumbColor ${newProfile.thumbColor} is near-black but palette is "${palette}". Near-black is reserved for black-ground/night — build a real color world.`,
+      );
+    }
+    const darkRecentCount = recentProfiles.slice(0, 5).filter((profile) => isDark(profile.thumbColor)).length;
+    if (darkRecentCount >= 2) {
+      errors.push(
+        `${newProfile.path} uses a near-black thumbColor after ${darkRecentCount} of the last 5 did. Today needs a light or saturated color world.`,
+      );
+    }
   }
 
   for (const recent of recentProfiles.slice(0, 3)) {
@@ -394,6 +431,14 @@ function validatePlaqueVoice(newProfile, errors) {
   for (const pattern of plaqueCliches) {
     if (pattern.test(explanation)) {
       errors.push(`${newProfile.path} explanation uses grant-speak/cliche: ${pattern}`);
+    }
+  }
+
+  // The interaction line is the worst offender for the plaque Mad-Lib.
+  const interaction = extractTopLevelString(newProfile.content, "interaction");
+  for (const pattern of plaqueCliches) {
+    if (interaction && pattern.test(interaction)) {
+      errors.push(`${newProfile.path} interaction uses grant-speak/cliche: ${pattern}`);
     }
   }
 }

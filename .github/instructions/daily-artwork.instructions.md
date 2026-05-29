@@ -162,8 +162,19 @@ Do not ship a piece that contains any of these without a written, defensible jus
 6. **Decorative noise without function.** Grain is fine when it earns its place; not when it hides bad rendering.
 7. **Generic "blob" SVGs.** The 2019 dribbble aesthetic.
 8. **Random-walk lines pretending to be calligraphy.**
-9. **Three.js demos cargo-culted from an example.** If you use Three.js, the geometry should be your own.
+9. **Three.js demos cargo-culted from an example.** If you use Three.js, the geometry should be your own. The drei starter scene (`Float` + `MeshDistortMaterial` + `OrbitControls` + a glowing icosahedron) and the `0.09/abs(...)` shadertoy glow-line shader are auto-fails.
 10. **"Generated" text in a serif typewriter font appearing one character at a time.** Tired.
+
+## House-style bans (the daily tic — strictly enforced)
+
+The agent left to itself reskins one identical piece daily. These are hard fails, no justification accepted:
+
+11. **The dark control panel as default chassis.** Near-black ground + status readout + warning lamp + caution console column + counter/score + ceremonial button. Allowed **only** when `visualBrief.composition` is `instrument`. A `timeline`/`map`/`game-board`/`field`/`room-scene`/`typographic` piece shipped as a console is rejected.
+12. **CMY-neon-on-black.** Cyan ~`#00e5ff`, magenta/pink ~`#ff2bd6`, acid-yellow/green as the only chroma over a near-black ground. The `thumbColor` may not be near-black unless `palette` is `black-ground` or `night`, and those run at most twice in any five days.
+13. **Glow/bloom as the primary rendering technique.** `box-shadow: 0 0 *`, radial-gradient halos, `mix-blend-screen` sweeps, scanlines. A little is fine; as the main verb it is rejected (this is ban #5, enforced).
+14. **The recurring thesis.** Any premise that reduces to "the system only becomes real / true / legible / counted once the body commits / carries / presses / overfeeds." Owned-to-death. Banned.
+15. **The plaque Mad-Lib.** "[verb] the [noun] because the work/piece treats [abstract] as [system] rather than [other system]." Banned in both `explanation` and `interaction`.
+16. **Persona monoculture.** Do not reuse a hometown's **region** (not just city) within five days — the Balkan / post-Soviet / transit-authority cluster is exhausted. Do not reuse the `sermon`, `love-letter`, or `lab-notes` voice within three days.
 
 ## Interaction — what "non-superfluous" means
 

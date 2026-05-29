@@ -30,25 +30,84 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Fetch world seed
+        id: seed
+        # The Copilot agent runs behind a firewall that blocks Wikipedia / HN /
+        # Open Library, so it can never fetch real-world inspiration itself and
+        # silently falls back to its own priors (the cause of samey output). We
+        # fetch it HERE, where Actions has full internet, and bake it into the
+        # issue. Resilient: never fail the job; a dud source just goes blank.
+        run: |
+          set -uo pipefail
+
+          wiki="$(curl -fsSL --max-time 20 https://en.wikipedia.org/api/rest_v1/page/random/summary 2>/dev/null || true)"
+          wiki_title="$(printf '%s' "$wiki" | jq -r '.title // empty' 2>/dev/null || true)"
+          wiki_extract="$(printf '%s' "$wiki" | jq -r '(.extract // "") | .[0:500]' 2>/dev/null || true)"
+
+          hn="$(curl -fsSL --max-time 20 "https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=15" 2>/dev/null || true)"
+          hn_titles="$(printf '%s' "$hn" | jq -r '[.hits[].title] | map(select(. != null)) | .[0:8] | map("- " + .) | join("\n")' 2>/dev/null || true)"
+
+          ol="$(curl -fsSL --max-time 20 "https://openlibrary.org/trending/daily.json?limit=25" 2>/dev/null || true)"
+          ol_n="$(printf '%s' "$ol" | jq -r '.works | length' 2>/dev/null || echo 0)"
+          book=""
+          if [ "${ol_n:-0}" -gt 0 ]; then
+            ol_idx=$(( RANDOM % ol_n ))
+            book="$(printf '%s' "$ol" | jq -r --argjson i "$ol_idx" '.works[$i] | [(.title // "untitled"), (if .author_name then "by " + .author_name[0] else "" end), (if .first_publish_year then "(" + (.first_publish_year|tostring) + ")" else "" end)] | map(select(. != "")) | join(" ")' 2>/dev/null || true)"
+          fi
+
+          echo "Fetched world seed: wiki='${wiki_title:-<none>}' book='${book:-<none>}' hn=$(printf '%s' "$hn_titles" | grep -c '^-' || echo 0) headlines"
+          {
+            echo "wiki_title<<SEED_EOF"; echo "${wiki_title:-(Wikipedia unavailable)}"; echo "SEED_EOF"
+            echo "wiki_extract<<SEED_EOF"; echo "${wiki_extract:-}"; echo "SEED_EOF"
+            echo "book<<SEED_EOF"; echo "${book:-(Open Library unavailable)}"; echo "SEED_EOF"
+            echo "hn_titles<<SEED_EOF"; echo "${hn_titles:-(Hacker News unavailable)}"; echo "SEED_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create issue for Copilot
         env:
           GH_TOKEN: ${{ secrets.RUNNER_PAT }}
           DAILY_DATE: ${{ steps.date.outputs.date }}
+          WIKI_TITLE: ${{ steps.seed.outputs.wiki_title }}
+          WIKI_EXTRACT: ${{ steps.seed.outputs.wiki_extract }}
+          BOOK: ${{ steps.seed.outputs.book }}
+          HN_TITLES: ${{ steps.seed.outputs.hn_titles }}
         run: |
+          set -euo pipefail
+
+          # Build the body in a file (not via shell interpolation) so fetched
+          # text with quotes/markdown can't break the command or inject anything.
+          {
+            echo "The Guest Wing is awaiting today's admission."
+            echo
+            echo "## Today's world seed — fetched from the real world; build from THIS"
+            echo
+            echo "Your premise must grow from the material below. Do **not** discard it for a tidier idea from your own head, and do **not** invent your own facts — these are real. Pick the single fragment that is strangest or most alive and let it set the subject."
+            echo
+            echo "**Random encyclopedia subject:** ${WIKI_TITLE}"
+            if [ -n "${WIKI_EXTRACT}" ]; then echo; echo "> ${WIKI_EXTRACT}"; fi
+            echo
+            echo "**Random book:** ${BOOK}"
+            echo
+            echo "**Today's Hacker News front page:**"
+            echo
+            echo "${HN_TITLES}"
+            echo
+            echo "Record the fragment you chose verbatim in \`profile.inspiration\` (the \`source=\` / \`premise=\` seed trace)."
+            echo
+            echo "---"
+            echo
+            echo "Follow the prompt at [\`.github/prompts/new-daily-artwork.prompt.md\`](.github/prompts/new-daily-artwork.prompt.md) step-by-step. Read the contract at [\`.github/instructions/daily-artwork.instructions.md\`](.github/instructions/daily-artwork.instructions.md) first — especially the **banned house style**."
+            echo
+            echo "Open a PR from a branch named \`copilot/daily-admit-guest-${DAILY_DATE}\` with label \`daily-artwork\` when complete. The verify job on this workflow will run lint, typecheck, and build, and auto-merge on green."
+            echo
+            echo "Today's date (Europe/London): ${DAILY_DATE}."
+          } > /tmp/daily-issue-body.md
+
           gh issue create \
             --title "daily: admit the guest for $DAILY_DATE" \
             --label "daily-artwork" \
             --assignee "@copilot" \
-            --body "$(cat <<EOF
-          The Guest Wing is awaiting today's admission.
-
-          Follow the prompt at [\`.github/prompts/new-daily-artwork.prompt.md\`](.github/prompts/new-daily-artwork.prompt.md) step-by-step. Read the contract at [\`.github/instructions/daily-artwork.instructions.md\`](.github/instructions/daily-artwork.instructions.md) first.
-
-          Open a PR from a branch named \`copilot/daily-admit-guest-$DAILY_DATE\` with label \`daily-artwork\` when complete. The verify job on this workflow will run lint, typecheck, and build, and auto-merge on green.
-
-          Today's date (Europe/London): $DAILY_DATE.
-          EOF
-          )"
+            --body-file /tmp/daily-issue-body.md
 
   verify:
     if: |
