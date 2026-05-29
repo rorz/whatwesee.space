@@ -187,6 +187,9 @@ jobs:
           # github.token has contents+pull-requests+issues: write via the
           # top-level permissions block — enough to merge, label, and close.
           GH_TOKEN: ${{ github.token }}
+          # This job has no checkout. GH_REPO lets every gh command resolve the
+          # repo without a local git clone (gh otherwise reads it from git).
+          GH_REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
@@ -224,22 +227,33 @@ jobs:
             fi
           fi
 
-          # 4. Squash-merge directly. verify (a needs dependency) is green and
-          #    there are no required status checks, so a synchronous merge is
-          #    deterministic — which lets the issue close below run reliably.
-          #    No --delete-branch: this job has no checkout, so gh's local branch
-          #    cleanup would fail with "not a git repository" AFTER merging and
-          #    skip the close below. The repo's delete_branch_on_merge setting
-          #    removes the head branch instead.
-          gh pr merge "$PR_URL" --squash --match-head-commit "$EXPECTED_HEAD_SHA"
+          # 4. Merge via the REST API — NOT `gh pr merge`, which shells out to
+          #    local git (even without --delete-branch) and dies with "not a git
+          #    repository" in this checkout-less job, after the merge, skipping
+          #    the close. `sha` guards against the head moving since verify;
+          #    delete_branch_on_merge removes the branch. Tolerate losing a race
+          #    to another run that already merged this PR.
+          if ! gh api --method PUT "repos/${GH_REPO}/pulls/${PR_NUMBER}/merge" \
+                 -f merge_method=squash -f sha="$EXPECTED_HEAD_SHA" 2>/tmp/merge_err; then
+            state="$(gh pr view "$PR_URL" --json state --jq '.state' 2>/dev/null || echo UNKNOWN)"
+            if [ "$state" != "MERGED" ]; then
+              cat /tmp/merge_err >&2
+              echo "::error::Merge failed and PR #${PR_NUMBER} is not merged (state=$state)."
+              exit 1
+            fi
+            echo "PR #${PR_NUMBER} already merged by another run; continuing to close."
+          fi
 
-          # 5. Close the issue explicitly. GitHub suppresses `Closes #N` keyword
-          #    auto-close when the merge is performed by GITHUB_TOKEN, so the
-          #    pipeline must close it itself.
+          # 5. Close the issue explicitly — GitHub suppresses `Closes #N`
+          #    auto-close on GITHUB_TOKEN merges. Non-fatal: the watchdog
+          #    close-merged-issues sweep is the backstop.
           if [ -n "$issue" ]; then
-            gh issue close "$issue" --reason completed \
-              --comment "Admitted to the Guest Wing via #${PR_NUMBER} (merged). Closed automatically by the daily-artwork workflow."
-            echo "Closed issue #$issue."
+            if gh issue close "$issue" --reason completed \
+                 --comment "Admitted to the Guest Wing via #${PR_NUMBER} (merged). Closed automatically by the daily-artwork workflow."; then
+              echo "Closed issue #$issue."
+            else
+              echo "::warning::Could not close issue #$issue; the watchdog sweep will catch it."
+            fi
           else
             echo "::warning::No daily-artwork issue resolved for $PR_URL; the watchdog reconciliation sweep will catch it."
           fi
