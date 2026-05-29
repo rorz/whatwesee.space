@@ -264,12 +264,10 @@ jobs:
 
             linked_issue_numbers="$(jq -r '.closingIssuesReferences[].number' <<< "$pr" | sed '/^$/d' || true)"
             if [ -z "$linked_issue_numbers" ]; then
-              linked_issue_numbers="$(gh issue list \
-                --state open \
-                --label daily-artwork \
-                --search "$daily_date in:title" \
-                --json number \
-                --jq '.[].number')"
+              # `gh issue list --label`/`--search` is unreliable here; filter the
+              # REST list with jq for the labelled issue matching this date.
+              linked_issue_numbers="$(gh issue list --state open --limit 100 --json number,title,labels \
+                | jq -r --arg d "$daily_date" '.[] | select(any(.labels[]; .name == "daily-artwork") and (.title | contains($d))) | .number')"
             fi
 
             printf '%s\n' "$linked_issue_numbers" | while read -r issue_number; do
@@ -294,4 +292,46 @@ jobs:
               --body "$retry_body")"
 
             echo "Recycled stale empty draft PR #$pr_number into $retry_url."
+          done
+
+  close-merged-issues:
+    # Reconciliation safety net for issue auto-close. GitHub suppresses
+    # `Closes #N` keyword auto-close on GITHUB_TOKEN merges, so an autonomously
+    # merged admission can leave its issue open. This sweep closes any open
+    # daily-artwork issue whose artwork already exists on main (i.e. merged).
+    # Identity-independent, idempotent, and backfills past stragglers.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Close issues whose artwork is already merged
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          # NOTE: `gh issue list --label`/`--search label:` is unreliable on
+          # this repo (returns 0 despite labelled issues), so filter the
+          # authoritative REST list with jq instead.
+          gh issue list --state open --limit 100 --json number,title,labels \
+            --jq '.[] | select(any(.labels[]; .name == "daily-artwork")) | [.number, .title] | @tsv' \
+          | while IFS=$'\t' read -r issue_number issue_title; do
+            [ -n "$issue_number" ] || continue
+
+            daily_date="$(printf '%s' "$issue_title" | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -n 1 || true)"
+            if [ -z "$daily_date" ]; then
+              echo "Issue #$issue_number has no date in its title; skipping."
+              continue
+            fi
+
+            # The admission is done iff its dated artwork folder is on main.
+            if compgen -G "app/daily/_artworks/${daily_date}-*" > /dev/null; then
+              gh issue close "$issue_number" --reason completed \
+                --comment "Reconciled: the ${daily_date} admission is already merged to main; closing this open issue."
+              echo "Closed merged-but-open issue #$issue_number ($daily_date)."
+            else
+              echo "Issue #$issue_number ($daily_date) has no artwork on main yet; leaving open."
+            fi
           done
