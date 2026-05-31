@@ -241,13 +241,13 @@ export default function FossilTide() {
       ctx.restore();
 
       // ── Caption ────────────────────────────────────────────────────
-      const mya = Math.round(p * 100);
+      const millionYearsAgo = Math.round(p * 100);
       const label =
         p < 0.04
           ? "PRESENT — Béchar, Algeria"
           : p > 0.97
             ? "TETHYS SEA — 100M yr ago"
-            : `TETHYS SEA — ${mya}M yr ago`;
+            : `TETHYS SEA — ${millionYearsAgo}M yr ago`;
       ctx.font = `${Math.max(9, size * 0.021)}px monospace`;
       ctx.fillStyle = `rgba(255,255,255,${0.3 + p * 0.25})`;
       ctx.textAlign = "center";
