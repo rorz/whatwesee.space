@@ -27,11 +27,12 @@ const manifest: ReadonlyArray<Passenger> = [
 const baggageKg = 212;
 const envelopeMin = 37;
 const envelopeMax = 63;
+const SHAKE_ANIMATION = "payload-limit-shake";
+const BREATH_ANIMATION = "payload-limit-breathe";
 
 export default function PayloadLimit() {
   const [shakeTick, setShakeTick] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [breath, setBreath] = useState(0);
 
   const revealedRef = useRef(revealed);
   const shakeRef = useRef(shakeTick);
@@ -43,26 +44,6 @@ export default function PayloadLimit() {
   useEffect(() => {
     shakeRef.current = shakeTick;
   }, [shakeTick]);
-
-  useEffect(() => {
-    let frame = 0;
-    let running = true;
-
-    const tick = () => {
-      if (!running) {
-        return;
-      }
-      setBreath((value) => (value + 1) % 360);
-      frame = window.requestAnimationFrame(tick);
-    };
-
-    frame = window.requestAnimationFrame(tick);
-
-    return () => {
-      running = false;
-      window.cancelAnimationFrame(frame);
-    };
-  }, []);
 
   const declaredTotal = useMemo(
     () => manifest.reduce((sum, passenger) => sum + passenger.declaredKg, baggageKg),
@@ -124,7 +105,7 @@ export default function PayloadLimit() {
         <div
           className="relative flex-1 overflow-hidden border-2 border-[#1f4ac0] bg-white"
           style={{
-            animation: shakeTick > 0 ? "payload-limit-shake 420ms cubic-bezier(.36,.07,.19,.97)" : undefined,
+            animation: shakeTick > 0 ? `${SHAKE_ANIMATION} 420ms cubic-bezier(.36,.07,.19,.97)` : undefined,
           }}
         >
           <div className="grid grid-cols-[1fr_auto_auto] border-b border-[#8ea8e8] bg-[#edf3ff] px-2 py-1 text-[9px] font-bold uppercase">
@@ -214,7 +195,7 @@ export default function PayloadLimit() {
             style={{
               background: statusLamp,
               boxShadow: `0 0 ${revealed ? 8 : 5}px ${revealed ? "#ff6d8a" : "#8dffa1"}`,
-              transform: `scale(${1 + Math.sin((breath * Math.PI) / 180) * 0.07})`,
+              animation: `${BREATH_ANIMATION} 1800ms ease-in-out infinite`,
             }}
           />
           <span>{revealed ? "Load breach: hold departure" : "Gate confidence: excessive"}</span>
@@ -222,7 +203,7 @@ export default function PayloadLimit() {
       </section>
 
       <style jsx>{`
-        @keyframes payload-limit-shake {
+        @keyframes ${SHAKE_ANIMATION} {
           0% {
             transform: translate(0, 0) rotate(0deg);
           }
@@ -240,6 +221,15 @@ export default function PayloadLimit() {
           }
           100% {
             transform: translate(0, 0) rotate(0deg);
+          }
+        }
+        @keyframes ${BREATH_ANIMATION} {
+          0%,
+          100% {
+            transform: scale(0.95);
+          }
+          50% {
+            transform: scale(1.05);
           }
         }
       `}</style>
