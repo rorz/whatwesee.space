@@ -57,7 +57,7 @@ const MAX_IMPACTS = 6;
 const IMPACT_LIFETIME = 11;
 const STEP_INTERVAL = 80;
 const IMPULSE_RADIUS = 3.6;
-const IMPULSE_STRENGTH = 0.12;
+const IMPULSE_STRENGTH = 0.18;
 const BASE_BACKGROUND = "#f7ff43";
 const CELL_BACKGROUND = "#fff799";
 const SHELF_BACKGROUND = "#ffb347";
@@ -116,8 +116,8 @@ function stepWorld(world: World): World {
         continue;
       }
       const push = (1 - dist / IMPULSE_RADIUS) * IMPULSE_STRENGTH;
-      pellet.vx += (dx / dist) * push;
-      pellet.vy += (dy / dist) * push;
+      pellet.vx -= (dx / dist) * push;
+      pellet.vy -= (dy / dist) * push;
     }
   }
 
@@ -157,7 +157,13 @@ function stepWorld(world: World): World {
       second.vx -= nx * bump;
       second.vy -= ny * bump;
 
-      if (relative > 0.11 && (first.kind === "salt" || second.kind === "salt")) {
+      const collisionX = (first.x + second.x) * 0.5;
+      const collisionY = (first.y + second.y) * 0.5;
+      const shockDriven = next.impacts.some(
+        (impact) => distance(impact.x, impact.y, collisionX, collisionY) < IMPULSE_RADIUS - 0.4,
+      );
+
+      if (shockDriven && relative > 0.11 && (first.kind === "salt" || second.kind === "salt")) {
         first.kind = "fresh";
         second.kind = "fresh";
       }
