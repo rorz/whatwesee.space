@@ -244,8 +244,8 @@ function createSnapshot(world: World): Snapshot {
   };
 }
 
-function clientToGrid(client: number, offset: number, size: number, grid: number): number {
-  return clamp(Math.floor(((client - offset) / size) * grid), 0, grid - 1);
+function clientToGrid(clientCoordinate: number, offset: number, size: number, grid: number): number {
+  return clamp(Math.floor(((clientCoordinate - offset) / size) * grid), 0, grid - 1);
 }
 
 export default function BrineCandyRack() {
