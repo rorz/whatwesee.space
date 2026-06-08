@@ -313,7 +313,11 @@ export default function SpecimenTeether() {
         onPointerDown={(event) => {
           draggingRef.current = true;
           lastPointRef.current = { x: event.clientX, y: event.clientY };
-          event.currentTarget.setPointerCapture(event.pointerId);
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            draggingRef.current = true;
+          }
         }}
         onPointerMove={(event) => {
           if (!draggingRef.current || !lastPointRef.current) return;
@@ -331,8 +335,12 @@ export default function SpecimenTeether() {
         onPointerUp={(event) => {
           draggingRef.current = false;
           lastPointRef.current = null;
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
+          try {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+          } catch {
+            draggingRef.current = false;
           }
         }}
       />
