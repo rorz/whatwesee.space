@@ -144,6 +144,7 @@ export default function ZeroWeatherPermit() {
   const rafRef = useRef<number | null>(null);
   const [modelView, setModelView] = useState<PermitModel>(() => initialModel());
   const [holding, setHolding] = useState(false);
+  const [maxDpr, setMaxDpr] = useState(2);
 
   const syncModelView = () => {
     setModelView({ ...modelRef.current });
@@ -176,6 +177,17 @@ export default function ZeroWeatherPermit() {
     return () => {
       window.removeEventListener("pointerup", release);
       window.removeEventListener("pointercancel", release);
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateDpr = () => {
+      setMaxDpr(Math.min(window.devicePixelRatio || 1, 2));
+    };
+    updateDpr();
+    window.addEventListener("resize", updateDpr);
+    return () => {
+      window.removeEventListener("resize", updateDpr);
     };
   }, []);
 
@@ -218,7 +230,10 @@ export default function ZeroWeatherPermit() {
         setHolding(false);
       }}
     >
-      <Canvas camera={{ position: [0, 1.8, 6.7], fov: 44 }} dpr={[1, 2]} gl={{ antialias: true, alpha: false }}>
+      <p aria-live="polite" className="sr-only">
+        Recovery {modelView.recovery} percent. Storm tier {modelView.storms}. Rebuild cycles {modelView.rebuilds}.
+      </p>
+      <Canvas camera={{ position: [0, 1.8, 6.7], fov: 44 }} dpr={[1, maxDpr]} gl={{ antialias: true, alpha: false }}>
         <PermitRoom model={modelView} holding={holding} />
       </Canvas>
 
