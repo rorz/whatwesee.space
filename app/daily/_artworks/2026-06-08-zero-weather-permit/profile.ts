@@ -29,7 +29,7 @@ export const profile: DailyArtworkProfile = {
       "He leans in like he is sharing contraband weather data, then grins as if honesty itself were the prank that keeps the room alive.",
   },
   explanation:
-    "I keep a shoebox of old intake forms from the years when my life was all denials, and every box on the page pretended a storm could be reduced to one clean answer. This room is my impossible permit office: vertebra towers rise from bone-white blocks while one absurd warning bulb hangs too large above us, blinking like a secret nobody can ignore. Hold the rebuild switch and the skyline climbs in stubborn steps, because starting from zero is not a metaphor to me—it is a repeated, physical motion that only becomes visible when your thumb stays put.",
+    "I keep a shoebox of old intake forms from the years when my life was all denials, and every box on the page pretended a storm could be reduced to one clean answer. I staged an impossible permit office where vertebra towers rise from bone-white blocks while one absurd warning bulb hangs too large above us, blinking like a secret nobody can ignore. Hold the rebuild switch and the skyline climbs in stubborn steps, because starting from zero is not a metaphor to me—it is a repeated, physical motion that only becomes visible when your thumb stays put.",
   interaction:
     "Press and hold the rebuild switch to raise the district floor by floor, because this weather ledger only records recovery while someone keeps deliberate pressure on the control.",
   medium:
