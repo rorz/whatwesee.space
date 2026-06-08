@@ -29,6 +29,24 @@ function createModel(): Model {
   };
 }
 
+function setPointerCaptureSafely(element: HTMLCanvasElement, pointerId: number): void {
+  try {
+    element.setPointerCapture(pointerId);
+  } catch {
+    return;
+  }
+}
+
+function releasePointerCaptureSafely(element: HTMLCanvasElement, pointerId: number): void {
+  try {
+    if (element.hasPointerCapture(pointerId)) {
+      element.releasePointerCapture(pointerId);
+    }
+  } catch {
+    return;
+  }
+}
+
 export default function SpecimenTeether() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -313,11 +331,7 @@ export default function SpecimenTeether() {
         onPointerDown={(event) => {
           draggingRef.current = true;
           lastPointRef.current = { x: event.clientX, y: event.clientY };
-          try {
-            event.currentTarget.setPointerCapture(event.pointerId);
-          } catch {
-            draggingRef.current = true;
-          }
+          setPointerCaptureSafely(event.currentTarget, event.pointerId);
         }}
         onPointerMove={(event) => {
           if (!draggingRef.current || !lastPointRef.current) return;
@@ -335,13 +349,7 @@ export default function SpecimenTeether() {
         onPointerUp={(event) => {
           draggingRef.current = false;
           lastPointRef.current = null;
-          try {
-            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-              event.currentTarget.releasePointerCapture(event.pointerId);
-            }
-          } catch {
-            draggingRef.current = false;
-          }
+          releasePointerCaptureSafely(event.currentTarget, event.pointerId);
         }}
       />
     </div>
