@@ -1,5 +1,6 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import rackRentOrrery from "@/app/daily/_artworks/2026-06-09-rack-rent-orrery";
 import specimenTeether from "@/app/daily/_artworks/2026-06-08-specimen-teether";
 import mbpTriage from "@/app/daily/_artworks/2026-06-07-mbp-triage";
 import snackForecast from "@/app/daily/_artworks/2026-06-03-snack-forecast";
@@ -22,6 +23,7 @@ import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  rackRentOrrery,
   specimenTeether,
   mbpTriage,
   snackForecast,
