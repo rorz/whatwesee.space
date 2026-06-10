@@ -65,14 +65,14 @@ function pressSlot(model: Model, slot: SlotKey): Model {
   };
 
   if (slot === "district") {
-    const districtIndex = Math.min(DISTRICT_LABELS.length - 1, next.districtIndex + 1);
-    const filed: Array<SlotKey> = districtIndex === DISTRICT_LABELS.length - 1 && !includesSlot(next.filed, "district")
+    const newDistrictIndex = Math.min(DISTRICT_LABELS.length - 1, next.districtIndex + 1);
+    const filed: Array<SlotKey> = newDistrictIndex === DISTRICT_LABELS.length - 1 && !includesSlot(next.filed, "district")
       ? [...next.filed, "district"]
       : next.filed;
     return {
       ...next,
-      districtIndex,
-      jamCount: next.jamCount + (districtIndex === DISTRICT_LABELS.length - 1 ? 0 : 1),
+      districtIndex: newDistrictIndex,
+      jamCount: next.jamCount + (newDistrictIndex === DISTRICT_LABELS.length - 1 ? 0 : 1),
       filed,
     };
   }
