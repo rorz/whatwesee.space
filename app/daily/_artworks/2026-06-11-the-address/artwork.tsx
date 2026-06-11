@@ -513,6 +513,11 @@ const PI_DIGITS =
   + "1";
 
 const MAX_QUERY_LEN = 9;
+const IDLE_SCROLL_SPEED = 0.012;
+const SCROLL_EASE_FACTOR = 0.09;
+const SCROLL_SNAP_THRESHOLD = 0.01;
+const CARET_BLINK_CYCLE_MS = 900;
+const CARET_VISIBLE_MS = 450;
 const BG = "#0d1b2e";
 const STRIP_BG = "#091624";
 const MATCH_BG = "#2a1800";
@@ -666,7 +671,7 @@ export default function TheAddress() {
       const queryFontSize = Math.round(stripH * 0.46);
       ctx.font = `400 ${queryFontSize}px 'Geist Mono', 'Courier New', monospace`;
 
-      const caret = Date.now() % 900 < 450 ? "▌" : " ";
+      const caret = Date.now() % CARET_BLINK_CYCLE_MS < CARET_VISIBLE_MS ? "▌" : " ";
       const displayQuery = query.length > 0 ? query + caret : caret;
       ctx.fillStyle = QUERY_FG;
       ctx.fillText(displayQuery, Math.round(size * 0.04), stripY + Math.round(stripH * 0.82));
@@ -677,14 +682,14 @@ export default function TheAddress() {
 
       // Slow auto-scroll when idle
       if (s.query.length === 0) {
-        s.targetRow += 0.012;
+        s.targetRow += IDLE_SCROLL_SPEED;
         const maxRow = Math.max(0, Math.floor(PI_DIGITS.length / layout.cols) - layout.gridRows);
         if (s.targetRow > maxRow) s.targetRow = 0;
       }
 
       // Smooth approach to target
       const diff = s.targetRow - s.scrollRow;
-      s.scrollRow += Math.abs(diff) > 0.01 ? diff * 0.09 : diff;
+      s.scrollRow += Math.abs(diff) > SCROLL_SNAP_THRESHOLD ? diff * SCROLL_EASE_FACTOR : diff;
 
       render();
       rafId = requestAnimationFrame(loop);
