@@ -105,7 +105,7 @@ export default function RoutingGourd() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setModel((current) => advanceModel(current, 1));
-    }, 180);
+    }, 260);
 
     return () => {
       window.clearInterval(intervalId);

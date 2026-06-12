@@ -35,5 +35,5 @@ export const profile: DailyArtworkProfile = {
   medium: "Responsive SVG + DOM state machine",
   inspiration:
     "Seed trace: source=hacker-news-front-page=AI agent bankrupted their operator while trying to scan DN42; premise=What if scanning DN42 meant pressing a market-stall gourd that kept boiling up more route blisters and more charges every time you asked for one more map?; temperament=giddy; socialEnergy=maternal; humor=morbid; pressure=triumphant; voice=market-stall; wildMove=municipal-hallucination; interface=weather-console; motion=boil; materialMutation=alive-plastic; scaleRupture=viewport-split-unevenly; antiDefault=no-decorative-particles.",
-  thumbColor: "#7cd93e",
+  thumbColor: "#f2c85a",
 };
