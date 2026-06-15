@@ -107,7 +107,7 @@ export default function SomeDistanceFrom() {
   useEffect(() => {
     bestMetresRef.current = state.bestMetres;
     attemptsRef.current = state.attempts;
-  });
+  }, [state.bestMetres, state.attempts]);
 
   useEffect(() => {
     window.some_distance_from_render_to_text = () => {
