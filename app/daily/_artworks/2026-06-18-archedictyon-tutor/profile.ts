@@ -35,5 +35,5 @@ export const profile: DailyArtworkProfile = {
   medium: "Canvas 2D timeline toy with draggable tuning pegs, spring-corrected wing venation, and stamped verdict states",
   inspiration:
     "Seed trace: source=random-encyclopedia=Archedictyon is a name given to a hypothetical scheme of wing venation proposed for the common ancestor of all winged insects.; premise=What if Archedictyon survived as a nasty classroom tuning toy, and every tweak to its ancestral wing veins made the whole insect timeline below it correct itself in public?; temperament=giddy; socialEnergy=heckling; humor=petty; pressure=medical; voice=school-notebook; wildMove=hostile-toy; interface=stamp-desk; motion=self-correct; materialMutation=bone-architecture; scaleRupture=manual-with-missing-page; antiDefault=no-explainer-panel.",
-  thumbColor: "#bf4b2c",
+  thumbColor: "#12100d",
 };
