@@ -937,3 +937,22 @@ a[href] {
   display: block;
   flex-shrink: 0;
 }
+
+@keyframes wws-machine-jam {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15%,
+  55% {
+    transform: translateX(-4px);
+  }
+  35%,
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.wws-machine-jam {
+  animation: wws-machine-jam 0.4s ease-in-out;
+}
