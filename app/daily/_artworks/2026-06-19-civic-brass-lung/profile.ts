@@ -9,7 +9,7 @@ export const profile: DailyArtworkProfile = {
     hometown: "Recife",
     era: "Active 2012–present",
     medium: "salvaged stairwell vents, municipal alarm housings, and cast-brass reed arrays",
-    manifesto: "if a city wants to breathe, it has to confess through its pipes",
+    manifesto: "if a city wants to breathe, it has to confess through its vents",
   },
   visualBrief: {
     palette: "white-ground",
@@ -34,6 +34,6 @@ export const profile: DailyArtworkProfile = {
     "Press any lane to force extra air into it; the neighboring shafts seize and recover with it, because one overfed intake makes the whole block breathe out of sequence.",
   medium: "Responsive text-grid simulation with lane-pressure diffusion, deterministic jam dynamics, and pointer-press controls",
   inspiration:
-    "Seed trace: source=fallback-noun=stairwell vent (issue world seed unavailable); premise=What if a city block had to breathe through one shared brass lung, and every forced intake made another shaft choke in public?; temperament=feral; socialEnergy=heckling; humor=menacing; pressure=civic; voice=kitchen-table; wildMove=architectural-organ; interface=inventory-screen; motion=jam; materialMutation=wet-metal; scaleRupture=object-cropped-hard; antiDefault=no-terminal-only.",
+    "Seed trace: source=fallback-noun=stairwell vent (world seed unavailable in issue body); premise=What if a city block had to breathe through one shared brass lung, and every forced intake made another shaft choke in public?; temperament=feral; socialEnergy=heckling; humor=menacing; pressure=civic; voice=kitchen-table; wildMove=architectural-organ; interface=inventory-screen; motion=jam; materialMutation=wet-metal; scaleRupture=object-cropped-hard; antiDefault=no-terminal-only.",
   thumbColor: "#1f9d55",
 };

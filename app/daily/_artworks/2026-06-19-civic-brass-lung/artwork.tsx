@@ -222,8 +222,7 @@ export default function CivicBrassLung() {
             key={key}
             type="button"
             className="rounded-sm border border-[#1f9d55] bg-white px-1 py-1 font-pixel-square text-[#0f2212] transition hover:bg-[#d7edd9]"
-            onMouseDown={() => commitStep(lane)}
-            onTouchStart={() => commitStep(lane)}
+            onClick={() => commitStep(lane)}
           >
             lane {key}
           </button>
