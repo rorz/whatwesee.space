@@ -1,5 +1,6 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import fifteenSeats from "@/app/daily/_artworks/2026-06-20-fifteen-seats";
 import civicBrassLung from "@/app/daily/_artworks/2026-06-19-civic-brass-lung";
 import archedictyonTutor from "@/app/daily/_artworks/2026-06-18-archedictyon-tutor";
 import unincorporated from "@/app/daily/_artworks/2026-06-17-unincorporated";
@@ -29,6 +30,7 @@ import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  fifteenSeats,
   civicBrassLung,
   archedictyonTutor,
   unincorporated,
