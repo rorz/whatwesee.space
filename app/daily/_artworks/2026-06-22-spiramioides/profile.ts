@@ -29,7 +29,7 @@ export const profile: DailyArtworkProfile = {
       "He records each spiral pass in field notebooks without conclusions, as if the measured distance between a moth and a bulb were already enough explanation.",
   },
   explanation:
-    "I came to logarithms through moth-trapping, not through a textbook. After a week running light traps near the Barkly Highway, I noticed that Niguza spiramioides drew its approach circles in a tightening ratio — measurably the same each pass, every revolution a fixed fraction closer than the last. What you have here is a drag-controllable version of that lamp; move it and the moth re-plots its course without complaint.",
+    "I came to logarithms through moth-trapping, not through a textbook. After a week running light traps near the Barkly Highway, I noticed that Niguza spiramioides drew its approach circles in a tightening ratio — measurably the same each pass, every revolution a fixed fraction closer than the last. I rebuilt that lamp here. Drag it and the moth re-plots its spiral without complaint, which is precisely what troubled me about the ones I found underneath it each morning.",
   interaction:
     "Drag the lamp to a new position and the moth recomputes its logarithmic spiral toward it, because the navigational error that drives the approach is always measured relative to where the lamp currently sits.",
   medium: "SVG moth simulation with logarithmic spiral kinematics and drag-repositioned light source",
