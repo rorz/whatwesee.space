@@ -53,10 +53,10 @@ const STEP_MS = 90;
 const TICKET_GLYPHS = ["*", "+", "x", "%", "@", "&", "#", "o"] as const;
 
 const SEASONS = [
-  { label: "VERAO", short: "V", x: 5, y: 8, tone: "summer" as const },
-  { label: "OUTON", short: "O", x: 19, y: 8, tone: "autumn" as const },
-  { label: "INVER", short: "I", x: 5, y: 17, tone: "winter" as const },
-  { label: "PRIMA", short: "P", x: 19, y: 17, tone: "spring" as const },
+  { label: "VERAO", gridLabel: "VERAO", short: "V", x: 5, y: 8, tone: "summer" as const },
+  { label: "OUTONO", gridLabel: "OUTONO", short: "O", x: 19, y: 8, tone: "autumn" as const },
+  { label: "INVERNO", gridLabel: "INVERNO", short: "I", x: 5, y: 17, tone: "winter" as const },
+  { label: "PRIMAVERA", gridLabel: "PRIMA", short: "P", x: 19, y: 17, tone: "spring" as const },
 ] as const;
 
 const TONE_STYLES: Record<Tone, { background: string; color: string }> = {
@@ -211,10 +211,10 @@ function buildGrid(state: QuiltState): Cell[] {
   frameBox(14, 13, 10, 8, "frame");
   frameBox(10, 8, 6, 8, "frame");
 
-  write(3, 5, "VERAO", "summer");
-  write(16, 5, "OUTON", "autumn");
-  write(3, 14, "INVER", "winter");
-  write(16, 14, "PRIMA", "spring");
+  write(3, 5, SEASONS[0].gridLabel, "summer");
+  write(15, 5, SEASONS[1].gridLabel, "autumn");
+  write(2, 14, SEASONS[2].gridLabel, "winter");
+  write(16, 14, SEASONS[3].gridLabel, "spring");
 
   for (const [index, season] of SEASONS.entries()) {
     const applause = Math.round(state.applause[index] * 10);
