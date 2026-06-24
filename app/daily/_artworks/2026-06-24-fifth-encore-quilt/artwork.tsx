@@ -406,9 +406,6 @@ export default function FifthEncoreQuilt() {
             </div>
           ))}
         </div>
-        <p className="mt-2 font-pixel-square text-[10px] leading-tight text-[#8a4f63] sm:text-[11px]">
-          shake the quilt side to side; harder rattles make the ticket-stars overshoot and search for a fresh season.
-        </p>
       </div>
     </div>
   );
