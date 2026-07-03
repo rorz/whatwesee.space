@@ -67,7 +67,7 @@ export default function NoSpines() {
     window.no_spines_render_to_text = () => {
       const sim = simRef.current;
       const thorns = Math.round(BASE_THORNS + sim.spines * EXTRA_THORNS);
-      return `No Spines | held:${sim.held ? "yes" : "no"} spines:${sim.spines.toFixed(2)} thorns:${thorns} holdFrames:${Math.floor(sim.holdFrames)}`;
+      return `held:${sim.held ? "yes" : "no"} spines:${sim.spines.toFixed(2)} thorns:${thorns} holdFrames:${Math.floor(sim.holdFrames)}`;
     };
 
     window.no_spines_advance = (steps: number) => {

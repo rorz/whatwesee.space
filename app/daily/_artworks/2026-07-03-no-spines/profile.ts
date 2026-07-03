@@ -34,6 +34,6 @@ export const profile: DailyArtworkProfile = {
     "Hold anywhere in the square to keep COCONA spineless; release and the hybrid ring erupts again, so the distinction lives in plain sight instead of in a checklist.",
   medium: "Animated SVG typography with hold-gated spine growth and boiling hybrid text ring",
   inspiration:
-    "Seed trace: source=random-encyclopedia=It can be distinguished from those plants by its lack of spines.; premise=What if cocona identification became a street-corner ceremony where the word had to stay visibly spineless while its hybrid relatives kept sprouting thorns?; temperament=brash; socialEnergy=heckling; humor=sardonic; pressure=hungry; voice=love-letter; wildMove=municipal-hallucination; interface=emergency-broadcast; motion=boil; materialMutation=chalk-machinery; scaleRupture=object-cropped-hard; antiDefault=no-terminal-only.",
+    "Seed trace: source=random-encyclopedia; premise=What if \"It can be distinguished from those plants by its lack of spines.\" became a street-corner ceremony where the word COCONA had to stay visibly spineless while its hybrid relatives kept sprouting thorns?; temperament=brash; socialEnergy=heckling; humor=sardonic; pressure=hungry; voice=love-letter; wildMove=municipal-hallucination; interface=emergency-broadcast; motion=boil; materialMutation=chalk-machinery; scaleRupture=object-cropped-hard; antiDefault=no-terminal-only.",
   thumbColor: "#0b140c",
 };
