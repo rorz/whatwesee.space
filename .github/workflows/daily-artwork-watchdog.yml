@@ -26,12 +26,87 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
           RUNNER_PAT: ${{ secrets.RUNNER_PAT }}
+          COPILOT_AGENT_MODEL: claude-sonnet-4.6
           NUDGE_AFTER_MINUTES: "45"
           READY_AFTER_MINUTES: "5"
           RECYCLE_AFTER_MINUTES: "120"
           INCOMPLETE_RECYCLE_AFTER_MINUTES: "240"
         run: |
           set -euo pipefail
+
+          start_copilot_task() {
+            local daily_date="$1"
+            local issue_url="$2"
+            local issue_body_file="$3"
+            local token="$4"
+            local issue_number="${issue_url##*/}"
+            local prompt_file="/tmp/daily-agent-prompt-${issue_number}.md"
+            local payload_file="/tmp/daily-agent-task-${issue_number}.json"
+
+            {
+              echo "Work on issue #${issue_number}: daily: admit the guest for ${daily_date}."
+              echo
+              echo "Use branch name \`copilot/daily-admit-guest-${daily_date}\` if you create a branch."
+              echo "Open a pull request against \`main\` with label \`daily-artwork\`, and include \`Closes #${issue_number}\` in the pull request body."
+              echo
+              cat "$issue_body_file"
+            } > "$prompt_file"
+
+            task_payload="$(jq -n \
+              --rawfile prompt "$prompt_file" \
+              --arg model "$COPILOT_AGENT_MODEL" \
+              '{prompt: $prompt, model: $model, create_pull_request: true, base_ref: "main"}')"
+
+            curl -fsSL \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${token}" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              "https://api.github.com/agents/repos/${GH_REPO}/tasks" \
+              -d "$task_payload" \
+              > "$payload_file"
+
+            echo "Started Copilot task $(jq -r '.html_url // .url' "$payload_file") using ${COPILOT_AGENT_MODEL}."
+          }
+
+          start_copilot_pr_task() {
+            local daily_date="$1"
+            local pr_number="$2"
+            local pr_url="$3"
+            local head_ref="$4"
+            local instruction_file="$5"
+            local token="$6"
+            local prompt_file="/tmp/daily-agent-prompt-pr-${pr_number}.md"
+            local payload_file="/tmp/daily-agent-task-pr-${pr_number}.json"
+
+            {
+              echo "Continue the existing daily-artwork PR #${pr_number}: ${pr_url}"
+              echo
+              echo "Commit any fixes to the existing branch \`${head_ref}\`."
+              echo "Keep the pull request labelled \`daily-artwork\` and ready only when the required payload is complete."
+              echo
+              cat "$instruction_file"
+            } > "$prompt_file"
+
+            task_payload="$(jq -n \
+              --rawfile prompt "$prompt_file" \
+              --arg model "$COPILOT_AGENT_MODEL" \
+              --arg head_ref "$head_ref" \
+              '{prompt: $prompt, model: $model, base_ref: "main", head_ref: $head_ref}')"
+
+            curl -fsSL \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${token}" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              "https://api.github.com/agents/repos/${GH_REPO}/tasks" \
+              -d "$task_payload" \
+              > "$payload_file"
+
+            echo "Started continuation task $(jq -r '.html_url // .url' "$payload_file") for PR #${pr_number} using ${COPILOT_AGENT_MODEL}."
+          }
 
           ready_after_minutes="$READY_AFTER_MINUTES"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -179,7 +254,11 @@ jobs:
                 incomplete_body="$(printf '%s\n%s\n\n%s\n' \
                   "$incomplete_marker" \
                   "This draft has changes and has been idle for ${age_minutes} minutes, but the required ${daily_date} daily-artwork payload is incomplete." \
-                  "Before marking ready, it needs exactly one new \`app/daily/_artworks/${daily_date}-<slug>/\` folder with \`artwork.tsx\`, \`index.ts\`, \`profile.ts\`, \`thumb.webp\`, plus the registry update.")"
+                  "The watchdog started a pinned continuation task. Before marking ready, it needs exactly one new \`app/daily/_artworks/${daily_date}-<slug>/\` folder with \`artwork.tsx\`, \`index.ts\`, \`profile.ts\`, \`thumb.webp\`, plus the registry update.")"
+                incomplete_body_file="/tmp/daily-incomplete-nudge-${pr_number}.md"
+                printf '%s\n' "$incomplete_body" > "$incomplete_body_file"
+                nudge_token="${RUNNER_PAT:-$GH_TOKEN}"
+                start_copilot_pr_task "$daily_date" "$pr_number" "$pr_url" "$head_ref" "$incomplete_body_file" "$nudge_token"
                 gh pr comment "$pr_number" --body "$incomplete_body"
                 echo "Nudged incomplete draft PR #$pr_number."
                 continue
@@ -220,11 +299,13 @@ jobs:
                 "Follow \`.github/prompts/new-daily-artwork.prompt.md\` step-by-step and read \`.github/instructions/daily-artwork.instructions.md\` first. Open a fresh, ready-for-review PR with label \`daily-artwork\` when complete." \
                 "Do not leave an incomplete placeholder PR as the final state; the workflow rejects incomplete daily-artwork PRs.")"
               retry_token="${RUNNER_PAT:-$GH_TOKEN}"
+              retry_body_file="/tmp/daily-retry-body-${daily_date}.md"
+              printf '%s\n' "$retry_body" > "$retry_body_file"
               retry_url="$(GH_TOKEN="$retry_token" gh issue create \
                 --title "daily: admit the guest for ${daily_date} (watchdog retry)" \
                 --label "daily-artwork" \
-                --assignee "@copilot" \
-                --body "$retry_body")"
+                --body-file "$retry_body_file")"
+              start_copilot_task "$daily_date" "$retry_url" "$retry_body_file" "$retry_token"
 
               echo "Recycled incomplete stale draft PR #$pr_number into $retry_url."
               continue
@@ -235,15 +316,19 @@ jobs:
             if [ "$has_watchdog_comment" != "true" ]; then
               pr_nudge_body="$(printf '%s\n%s\n\n%s\n' \
                 "$marker" \
-                "This draft has been open for ${age_minutes} minutes with no file changes. @copilot please continue the daily artwork for ${daily_date}: push the required artwork payload, then mark the PR ready for review only once it is complete." \
+                "This draft has been open for ${age_minutes} minutes with no file changes. The watchdog started a pinned continuation task for the ${daily_date} daily artwork. Push the required artwork payload, then mark the PR ready for review only once it is complete." \
                 "Required payload: one new \`app/daily/_artworks/${daily_date}-<slug>/\` folder, \`artwork.tsx\`, \`index.ts\`, \`profile.ts\`, \`thumb.webp\`, and the registry update.")"
+              pr_nudge_body_file="/tmp/daily-empty-nudge-${pr_number}.md"
+              printf '%s\n' "$pr_nudge_body" > "$pr_nudge_body_file"
+              nudge_token="${RUNNER_PAT:-$GH_TOKEN}"
+              start_copilot_pr_task "$daily_date" "$pr_number" "$pr_url" "$head_ref" "$pr_nudge_body_file" "$nudge_token"
               gh pr comment "$pr_number" --body "$pr_nudge_body"
 
               jq -r '.closingIssuesReferences[].number' <<< "$pr" | while read -r issue_number; do
                 if [ -n "$issue_number" ]; then
                   issue_nudge_body="$(printf '%s\n%s\n' \
                     "$marker" \
-                    "Watchdog nudge: draft PR #${pr_number} has been open for ${age_minutes} minutes with no file changes. @copilot please continue the ${daily_date} backfill and only mark the PR ready when the required payload exists.")"
+                    "Watchdog nudge: draft PR #${pr_number} has been open for ${age_minutes} minutes with no file changes. A pinned continuation task has been started for the ${daily_date} backfill.")"
                   gh issue comment "$issue_number" --body "$issue_nudge_body"
                 fi
               done
@@ -285,11 +370,13 @@ jobs:
               "Follow \`.github/prompts/new-daily-artwork.prompt.md\` step-by-step and read \`.github/instructions/daily-artwork.instructions.md\` first. Open a fresh, ready-for-review PR with label \`daily-artwork\` when complete." \
               "Do not leave an empty placeholder PR as the final state; the workflow rejects empty daily-artwork PRs.")"
             retry_token="${RUNNER_PAT:-$GH_TOKEN}"
+            retry_body_file="/tmp/daily-retry-body-${daily_date}.md"
+            printf '%s\n' "$retry_body" > "$retry_body_file"
             retry_url="$(GH_TOKEN="$retry_token" gh issue create \
               --title "daily: admit the guest for ${daily_date} (watchdog retry)" \
               --label "daily-artwork" \
-              --assignee "@copilot" \
-              --body "$retry_body")"
+              --body-file "$retry_body_file")"
+            start_copilot_task "$daily_date" "$retry_url" "$retry_body_file" "$retry_token"
 
             echo "Recycled stale empty draft PR #$pr_number into $retry_url."
           done

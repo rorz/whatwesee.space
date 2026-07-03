@@ -63,9 +63,11 @@ jobs:
             echo "hn_titles<<SEED_EOF"; echo "${hn_titles:-(Hacker News unavailable)}"; echo "SEED_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Create issue for Copilot
+      - name: Create issue and start Copilot task
         env:
           GH_TOKEN: ${{ secrets.RUNNER_PAT }}
+          COPILOT_AGENT_MODEL: claude-sonnet-4.6
+          GH_REPO: ${{ github.repository }}
           DAILY_DATE: ${{ steps.date.outputs.date }}
           WIKI_TITLE: ${{ steps.seed.outputs.wiki_title }}
           WIKI_EXTRACT: ${{ steps.seed.outputs.wiki_extract }}
@@ -103,11 +105,37 @@ jobs:
             echo "Today's date (Europe/London): ${DAILY_DATE}."
           } > /tmp/daily-issue-body.md
 
-          gh issue create \
+          issue_url="$(gh issue create \
             --title "daily: admit the guest for $DAILY_DATE" \
             --label "daily-artwork" \
-            --assignee "@copilot" \
-            --body-file /tmp/daily-issue-body.md
+            --body-file /tmp/daily-issue-body.md)"
+          issue_number="${issue_url##*/}"
+
+          {
+            echo "Work on issue #${issue_number}: daily: admit the guest for ${DAILY_DATE}."
+            echo
+            echo "Use branch name \`copilot/daily-admit-guest-${DAILY_DATE}\` if you create a branch."
+            echo "Open a pull request against \`main\` with label \`daily-artwork\`, and include \`Closes #${issue_number}\` in the pull request body."
+            echo
+            cat /tmp/daily-issue-body.md
+          } > /tmp/daily-agent-prompt.md
+
+          task_payload="$(jq -n \
+            --rawfile prompt /tmp/daily-agent-prompt.md \
+            --arg model "$COPILOT_AGENT_MODEL" \
+            '{prompt: $prompt, model: $model, create_pull_request: true, base_ref: "main"}')"
+
+          curl -fsSL \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "https://api.github.com/agents/repos/${GH_REPO}/tasks" \
+            -d "$task_payload" \
+            > /tmp/daily-agent-task.json
+
+          echo "Created $issue_url and started Copilot task $(jq -r '.html_url // .url' /tmp/daily-agent-task.json) using ${COPILOT_AGENT_MODEL}."
 
   verify:
     if: |
