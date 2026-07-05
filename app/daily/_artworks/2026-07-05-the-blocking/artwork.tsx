@@ -143,18 +143,18 @@ export default function TheBlocking() {
     );
 
     let resetCountdown = -1;
-    let resetIntervalId: ReturnType<typeof setInterval> | null = null;
+    let resetTimerId: ReturnType<typeof setInterval> | null = null;
 
     const totalKf = () => actors.reduce((s, a) => s + a.keyframes.length, 0);
 
     const startReset = () => {
-      if (resetIntervalId !== null) return;
+      if (resetTimerId !== null) return;
       resetCountdown = 4;
-      resetIntervalId = setInterval(() => {
+      resetTimerId = setInterval(() => {
         resetCountdown--;
         if (resetCountdown <= 0) {
-          clearInterval(resetIntervalId!);
-          resetIntervalId = null;
+          clearInterval(resetTimerId!);
+          resetTimerId = null;
           resetCountdown = -1;
           actors.forEach((a, i) => {
             a.keyframes = INITIAL_ACTORS[i].keyframes.map((kf) => ({
@@ -407,7 +407,7 @@ export default function TheBlocking() {
 
       if (closestIdx >= 0) {
         actor.keyframes.splice(closestIdx, 1);
-        if (totalKf() === 0 && resetIntervalId === null) {
+        if (totalKf() === 0 && resetTimerId === null) {
           startReset();
         }
       }
@@ -431,7 +431,7 @@ export default function TheBlocking() {
       window.cancelAnimationFrame(rafId);
       ro.disconnect();
       canvas.removeEventListener("pointerdown", handlePointerDown);
-      if (resetIntervalId !== null) clearInterval(resetIntervalId);
+      if (resetTimerId !== null) clearInterval(resetTimerId);
       delete window.the_blocking_render_to_text;
       delete window.the_blocking_advance;
     };
