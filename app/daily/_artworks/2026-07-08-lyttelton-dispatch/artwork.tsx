@@ -193,6 +193,7 @@ export default function LytteltonDispatch() {
       ctx.save();
       ctx.globalAlpha = 0.045;
       ctx.fillStyle = "#5a3800";
+      // Seeded hash constants for deterministic pseudo-random grain positions
       for (let i = 0; i < 1200; i++) {
         const gx = ((Math.sin(i * 127.1 + 1) * 43758.5453) % 1 + 1) % 1;
         const gy = ((Math.sin(i * 311.7 + 2) * 53758.5453) % 1 + 1) % 1;
