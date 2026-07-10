@@ -11,6 +11,8 @@ declare global {
 const COLS = 7;
 const ROWS = 6;
 const TOTAL = 18;
+const SELF_CORRECT_MS = 500;
+const FADE_STEP = 0.25;
 
 const MINERAL: readonly string[] = [
   "#14b850",
@@ -73,7 +75,7 @@ export default function EighteenClaims() {
 
   useEffect(() => {
     const loop = (t: number) => {
-      if (!doneRef.current && t - tickRef.current > 500) {
+      if (!doneRef.current && t - tickRef.current > SELF_CORRECT_MS) {
         tickRef.current = t;
         const cur = cellsRef.current;
         let dirty = false;
@@ -82,7 +84,7 @@ export default function EighteenClaims() {
           const cn = cellNeighbors(i).filter((n) => cur[n].claimed).length;
           if (cn > 0) return cell;
           dirty = true;
-          const f = cell.fade - 0.25;
+          const f = cell.fade - FADE_STEP;
           return f <= 0 ? { ...cell, claimed: false, fade: 1 } : { ...cell, fade: f };
         });
         if (dirty) {
