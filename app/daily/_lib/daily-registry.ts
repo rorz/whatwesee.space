@@ -1,5 +1,6 @@
 import type { DailyArtworkModule, DailyArtworkProfile } from "@/app/daily/_lib/daily-types";
 import { dailyRouteSlug } from "@/app/daily/_lib/daily-types";
+import suaveForm from "@/app/daily/_artworks/2026-07-15-suave-form";
 import improveTheMap from "@/app/daily/_artworks/2026-07-14-improve-the-map";
 import theCount from "@/app/daily/_artworks/2026-07-13-the-count";
 import elytra from "@/app/daily/_artworks/2026-07-11-elytra";
@@ -40,6 +41,7 @@ import heldLine from "@/app/daily/_artworks/2026-05-17-held-line";
 import singleStroke from "@/app/daily/_artworks/2026-05-14-single-stroke";
 
 export const DAILY_ARTWORKS: ReadonlyArray<DailyArtworkModule> = [
+  suaveForm,
   improveTheMap,
   theCount,
   elytra,
