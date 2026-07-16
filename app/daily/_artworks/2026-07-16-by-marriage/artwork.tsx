@@ -198,7 +198,7 @@ export default function ByMarriage() {
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("mouseup", onUp);
       window.removeEventListener("touchend", onUp);
-      (Object.values(rafs) as number[]).forEach((id) => cancelAnimationFrame(id));
+      (Object.values(rafs) as number[]).forEach((rafId) => cancelAnimationFrame(rafId));
     };
   }, []);
 
