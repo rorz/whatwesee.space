@@ -1,4 +1,4 @@
-# WHAT WE SEE
+# whatwesee.space
 
 A nine-work computational exhibition authored by [Rory McMeekin](https://x.com/rorzio) and staged through agentic systems. Live at [whatwesee.space](https://whatwesee.space).
 
